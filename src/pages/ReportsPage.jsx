@@ -19,6 +19,7 @@ import { effectiveFeatures } from '../lib/features';
 import { PERMISSIONS } from '../lib/permissions';
 import SeasonReport from '../components/reports/SeasonReport';
 import MarkdownManager from '../components/reports/MarkdownManager';
+import ShopIntelligence from '../components/reports/ShopIntelligence';
 
 // Built on each render so the labels follow the interface language
 const dateRanges = () => [
@@ -54,9 +55,9 @@ export default function ReportsPage() {
     const features = useMemo(() => effectiveFeatures(savedFeatures), [savedFeatures]);
     const canDiscount = !!features.promotions && hasPermission(PERMISSIONS.PROMOTIONS_MANAGE);
     const owner = role === 'admin';
-    const tabs = [['overview', t('reports.overview')], ['articles', t('reports.articlesTab')], ['seasons', t('season.tab')],
+    const tabs = [['overview', t('reports.overview')], ['smart', t('smart.tab')], ['articles', t('reports.articlesTab')], ['seasons', t('season.tab')],
         ...(features.promotions ? [['markdowns', t('markdown.tab')]] : []), ['shifts', t('reports.shifts')]];
-    const byPeriod = !['seasons', 'markdowns'].includes(activeTab);
+    const byPeriod = !['seasons', 'markdowns', 'smart'].includes(activeTab);
     const [shiftData, setShiftData] = useState([]);
 
     useEffect(() => {
@@ -213,7 +214,9 @@ export default function ReportsPage() {
             </PageHeader>
 
             <div className="page-body">
-                {activeTab === 'seasons' ? (
+                {activeTab === 'smart' ? (
+                    <ShopIntelligence />
+                ) : activeTab === 'seasons' ? (
                     <SeasonReport money={owner} canDiscount={canDiscount} />
                 ) : activeTab === 'markdowns' ? (
                     <MarkdownManager money={owner} canDecide={canDiscount} />

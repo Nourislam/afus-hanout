@@ -104,6 +104,15 @@ module.exports = function register(ctx) {
     ipcMain.handle('insights:deadStock', (_, args = {}) => insights.deadStock(dbApi, args));
     ipcMain.handle('insights:stockWorth', (_, args = {}) => insights.stockWorth(dbApi, args));
     ipcMain.handle('insights:season', (_, args = {}) => insights.seasonReport(dbApi, args));
+    // The shop's rhythm: busy hours and days, the coming occasions and what to buy for them
+    const rhythm = require('../services/shopRhythm');
+    ipcMain.handle('insights:rhythm', (_, args = {}) => rhythm.rhythm(dbApi, { weeks: Math.min(52, Math.max(2, parseInt(args?.weeks, 10) || 12)) }));
+    ipcMain.handle('insights:calendar', () => rhythm.calendar(dbApi));
+    ipcMain.handle('insights:events', () => rhythm.listEvents(dbApi));
+    ipcMain.handle('insights:eventAdd', (_, args = {}) => {
+      try { return { success: true, event: rhythm.addEvent(dbApi, args || {}, require('uuid').v4()) }; } catch (error) { return { success: false, error: error.message }; }
+    });
+    ipcMain.handle('insights:eventDelete', (_, id) => rhythm.deleteEvent(dbApi, id));
     // Markdown manager: suggestions and results are read-only; a decision is the owner's
     ipcMain.handle('insights:markdowns', () => ({ suggestions: markdowns.suggestions(dbApi), results: markdowns.results(dbApi), steps: markdowns.STEPS }));
     ipcMain.handle('insights:markdownDecide', (_, args = {}) => {

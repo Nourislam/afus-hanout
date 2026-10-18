@@ -548,6 +548,22 @@ const MIGRATIONS = [
             addColumnIfMissing(db, 'products', 'show_on_website', 'INTEGER NOT NULL DEFAULT 1');
         },
     },
+    {
+        version: '2026_10_shop_events',
+        description: 'Reports › Shop intelligence: the shop\'s own dates (a sale, a local feast), every year or once',
+        up(db) {
+            db.run(`
+                CREATE TABLE IF NOT EXISTS shop_events (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    date TEXT NOT NULL,
+                    days_before INTEGER NOT NULL DEFAULT 14,
+                    yearly INTEGER NOT NULL DEFAULT 1,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {

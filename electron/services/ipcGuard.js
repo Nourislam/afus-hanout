@@ -131,6 +131,11 @@ const RULES = {
     'db:promotions:update': P.PROMOTIONS_MANAGE,
     'db:promotions:delete': P.PROMOTIONS_MANAGE,
     'insights:markdownDecide': P.PROMOTIONS_MANAGE,
+    'insights:rhythm': P.REPORTS_VIEW,
+    'insights:calendar': P.REPORTS_VIEW,
+    'insights:events': P.REPORTS_VIEW,
+    'insights:eventAdd': P.REPORTS_VIEW,
+    'insights:eventDelete': P.REPORTS_VIEW,
     // The shop's website: the owner's
     // Reading too: the state may hold the short code of a GitHub sign-in in progress
     'website:getState': 'admin',
