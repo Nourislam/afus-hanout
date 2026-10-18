@@ -23,7 +23,8 @@ describe('no cap of 100 (or 10, 50, 1000…) on the lists of the shop', () => {
     });
 
     it('the main process asks the database for every row unless a page size is given', () => {
-        const main = fs.readFileSync(path.join(__dirname, '../electron/main.js'), 'utf8');
+        const dir = path.join(__dirname, '../electron');
+        const main = ['main.js', ...fs.readdirSync(path.join(dir, 'ipc')).map(f => `ipc/${f}`)].map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
         // A fixed LIMIT is only allowed for one row, or top-5 summaries
         const fixed = [...main.matchAll(/LIMIT (\d+)/g)].map(m => Number(m[1])).filter(n => n !== 1 && n !== 5);
         expect(fixed).toEqual([]);

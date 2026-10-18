@@ -16,6 +16,9 @@ function filesUnder(dir) {
         return /\.(js|jsx|mjs|cjs|html)$/.test(entry.name) ? [rel] : [];
     });
 }
+// The main process: main.js and its IPC handlers (electron/ipc, one file per topic)
+const MAIN_FILES = ['electron/main.js', ...fs.readdirSync(path.join(ROOT, 'electron/ipc')).map(f => `electron/ipc/${f}`)];
+const readMain = () => MAIN_FILES.map(read).join('\n');
 const CODE = [...filesUnder('src'), ...filesUnder('electron'), 'index.html'];
 
 // Where a network connection is allowed, and why
@@ -37,7 +40,7 @@ const NETWORK_ALLOWED = {
     'electron/website/worker/worker.mjs': "the shop's website API, run by Cloudflare (never by the program)",
     // Not run by the program: the published website's script reads its own search.json, in the customer's browser
     'electron/website/storefront/assets/store.js': "the shop website's own catalogue file (same website), in the customer's browser",
-    'electron/main.js': 'e-mail sending handlers only (nodemailer), see the next test',
+    'electron/ipc/email.js': 'e-mail sending handlers only (nodemailer), see the next test',
     // Asked by the shop (Settings › About › check), only when the reseller's
     // installer profile gives an https address; nothing is installed by itself
     'electron/services/updateService.js': 'optional update check, on demand',
@@ -51,7 +54,7 @@ describe('offline-first core', () => {
     });
 
     it('the main process only uses the network to send e-mails, never at startup', () => {
-        const main = read('electron/main.js');
+        const main = readMain();
         expect(main).not.toMatch(/\bfetch\s*\(|axios|https?\.(request|get)\s*\(|net\.request|autoUpdater/);
         // nodemailer transports are only created inside the e-mail handlers
         const transports = [...main.matchAll(/nodemailer\.createTransport/g)].map(m => main.lastIndexOf("ipcMain.handle('", m.index));
@@ -65,10 +68,11 @@ describe('offline-first core', () => {
         const allowed = /shopify\.dev|help\.shopify\.com|woocommerce\.(com|github\.io)|your-store\.com|^https:\/\/wa\.me\b/;
         // The shop's own free website address: shown to the shop, never opened by the program
         // The shop's own website / API addresses, built from its names (GitHub Pages, workers.dev)
-        const WEBSITE_FILES = ['electron/website/websiteState.js', 'electron/website/publish/deployer.js', 'electron/website/cloudflare.js', 'src/pages/WebsitePage.jsx', 'electron/website/domain/domainManager.js', 'src/components/settings/ShopInfoForm.jsx'];
+        const WEBSITE_SCREENS = ['src/pages/WebsitePage.jsx', ...filesUnder('src/components/website')];
+        const WEBSITE_FILES = ['electron/website/websiteState.js', 'electron/website/publish/deployer.js', 'electron/website/cloudflare.js', 'electron/website/domain/domainManager.js', 'src/components/settings/ShopInfoForm.jsx', ...WEBSITE_SCREENS];
         const shopAddress = ([file, url]) => WEBSITE_FILES.includes(file) && (url.startsWith('https://${') || url.startsWith('https://<')
             // Examples in the empty fields of the shop's own links (Website screen): never opened by the program
-            || (['src/pages/WebsitePage.jsx', 'src/components/settings/ShopInfoForm.jsx'].includes(file) && (/^https:\/\/(facebook\.com|instagram\.com|tiktok\.com|maps\.app\.goo\.gl)\/(…|@…)$/.test(url) || url === 'https://…{number}')));
+            || (['src/components/settings/ShopInfoForm.jsx', ...WEBSITE_SCREENS].includes(file) && (/^https:\/\/(facebook\.com|instagram\.com|tiktok\.com|maps\.app\.goo\.gl)\/(…|@…)$/.test(url) || url === 'https://…{number}')));
         // GitHub's own sign-in page and API, in the GitHub module only
         const github = ([file, url]) => file === 'electron/website/github.js' && ['https://github.com', 'https://api.github.com'].includes(url);
         // Cloudflare's own sign-in and API, in the Cloudflare module only
@@ -104,10 +108,10 @@ describe('offline-first core', () => {
 
     it('the offline licence never blocks anything: no check uses it', () => {
         // Only the About screen reads it; sales, stock, backups and the role checks never do
-        for (const f of CODE.filter(f => f !== 'electron/main.js' && f !== 'electron/services/licenseService.js')) {
+        for (const f of CODE.filter(f => !MAIN_FILES.includes(f) && f !== 'electron/services/licenseService.js')) {
             expect(read(f), f).not.toMatch(/licenseService|licenseStatus/);
         }
-        const main = read('electron/main.js');
+        const main = readMain();
         // Each use sits in the licence function or the two About handlers
         for (const m of main.matchAll(/(?<!function )licenseStatus\(\)|licenseService\.check/g)) {
             const before = main.slice(Math.max(0, m.index - 400), m.index);
