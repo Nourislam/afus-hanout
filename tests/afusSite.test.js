@@ -16,6 +16,21 @@ describe('Afus website', () => {
         }
     });
 
+    it('every company page has its title and description, and the demo button stays on the Afus Boutique page', () => {
+        for (const lang of ['ar', 'fr']) {
+            const t = CONTENT[lang];
+            for (const page of [t.home, t.solutions, t.products, t.servicesPage, t.boutique, t.about, t.contactPage, t.privacy, t.terms]) {
+                expect(page.title).toBeTruthy();
+                expect(page.description).toBeTruthy();
+            }
+            expect(t.audiences.map(a => a[0])).toEqual(['shops', 'companies', 'administrations']);
+        }
+        const build = fs.readFileSync(path.join(__dirname, '../site/build.mjs'), 'utf8');
+        const header = build.slice(build.indexOf('const cta = '), build.indexOf('const f = t.footer'));
+        expect(header).toMatch(/^const cta = key === 'boutique'\s*\?[^:]*t\.nav\.demo/);
+        expect((header.match(/t\.nav\.demo/g) || []).length).toBe(1);
+    });
+
     it('no contact detail is invented: the order section shows only what config.json gives', () => {
         const config = JSON.parse(fs.readFileSync(path.join(__dirname, '../site/config.json'), 'utf8'));
         expect(Object.keys(config).sort()).toEqual(['email', 'facebook', 'phone', 'whatsapp']);
