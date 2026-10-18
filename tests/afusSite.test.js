@@ -18,7 +18,9 @@ describe('Afus website', () => {
 
     it('no contact detail is invented: the order section shows only what config.json gives', () => {
         const config = JSON.parse(fs.readFileSync(path.join(__dirname, '../site/config.json'), 'utf8'));
-        expect(Object.keys(config).sort()).toEqual(['email', 'phone', 'whatsapp']);
+        expect(Object.keys(config).sort()).toEqual(['email', 'facebook', 'phone', 'whatsapp']);
+        // The WhatsApp number is an Algerian mobile in international form
+        expect(config.whatsapp.replace(/\D/g, '')).toMatch(/^213[5-7]\d{8}$/);
     });
 
     it('the web demo has no network: its Electron net and online modules refuse', () => {

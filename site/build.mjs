@@ -24,11 +24,18 @@ const html = (...parts) => parts.flat().filter(p => p !== false && p != null && 
 /** Links from a page at `depth` folders below the root. */
 const linker = (depth) => (p) => `${'../'.repeat(depth)}${p}`;
 
+/** The company's Facebook page (config.json: its name, e.g. "afusDZ"). */
+const facebookUrl = () => {
+    const name = String(CONFIG.facebook || '').trim().replace(/^https?:\/\/(www\.)?facebook\.com\//, '').replace(/^\/+|\/+$/g, '');
+    return /^[A-Za-z0-9.\-]{2,80}$/.test(name) ? `https://www.facebook.com/${name}` : '';
+};
+
 function contact(t) {
     const out = [];
     const digits = String(CONFIG.whatsapp || '').replace(/\D/g, '');
     if (digits) out.push(`<a class="btn btn-wa" href="https://wa.me/${esc(digits)}?text=${encodeURIComponent(t.boutique.whatsappText)}" target="_blank" rel="noopener">${icon('message-circle', 20)}<span>${esc(t.boutique.whatsapp)}</span></a>`);
     if (CONFIG.phone) out.push(`<a class="btn btn-ghost-light" href="tel:${esc(String(CONFIG.phone).replace(/\s/g, ''))}">${icon('phone', 20)}<span dir="ltr">${esc(CONFIG.phone)}</span></a>`);
+    if (facebookUrl()) out.push(`<a class="btn btn-ghost-light" href="${esc(facebookUrl())}" target="_blank" rel="noopener">${icon('facebook', 20)}<span>Facebook</span></a>`);
     if (CONFIG.email) out.push(`<a class="btn btn-ghost-light" href="mailto:${esc(CONFIG.email)}">${icon('mail', 20)}<span>${esc(t.boutique.email)}</span></a>`);
     return out;
 }
@@ -75,7 +82,7 @@ ${body}
   <div class="container ftr">
     <div class="brand"><img src="${L('icon.svg')}" alt="" width="28" height="28"><span>Afus</span></div>
     <p>${esc(t.footer.made)} · © ${new Date().getFullYear()} Afus · ${esc(t.footer.rights)}</p>
-    <nav><a href="${L(`${base}boutique/index.html`)}">Afus Boutique</a><a href="${L(`demo/index.html${lang === 'ar' ? '' : '?lang=fr'}`)}">${esc(t.nav.demo)}</a><a href="${L(alternate)}" lang="${t.other.code}">${esc(t.other.label)}</a></nav>
+    <nav>${CONFIG.whatsapp ? `<a href="https://wa.me/${esc(String(CONFIG.whatsapp).replace(/\D/g, ''))}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${facebookUrl() ? `<a href="${esc(facebookUrl())}" target="_blank" rel="noopener">Facebook</a>` : ''}<a href="${L(`${base}boutique/index.html`)}">Afus Boutique</a><a href="${L(`demo/index.html${lang === 'ar' ? '' : '?lang=fr'}`)}">${esc(t.nav.demo)}</a><a href="${L(alternate)}" lang="${t.other.code}">${esc(t.other.label)}</a></nav>
   </div>
 </footer>
 </body>
