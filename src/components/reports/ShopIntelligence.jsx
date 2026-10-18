@@ -4,6 +4,7 @@ import { Button } from '../ui/Button';
 import { toast } from '../ui/Toast';
 import { MiniTabs, Spinner, Empty } from '../dashboard/parts';
 import { useT } from '../../i18n';
+import { translateError } from '../../i18n/errors';
 import { formatDate, formatNumber } from '../../i18n/format';
 
 const WEEKS = [4, 12, 26, 52];
@@ -164,8 +165,13 @@ function Occasion({ o, t, lang }) {
 function OwnEvents({ events, onChange, t, lang }) {
     const [form, setForm] = useState({ name: '', date: '', daysBefore: 14, yearly: true });
     const add = async () => {
-        const r = await window.electronAPI.insights.eventAdd(form);
-        if (!r?.success) { toast.error(t(r?.error === 'EVENT_NAME_REQUIRED' ? 'smart.nameRequired' : 'smart.dateInvalid')); return; }
+        let r;
+        try { r = await window.electronAPI.insights.eventAdd(form); } catch (error) { toast.error(translateError(error)); return; }
+        if (!r?.success) {
+            const known = { EVENT_NAME_REQUIRED: 'smart.nameRequired', EVENT_DATE_INVALID: 'smart.dateInvalid' }[r?.error];
+            toast.error(known ? t(known) : translateError(r?.error));
+            return;
+        }
         setForm({ name: '', date: '', daysBefore: 14, yearly: true });
         toast.success(t('smart.eventSaved'));
         onChange();

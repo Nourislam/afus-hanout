@@ -134,8 +134,9 @@ const RULES = {
     'insights:rhythm': P.REPORTS_VIEW,
     'insights:calendar': P.REPORTS_VIEW,
     'insights:events': P.REPORTS_VIEW,
-    'insights:eventAdd': P.REPORTS_VIEW,
-    'insights:eventDelete': P.REPORTS_VIEW,
+    // Writing the shop's own dates: who plans the offers (owner, manager)
+    'insights:eventAdd': P.PROMOTIONS_MANAGE,
+    'insights:eventDelete': P.PROMOTIONS_MANAGE,
     // The shop's website: the owner's
     // Reading too: the state may hold the short code of a GitHub sign-in in progress
     'website:getState': 'admin',

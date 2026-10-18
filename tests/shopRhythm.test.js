@@ -56,6 +56,10 @@ describe('shop rhythm', () => {
         expect(() => rhythmService.addEvent(api, { name: 'X', date: '20/01/2026' }, 'x')).toThrow('EVENT_DATE_INVALID');
         const own = rhythmService.calendar(api, { now: Date.parse('2026-12-01T09:00:00'), limit: 20 }).find(x => x.id === 'ev1');
         expect(own).toMatchObject({ name: 'Soldes d\'hiver', kind: 'own', date: '2027-01-20', before: 10 });
+        // 29 February: the 28th in a year without it
+        rhythmService.addEvent(api, { name: 'Leap', date: '2028-02-29', yearly: true }, 'ev2');
+        expect(rhythmService.calendar(api, { now: Date.parse('2029-01-10T09:00:00'), limit: 20 }).find(x => x.id === 'ev2').date).toBe('2029-02-28');
+        rhythmService.deleteEvent(api, 'ev2');
         rhythmService.deleteEvent(api, 'ev1');
         expect(rhythmService.listEvents(api)).toEqual([]);
     });

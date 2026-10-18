@@ -122,13 +122,18 @@ function ownEvents(api) {
         return [];
     }
 }
+/** The same day in another year (29 February: the 28th when the year has none). */
+function sameDayIn(year, month, day) {
+    const d = new Date(year, month, day);
+    return d.getMonth() === month ? d : new Date(year, month + 1, 0);
+}
 function ownOccurrences(e, from, to) {
     const base = new Date(`${e.date}T00:00:00`);
     if (Number.isNaN(base.getTime())) return [];
     if (!e.yearly) return base >= atMidnight(from) && base <= to ? [base] : [];
     const out = [];
     for (let y = from.getFullYear(); y <= to.getFullYear(); y++) {
-        const d = new Date(y, base.getMonth(), base.getDate());
+        const d = sameDayIn(y, base.getMonth(), base.getDate());
         if (d >= atMidnight(from) && d <= to) out.push(d);
     }
     return out;
