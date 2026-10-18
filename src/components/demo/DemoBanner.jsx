@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Store, RotateCcw, LogOut, ShoppingBag, Compass } from 'lucide-react';
+import { Store, RotateCcw, LogOut, ShoppingBag, Compass, Home } from 'lucide-react';
 import { useT } from '../../i18n';
 import { toast } from '../ui/Toast';
 import { translateError } from '../../i18n/errors';
@@ -54,6 +54,12 @@ export default function DemoBanner() {
                                 className="flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1 font-semibold hover:bg-white/25">
                                 <Compass className="w-4 h-4" /> {t('demo.tour')}
                             </button>
+                            {web.siteUrl && (
+                                <a href={web.siteUrl} target="_top" data-testid="demo-site"
+                                    className="flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1 font-semibold hover:bg-white/25">
+                                    <Home className="w-4 h-4" /> {t('demo.backSite')}
+                                </a>
+                            )}
                             <a href={web.orderUrl} target="_top" data-testid="demo-order"
                                 className="flex items-center gap-1.5 rounded-lg bg-white text-orange-700 px-3 py-1 font-semibold hover:bg-orange-50">
                                 <ShoppingBag className="w-4 h-4" /> {t('demo.order')}

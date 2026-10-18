@@ -44,6 +44,8 @@ const NETWORK_ALLOWED = {
     'electron/shops/shopsService.js': "the owner's own shops link on his Cloudflare account (Settings › My shops, optional)",
     // Not run by the program: uploaded to the owner's Cloudflare account as the shops link
     'electron/shops/worker/link.mjs': "the owner's shops link, run by Cloudflare (never by the program)",
+    // Only in the web demo on the Afus website: its own theme shops list (same website); in the program demoShops() is null
+    'src/components/website/DemoThemeGallery.jsx': "the Afus website's own theme shops list, web demo only (same website)",
     'electron/ipc/email.js': 'e-mail sending handlers only (nodemailer), see the next test',
     // Asked by the shop (Settings › About › check), only when the reseller's
     // installer profile gives an https address; nothing is installed by itself

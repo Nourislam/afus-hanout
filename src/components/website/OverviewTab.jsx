@@ -7,6 +7,7 @@ import { toast } from '../ui/Toast';
 import { formatDate } from '../../i18n/format';
 import { useT } from '../../i18n';
 import { PreviewFrame, themeText } from './DesignTab';
+import { demoShops, shopUrl } from './DemoThemeGallery';
 import { AddressField, DOMAIN_STYLE, STATUS_STYLE, STEP_ICON } from './shared';
 
 // Every page of the website, as the preview offers them
@@ -139,7 +140,7 @@ export function WebsiteOverview({ site, busy, run, outdated = null }) {
                 </Row>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-1">
-                <Button variant="secondary" onClick={() => setPreviewing(true)} data-testid="website-overview-preview"><Globe className="w-4 h-4" /> {t('website.manage.preview')}</Button>
+                <Button variant="secondary" onClick={() => (demoShops() ? window.open(shopUrl(lang, site.theme), '_blank', 'noopener') : setPreviewing(true))} data-testid="website-overview-preview"><Globe className="w-4 h-4" /> {t('website.manage.preview')}</Button>
                 <Button onClick={update} loading={running || busy === 'publish'} disabled={!site.canPublish} data-testid="website-overview-update">
                     <RefreshCw className="w-4 h-4" /> {running ? t(published ? 'website.update.running' : 'website.publish.running') : published ? t('website.updateNow') : t('website.publish.create')}
                 </Button>

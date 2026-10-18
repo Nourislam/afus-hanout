@@ -1,4 +1,5 @@
-// The theme gallery's shops (dist-site/themes/<lang>/<theme>/): for each theme,
+// The theme shops of the web demo (dist-site/demo/shops/<lang>/<theme>/), opened from
+// its Website screen (Themes tab, Overview › Preview): for each theme,
 // the whole website a shop gets from Afus Boutique (home, categories, every
 // article page, cart, checkout, about, contact...), made by the program's own
 // site builder from the demo shop (its articles, photos and categories).
@@ -58,9 +59,10 @@ function toShared(text, up) {
 }
 
 /** The preview bar, linked (the pages allow no inline style or script). */
-function withBar(html, { depth, label, back, theme }) {
+function withBar(html, { depth, label, theme }) {
     const up = '../'.repeat(depth);
-    const bar = `<div class="afus-preview"><a href="${up}../${back}">${label.back}</a><span>${label.preview} · ${theme}</span><a href="${up}../${label.contact}">${label.want}</a></div>`;
+    // From the shops folder (demo/shops/) to the site root
+    const bar = `<div class="afus-preview"><span>${label.preview} · ${theme}</span><a href="${up}../../${label.contact}">${label.want}</a></div>`;
     return html
         .replace('</head>', `<link rel="stylesheet" href="${up}preview.css"></head>`)
         .replace(/<body([^>]*)>/, (m) => `${m}${bar}`);
@@ -72,10 +74,12 @@ export const PREVIEW_CSS = '.afus-preview{position:sticky;top:0;z-index:9999;dis
 
 /**
  * Writes every theme's shop for both languages under outDir/<lang>/<theme>/.
- * labels[lang] = { back, preview, want, gallery, contact }: gallery and contact pages from the site root.
+ * labels[lang] = { preview, want, contact }: contact, the contact page from the site root.
+ * pictures: a folder of <theme>-<lang>.webp screenshots, copied to img/ for the demo's cards.
+ * Writes index.json: per language and theme, its pages count and first article / category page.
  * @returns {{ [lang]: { [themeId]: { pages, products, first: { product, category } } } }}
  */
-export async function buildThemeShops(outDir, labels) {
+export async function buildThemeShops(outDir, labels, { pictures = null } = {}) {
     const { dir, api, demo, init } = await demoShop();
     const { buildPublicData } = require('../electron/website/publicData');
     const { buildSite } = require('../electron/website/publish/siteBuilder');
@@ -104,7 +108,7 @@ export async function buildThemeShops(outDir, labels) {
                     const depth = f.path.split('/').length - 1 + 2; // up to themes/ (outDir)
                     let body = f.content;
                     if (/\.(html|css|json)$/.test(f.path)) body = toShared(String(body), '../'.repeat(f.path.split('/').length - 1));
-                    if (f.path.endsWith('.html')) body = withBar(body, { depth, label: labels[lang], back: labels[lang].gallery, theme: theme.name[lang] || theme.name.fr });
+                    if (f.path.endsWith('.html')) body = withBar(body, { depth, label: labels[lang], theme: theme.name[lang] || theme.name.fr });
                     fs.writeFileSync(file, body);
                 }
                 const product = snapshot.products.find(p => p.images.length) || snapshot.products[0];
@@ -121,5 +125,10 @@ export async function buildThemeShops(outDir, labels) {
         fs.rmSync(dir, { recursive: true, force: true });
     }
     fs.writeFileSync(path.join(outDir, 'preview.css'), PREVIEW_CSS);
+    fs.writeFileSync(path.join(outDir, 'index.json'), JSON.stringify(summary));
+    if (pictures && fs.existsSync(pictures)) {
+        fs.mkdirSync(path.join(outDir, 'img'), { recursive: true });
+        for (const f of fs.readdirSync(pictures)) if (f.endsWith('.webp')) fs.copyFileSync(path.join(pictures, f), path.join(outDir, 'img', f));
+    }
     return summary;
 }

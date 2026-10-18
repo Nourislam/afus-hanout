@@ -9,7 +9,12 @@ import { whenWindow } from './shims/electron.js';
 const asked = new URLSearchParams(location.search).get('lang');
 const lang = ['ar', 'fr', 'en'].includes(asked) ? asked : 'ar';
 // The program knows it is the web demo (its demo bar offers the tour and the way to order)
-window.__AFUS_WEB_DEMO__ = { orderUrl: lang === 'ar' ? '../boutique/#order' : '../fr/boutique/#order' };
+// siteUrl: back to the Afus website; shops: the theme shops its Website screen opens (made by site/build.mjs)
+window.__AFUS_WEB_DEMO__ = {
+    orderUrl: lang === 'ar' ? '../boutique/#order' : '../fr/boutique/#order',
+    siteUrl: lang === 'ar' ? '../' : '../fr/',
+    shops: 'shops/',
+};
 document.documentElement.lang = lang;
 document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
 

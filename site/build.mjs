@@ -1,5 +1,5 @@
 // Builds the Afus website (npm run build:site -> dist-site/): the company pages
-// (home, solutions, software, themes, about, contact, privacy, terms), the
+// (home, solutions, software, about, contact, privacy, terms), the
 // Afus Boutique page and the web demo (dist-demo, built first), in Arabic
 // (/) and French (/fr/). Static files only, relative links: it works at any
 // address (GitHub Pages project page today, the company's own domain later).
@@ -11,9 +11,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import * as Lucide from 'lucide-react';
 import { CONTENT } from './content.mjs';
 import { buildThemeShops } from './themes.mjs';
-import { createRequire } from 'module';
-
-const { registry } = createRequire(import.meta.url)('../electron/website/themes/registry');
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
@@ -36,9 +33,17 @@ const facebookUrl = () => {
 };
 
 /** Every page, Arabic at the root and French under fr/. */
-const PAGES = { home: '', solutions: 'solutions/', products: 'products/', boutique: 'boutique/', themes: 'themes/', about: 'about/', contact: 'contact/', privacy: 'privacy/', terms: 'terms/' };
+const PAGES = { home: '', solutions: 'solutions/', products: 'products/', boutique: 'boutique/', about: 'about/', contact: 'contact/', privacy: 'privacy/', terms: 'terms/' };
 const pagePath = (lang, key) => `${lang === 'fr' ? 'fr/' : ''}${PAGES[key]}index.html`;
 const NAV = ['home', 'solutions', 'products', 'about', 'contact'];
+/**
+ * The Afus software, shown on the Software page and in the footer. A new
+ * program: one more entry here (its texts in content.mjs, its page in RENDER).
+ *   page: its own page; text(t): its card texts; img: its screenshot (img/<img>-<lang>.webp); demo: it can be tried here
+ */
+const PROGRAMS = [
+    { id: 'boutique', name: 'Afus Boutique', page: 'boutique', img: 'pos', demo: true, text: (t) => t.home.boutique },
+];
 
 const waDigits = () => String(CONFIG.whatsapp || '').replace(/\D/g, '');
 const waUrl = (text) => (waDigits() ? `https://wa.me/${waDigits()}${text ? `?text=${encodeURIComponent(text)}` : ''}` : '');
@@ -78,7 +83,7 @@ function channels(t) {
 
 function layout(c, { title, description, body, scripts = '' }) {
     const { lang, t, key, L, u } = c;
-    const current = (k) => (k === key || (k === 'products' && ['boutique', 'themes'].includes(key)) ? ' aria-current="page"' : '');
+    const current = (k) => (k === key || (k === 'products' && PROGRAMS.some(p => p.page === key)) ? ' aria-current="page"' : '');
     const links = NAV.map(k => `<a href="${u(k)}"${current(k)}>${esc(t.nav[k])}</a>`).join('');
     // The same header on every page: one call to action, contact
     const cta = `<a class="btn btn-primary btn-sm hdr-cta" href="${u('contact')}">${icon('message-circle', 18)}<span>${esc(t.nav.contact)}</span></a>`;
@@ -122,7 +127,7 @@ ${body}
   <div class="container ftr">
     <div class="ftr-brand"><a class="brand" href="${u('home')}"><img src="${L('icon.svg')}" alt="" width="32" height="32"><span>Afus</span></a><p>${esc(f.about)}</p></div>
     ${col(f.company, [[u('about'), esc(t.nav.about)], [u('solutions'), esc(t.nav.solutions)], [u('contact'), esc(t.nav.contact)]])}
-    ${col(f.software, [[u('boutique'), 'Afus Boutique'], [u('themes'), esc(t.nav.themes)], [c.demo, esc(t.nav.demo)], [u('products'), esc(t.nav.products)]])}
+    ${col(f.software, PROGRAMS.map(p => [u(p.page), esc(p.name)]))}
     ${col(f.contact, channels(t).map(([ic, label, href, , ext]) => [href, `${icon(ic, 16)}<span>${esc(label)}</span>`, ext]))}
   </div>
   <div class="container ftr-bottom"><p>© ${new Date().getFullYear()} Afus · ${esc(f.rights)} · ${esc(f.made)}</p><nav><a href="${u('privacy')}">${esc(t.privacy.h1)}</a><a href="${u('terms')}">${esc(t.terms.h1)}</a><a href="${L(c.alternate)}" lang="${t.other.code}">${esc(t.other.label)}</a></nav></div>
@@ -149,11 +154,13 @@ function ctaBand(c) {
     return `<section class="cta-band"><div class="container cta-inner"><div><h2>${esc(h.ctaTitle)}</h2><p>${esc(h.ctaText)}</p></div><div class="ctas">${wa ? `<a class="btn btn-wa btn-lg" href="${esc(wa)}" target="_blank" rel="noopener">${icon('message-circle', 20)}<span>WhatsApp</span></a>` : ''}<a class="btn btn-ghost-light btn-lg" href="${c.u('contact')}">${esc(c.t.nav.contact)}</a></div></div></section>`;
 }
 
-function boutiqueCard(c) {
-    const b = c.t.home.boutique;
-    return `<article class="product-card"><div class="pc-text"><span class="tag tag-ok">${esc(b.tag)}</span><h3>${esc(b.name)}</h3><p class="muted">${esc(b.for)}</p>${checks(b.points)}`
-        + `<p class="price-line">${icon('tag', 18)}<b dir="ltr">${esc(b.price)}</b></p><div class="ctas"><a class="btn btn-primary" href="${c.u('boutique')}">${esc(b.more)}</a><a class="btn btn-ghost" href="${c.demo}">${icon('play-circle', 18)}<span>${esc(c.t.nav.demo)}</span></a></div></div>`
-        + `<div class="pc-media">${frame(c.L(`img/pos-${c.lang}.webp`), b.name)}</div></article>`;
+/** One program's card: the whole card opens its page; it can be tried from here when it has a demo. */
+function programCard(c, prog) {
+    const b = prog.text(c.t);
+    return `<article class="product-card"><div class="pc-text"><span class="tag tag-ok">${esc(b.tag)}</span><h3><a class="stretch" href="${c.u(prog.page)}">${esc(b.name)}</a></h3><p class="muted">${esc(b.for)}</p>${checks(b.points)}`
+        + `<p class="price-line">${icon('tag', 18)}<b dir="ltr">${esc(b.price)}</b></p><div class="ctas"><a class="btn btn-primary" href="${c.u(prog.page)}">${esc(b.more)}${icon(c.arrow, 18)}</a>`
+        + (prog.demo ? `<a class="btn btn-ghost" href="${c.demo}">${icon('play-circle', 18)}<span>${esc(c.t.nav.demo)}</span></a>` : '') + `</div></div>`
+        + `<div class="pc-media">${frame(c.L(`img/${prog.img}-${c.lang}.webp`), b.name)}</div></article>`;
 }
 
 function homePage(c) {
@@ -168,7 +175,7 @@ function homePage(c) {
         `<section class="section"><div class="container">${head(h.solutionsTitle, h.solutionsLead)}<div class="grid-3">`,
         t.audiences.map(([id, ic, title, text, , , more]) => `<a class="card card-link" href="${u('solutions')}#${id}"><span class="ic">${icon(ic, 26)}</span><h3>${esc(title)}</h3><p>${esc(text)}</p><span class="more">${esc(more)}${icon(c.arrow, 18)}</span></a>`),
         `</div></div></section>`,
-        `<section class="section alt"><div class="container">${head(h.productTitle)}${boutiqueCard(c)}</div></section>`,
+        `<section class="section alt"><div class="container">${head(h.productTitle)}${PROGRAMS.map(p => programCard(c, p)).join('')}</div></section>`,
         `<section class="section alt"><div class="container">${head(h.processTitle)}${steps(t.process)}${callout(t.buyNote)}</div></section>`,
         `<section class="section"><div class="container">${head(h.whyTitle)}<div class="grid-4">${h.why.map(card).join('')}</div></div></section>`,
         ctaBand(c),
@@ -193,13 +200,13 @@ function solutionsPage(c) {
     return layout(c, { title: s.title, description: s.description, body });
 }
 
+/** Every Afus program (PROGRAMS), then the ones to come. */
 function productsPage(c) {
-    const { t, u } = c; const p = t.products;
+    const { t } = c; const p = t.products;
     const body = html(
         pageHero(p),
-        `<section class="section"><div class="container">${head(t.home.productTitle)}${boutiqueCard(c)}<div class="grid-2 mt">`,
-        `<article class="card"><span class="tag">${esc(p.soon.tag)}</span><h3>${esc(p.soon.name)}</h3><p>${esc(p.soon.text)}</p></article>`,
-        `<article class="card"><span class="tag tag-blue">${esc(p.custom.tag)}</span><h3>${esc(p.custom.name)}</h3><p>${esc(p.custom.text)}</p><a class="btn btn-ghost" href="${u('contact')}">${esc(p.custom.cta)}${icon(c.arrow, 18)}</a></article>`,
+        `<section class="section"><div class="container"><div class="programs">${PROGRAMS.map(prog => programCard(c, prog)).join('')}`,
+        `<article class="card soon"><span class="ic">${icon('hourglass', 24)}</span><span class="tag">${esc(p.soon.tag)}</span><h3>${esc(p.soon.name)}</h3><p>${esc(p.soon.text)}</p></article>`,
         `</div></div></section>`,
         ctaBand(c),
     );
@@ -265,7 +272,7 @@ function boutiquePage(c) {
         `<section class="section"><div class="container">${head(b.featuresTitle)}<div class="grid-3">${b.features.map(card).join('')}</div></div></section>`,
         `<section class="section alt"><div class="container">${head(b.showTitle)}`,
         b.show.map(([img, title, text], i) => `<div class="show${i % 2 ? ' is-reverse' : ''}"><div class="show-text"><h3>${esc(title)}</h3><p>${esc(text)}</p></div><div class="show-media">${frame(L(`img/${img}-${lang}.webp`), title)}</div></div>`),
-        `<div class="ctas center more-row"><a class="btn btn-primary btn-lg" href="${demo}">${icon('play-circle', 20)}<span>${esc(b.cta1)}</span></a><a class="btn btn-ghost btn-lg" href="${u('themes')}">${icon('palette', 20)}<span>${esc(t.themesPage.more)}</span></a></div>`,
+        `<div class="ctas center more-row"><a class="btn btn-primary btn-lg" href="${demo}">${icon('play-circle', 20)}<span>${esc(b.cta1)}</span></a></div>`,
         `</div></section>`,
         `<section class="section" id="buy"><div class="container buy-grid"><div>${head(b.stepsTitle)}${steps(b.steps)}${callout(t.buyNote)}</div>`,
         `<aside class="price-card" aria-labelledby="price-title"><span class="tag tag-ok">${esc(pr.label)}</span><h2 id="price-title">${esc(pr.title)}</h2>`,
@@ -281,33 +288,7 @@ function boutiquePage(c) {
     return layout(c, { title: b.title, description: b.description, body });
 }
 
-/** The 8 themes, each a whole shop made by the program (themes.mjs), with its picture. */
-function themesPage(c) {
-    const { t, L, lang } = c; const p = t.themesPage;
-    const shops = THEME_SHOPS[lang] || {};
-    const cards = registry.list().map((theme) => {
-        const shop = shops[theme.id];
-        if (!shop) return '';
-        const base = L(`themes/${lang}/${theme.id}/`);
-        const shot = fs.existsSync(path.join(HERE, 'img', 'themes', `${theme.id}-${lang}.webp`)) ? `<img src="${L(`img/themes/${theme.id}-${lang}.webp`)}" alt="" width="1200" height="750" loading="lazy" decoding="async">` : '';
-        return html(
-            `<article class="theme-card"><a class="theme-shot" href="${base}index.html" tabindex="-1" aria-hidden="true">${shot}</a><div class="theme-body">`,
-            `<h2>${esc(theme.name[lang] || theme.name.fr)}</h2><p>${esc(theme.description[lang] || theme.description.fr)}</p><p class="muted small">${shop.pages} ${esc(p.pages)}</p>`,
-            `<div class="ctas"><a class="btn btn-primary" href="${base}index.html">${esc(p.open)}${icon(c.arrow, 18)}</a>`,
-            shop.first.product ? `<a class="btn btn-ghost" href="${base}${shop.first.product}">${esc(p.product)}</a>` : '',
-            shop.first.category ? `<a class="btn btn-ghost" href="${base}${shop.first.category}">${esc(p.category)}</a>` : '',
-            `</div></div></article>`,
-        );
-    });
-    const body = html(
-        pageHero(p),
-        `<section class="section"><div class="container"><div class="themes-grid">${cards.join('')}</div>${callout(p.note)}<p class="muted small credits">${esc(p.credits)}</p></div></section>`,
-        ctaBand(c),
-    );
-    return layout(c, { title: p.title, description: p.description, body });
-}
-
-const RENDER = { home: homePage, themes: themesPage, solutions: solutionsPage, products: productsPage, boutique: boutiquePage, about: aboutPage, contact: contactPage, privacy: legalPage('privacy'), terms: legalPage('terms') };
+const RENDER = { home: homePage, solutions: solutionsPage, products: productsPage, boutique: boutiquePage, about: aboutPage, contact: contactPage, privacy: legalPage('privacy'), terms: legalPage('terms') };
 
 function notFound() {
     const c = { ...ctx('ar', 'home'), key: 'nf' };
@@ -330,10 +311,6 @@ function write(rel, text) {
 }
 
 fs.rmSync(OUT, { recursive: true, force: true });
-// The shops of the theme gallery, before its page (it links to their pages)
-const THEME_SHOPS = await buildThemeShops(path.join(OUT, 'themes'), Object.fromEntries(['ar', 'fr'].map(lang => [lang, {
-    ...CONTENT[lang].themesPage.bar, gallery: pagePath(lang, 'themes'), contact: pagePath(lang, 'contact'),
-}])));
 for (const lang of ['ar', 'fr']) for (const key of Object.keys(PAGES)) write(pagePath(lang, key), RENDER[key](ctx(lang, key)));
 write('404.html', notFound());
 write('.nojekyll', '');
@@ -348,4 +325,8 @@ copyDir(path.join(HERE, 'img'), path.join(OUT, 'img'));
 fs.copyFileSync(path.join(ROOT, 'public', 'icon.svg'), path.join(OUT, 'icon.svg'));
 if (fs.existsSync(path.join(ROOT, 'dist-demo', 'index.html'))) copyDir(path.join(ROOT, 'dist-demo'), path.join(OUT, 'demo'));
 else console.warn('dist-demo missing: run npm run build:demo first');
+// The theme shops the demo's Website screen opens (Themes tab, Overview › Preview): one whole shop per theme
+await buildThemeShops(path.join(OUT, 'demo', 'shops'), Object.fromEntries(['ar', 'fr'].map(lang => [lang, {
+    ...CONTENT[lang].shopPreview, contact: pagePath(lang, 'contact'),
+}])), { pictures: path.join(HERE, 'img', 'themes') });
 console.log('site built in dist-site/');

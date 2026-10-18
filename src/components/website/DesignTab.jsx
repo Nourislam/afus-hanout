@@ -4,6 +4,7 @@ import { Palette, CheckCircle2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { toast } from '../ui/Toast';
 import { useT } from '../../i18n';
+import { DemoThemeGallery, demoShops } from './DemoThemeGallery';
 
 /** A theme's name / description in the window's language (they come with the theme). */
 export const themeText = (theme, key, lang) => theme?.[key]?.[lang] || theme?.[key]?.ar || theme?.id || '';
@@ -74,7 +75,12 @@ const PREVIEW_HEIGHT = 620;
  * page is drawn by the program from the shop's data and shown in a frame
  * that runs no script and cannot reach the program.
  */
-export function ThemeStudio({ site, busy, run }) {
+export function ThemeStudio(props) {
+    // The web demo (Afus website): the theme shops made beforehand, opened in a new page
+    return demoShops() ? <DemoThemeGallery {...props} /> : <LiveThemeStudio {...props} />;
+}
+
+function LiveThemeStudio({ site, busy, run }) {
     const { t, lang } = useT();
     const api = window.electronAPI.website;
     const [picked, setPicked] = useState(site.theme);

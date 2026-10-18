@@ -25,4 +25,5 @@ export default {
     'demo.loginTitle': ["Sample accounts of the demo shop", "Comptes d'exemple de la boutique de démo", "حسابات المحل التجريبي"],
     'demo.loginPin': ["PIN {pin}", "Code {pin}", "الرمز {pin}"],
     'demo.backupBlocked': ["Backups belong to your real shop: they are not available in the demo shop. Use \"Start the demo again\" to go back to the start.", "Les sauvegardes appartiennent à votre vraie boutique : elles ne sont pas disponibles dans la démo. Utilisez « Recommencer la démo » pour revenir au départ.", "النسخ الاحتياطية تخص محلك الحقيقي، وهي غير متاحة في المحل التجريبي. استعمل «إعادة العرض للبداية» للرجوع إلى البداية."],
+    'demo.backSite': ["Afus website", "Site Afus", "موقع Afus"],
 };

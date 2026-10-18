@@ -216,19 +216,15 @@ p{margin:0}
 .price-card .checks{margin:6px 0 4px}
 .price-card .btn{margin-top:8px}
 
-/* Theme gallery: each card opens a whole shop */
-.themes-grid{display:grid;grid-template-columns:1fr;gap:22px}
-.theme-card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s var(--ease)}
-@media (hover:hover) and (pointer:fine){.theme-card:hover{box-shadow:var(--shadow);transform:translateY(-3px)}}
-.theme-shot{display:block;aspect-ratio:16/10;background:linear-gradient(150deg,var(--blue-soft),#fff);border-bottom:1px solid var(--line);overflow:hidden}
-.theme-shot img{width:100%;height:100%;object-fit:cover;object-position:top;transition:transform .4s var(--ease)}
-.theme-card:hover .theme-shot img{transform:scale(1.03)}
-.theme-body{display:flex;flex-direction:column;gap:8px;padding:22px;flex:1}
-.theme-body h2{font-size:1.3em;color:var(--navy)}
-.theme-body>p{color:var(--muted)}
-.theme-body .ctas{margin-top:auto;padding-top:8px}
+/* Software page: every Afus program (the whole card opens its page), then the ones to come */
+.programs{display:grid;gap:20px}
+.product-card{position:relative}
+.product-card .stretch{color:inherit;text-decoration:none}
+.product-card .stretch::after{content:'';position:absolute;inset:0;border-radius:inherit}
+.product-card .ctas{position:relative;z-index:1}
+@media (hover:hover) and (pointer:fine){.product-card{transition:box-shadow .2s,border-color .2s}.product-card:hover{border-color:#c9d5f2;box-shadow:0 28px 70px rgba(10,36,114,.16)}}
+.card.soon{border-style:dashed;background:transparent;box-shadow:none}
 .small{font-size:.88em}
-.credits{margin-top:14px}
 
 /* Legal pages */
 .legal h2{font-size:1.25em;color:var(--navy);margin:28px 0 8px}

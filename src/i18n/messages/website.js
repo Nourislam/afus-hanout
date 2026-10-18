@@ -592,4 +592,12 @@ export default {
     'website.signup.cloudflare.create': ["Create one for free", "Créez-en un gratuitement", "أنشئ حسابًا مجانيًا"],
     'website.token.otherWay': ["Another way: link with a key", "Autre façon : lier avec une clé", "طريقة أخرى: الربط بمفتاح"],
     'website.publish.reason.github_email': ["GitHub asks you to confirm your account's e-mail address first: open the e-mail GitHub sent you, press the link, then press Try again.", "GitHub demande d'abord de confirmer l'adresse e-mail du compte : ouvrez l'e-mail envoyé par GitHub, appuyez sur le lien, puis sur Réessayer.", "يطلب GitHub تأكيد البريد الإلكتروني للحساب أولًا: افتح الرسالة التي أرسلها GitHub واضغط الرابط، ثم اضغط «أعد المحاولة»."],
+    'website.gallery.hint': ["Each theme below is a whole shop made with the demo shop's articles: open it in a new page, then keep the one you like.", "Chaque thème ci-dessous est une boutique complète faite avec les articles de la démo : ouvrez-la dans une nouvelle page, puis gardez celui qui vous plaît.", "كل ثيم هنا متجر كامل بسلع المحل التجريبي: افتحه في صفحة جديدة، ثم اختر الذي يعجبك."],
+    'website.gallery.open': ["Open the shop", "Ouvrir la boutique", "افتح المتجر"],
+    'website.gallery.product': ["Article page", "Page article", "صفحة منتج"],
+    'website.gallery.category': ["Category page", "Page catégorie", "صفحة صنف"],
+    'website.gallery.pages': ["{n} pages", "{n} pages", "{n} صفحة"],
+    'website.gallery.keep': ["Choose this theme", "Choisir ce thème", "اختر هذا الثيم"],
+    'website.gallery.chosen': ["Chosen", "Choisi", "المختار"],
+    'website.gallery.note': ["Preview only: ordering is off in these shops. In your shop, the program makes the website with your articles, prices and photos.", "Aperçu seulement : la commande est désactivée. Chez vous, le logiciel crée le site avec vos articles, vos prix et vos photos.", "معاينة فقط: الطلب معطّل في هذه المتاجر. في محلك، البرنامج ينشئ الموقع بسلعك وأسعارك وصورك."],
 };
