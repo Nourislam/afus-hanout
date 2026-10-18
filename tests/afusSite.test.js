@@ -31,6 +31,16 @@ describe('Afus website', () => {
         expect((header.match(/t\.nav\.demo/g) || []).length).toBe(1);
     });
 
+    it('the software is not sold online: the buyer contacts us and a team member visits', () => {
+        for (const lang of ['ar', 'fr']) {
+            const t = CONTENT[lang];
+            expect(t.buyNote).toBeTruthy();
+            expect(JSON.stringify(t.boutique.strip)).not.toMatch(/توصيل|Livraison/);
+            expect(t.boutique.cta2).not.toMatch(/^اطلب البرنامج$|^Commander$/);
+            expect(t.boutique.steps.length).toBe(3);
+        }
+    });
+
     it('no contact detail is invented: the order section shows only what config.json gives', () => {
         const config = JSON.parse(fs.readFileSync(path.join(__dirname, '../site/config.json'), 'utf8'));
         expect(Object.keys(config).sort()).toEqual(['email', 'facebook', 'phone', 'whatsapp']);

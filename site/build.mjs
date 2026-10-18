@@ -137,6 +137,7 @@ const pageHero = ({ eyebrow, h1, lead }, ctas = '') => `<section class="page-her
 const head = (title, lead) => `<div class="section-head"><h2 class="section-title">${esc(title)}</h2>${lead ? `<p>${esc(lead)}</p>` : ''}</div>`;
 const card = ([ic, title, text]) => `<div class="card"><span class="ic">${icon(ic, 24)}</span><h3>${esc(title)}</h3><p>${esc(text)}</p></div>`;
 const checks = (points) => `<ul class="checks">${points.map(p => `<li>${icon('check', 18)}<span>${esc(p)}</span></li>`).join('')}</ul>`;
+const callout = (text) => `<p class="callout">${icon('user-check', 20)}<span>${esc(text)}</span></p>`;
 const steps = (list) => `<ol class="steps">${list.map(([title, text]) => `<li><h3>${esc(title)}</h3><p>${esc(text)}</p></li>`).join('')}</ol>`;
 
 function ctaBand(c) {
@@ -167,7 +168,7 @@ function homePage(c) {
         `<section class="section alt"><div class="container">${head(h.productTitle)}${boutiqueCard(c)}</div></section>`,
         `<section class="section"><div class="container">${head(h.servicesTitle)}<div class="grid-3">${t.services.slice(0, 6).map(card).join('')}</div>`,
         `<p class="center more-row"><a class="btn btn-ghost" href="${u('services')}">${esc(h.servicesMore)}${icon(c.arrow, 18)}</a></p></div></section>`,
-        `<section class="section alt"><div class="container">${head(h.processTitle)}${steps(t.process)}</div></section>`,
+        `<section class="section alt"><div class="container">${head(h.processTitle)}${steps(t.process)}${callout(t.buyNote)}</div></section>`,
         `<section class="section"><div class="container">${head(h.whyTitle)}<div class="grid-4">${h.why.map(card).join('')}</div></div></section>`,
         ctaBand(c),
     );
@@ -195,7 +196,7 @@ function productsPage(c) {
     const { t, u } = c; const p = t.products;
     const body = html(
         pageHero(p),
-        `<section class="section"><div class="container">${boutiqueCard(c)}<div class="grid-2 mt">`,
+        `<section class="section"><div class="container">${head(t.home.productTitle)}${boutiqueCard(c)}<div class="grid-2 mt">`,
         `<article class="card"><span class="tag">${esc(p.soon.tag)}</span><h3>${esc(p.soon.name)}</h3><p>${esc(p.soon.text)}</p></article>`,
         `<article class="card"><span class="tag tag-blue">${esc(p.custom.tag)}</span><h3>${esc(p.custom.name)}</h3><p>${esc(p.custom.text)}</p><a class="btn btn-ghost" href="${u('contact')}">${esc(p.custom.cta)}${icon(c.arrow, 18)}</a></article>`,
         `</div></div></section>`,
@@ -208,8 +209,8 @@ function servicesPage(c) {
     const { t } = c; const s = t.servicesPage;
     const body = html(
         pageHero(s),
-        `<section class="section"><div class="container"><div class="grid-4">${t.services.map(card).join('')}</div></div></section>`,
-        `<section class="section alt"><div class="container">${head(t.home.processTitle)}${steps(t.process)}</div></section>`,
+        `<section class="section"><div class="container">${head(t.home.servicesTitle)}<div class="grid-4">${t.services.map(card).join('')}</div></div></section>`,
+        `<section class="section alt"><div class="container">${head(t.home.processTitle)}${steps(t.process)}${callout(t.buyNote)}</div></section>`,
         ctaBand(c),
     );
     return layout(c, { title: s.title, description: s.description, body });
@@ -243,7 +244,7 @@ function contactPage(c) {
     const script = form ? `<script>(function(){var L=${labels},f=document.getElementById('wa-form');f.addEventListener('submit',function(e){e.preventDefault();var v=function(n){return f.elements[n].value.trim()},err=f.querySelector('.form-error');if(!v('name')||!v('message')){err.hidden=false;f.elements[v('name')?'message':'name'].focus();return}err.hidden=true;var lines=[L.hello,L.name+': '+v('name'),L.activity+': '+v('activity')];if(v('city'))lines.push(L.city+': '+v('city'));lines.push('',v('message'));window.open(L.url+encodeURIComponent(lines.join('\\n')),'_blank','noopener')})})();</script>\n` : '';
     const body = html(
         pageHero(k),
-        `<section class="section"><div class="container contact-grid">${form}<div class="channels"><h2>${esc(k.channelsTitle)}</h2>${list}</div></div></section>`,
+        `<section class="section"><div class="container contact-grid">${form}<div class="channels"><h2>${esc(k.channelsTitle)}</h2>${list}${callout(t.buyNote)}</div></div></section>`,
     );
     return layout(c, { title: k.title, description: k.description, body, scripts: script });
 }
