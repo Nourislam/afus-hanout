@@ -21,7 +21,7 @@ describe('status of goods sent back to a supplier', () => {
             .map(file => path.relative(root, file));
         // only the migration that repairs old rows may still name it
         expect(misspelt).toEqual([path.join('electron', 'database', 'migrations.js')]);
-        expect(fs.readFileSync(path.join(root, 'electron/main.js'), 'utf8')).toMatch(/INSERT INTO purchase_returns[\s\S]{0,200}notes, 'completed'\]/);
+        expect(fs.readFileSync(path.join(root, 'electron/ipc/people.js'), 'utf8')).toMatch(/INSERT INTO purchase_returns[\s\S]{0,200}notes, 'completed'\]/);
     });
 
     it('old misspelt rows are repaired once, nothing else changes', async () => {
