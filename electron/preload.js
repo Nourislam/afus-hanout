@@ -96,7 +96,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         getState: () => ipcRenderer.invoke('website:getState'),
         preview: () => ipcRenderer.invoke('website:preview'),
         pageDefault: (id) => ipcRenderer.invoke('website:pageDefault', id),
-        photos: () => ipcRenderer.invoke('website:photos'),
+        photos: (theme) => ipcRenderer.invoke('website:photos', theme),
         // A page of the website in a theme (HTML without script, shown in a sandboxed frame)
         previewTheme: (args) => ipcRenderer.invoke('website:previewTheme', args),
         create: (args) => ipcRenderer.invoke('website:create', args),

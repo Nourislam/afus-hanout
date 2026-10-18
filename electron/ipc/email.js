@@ -1,6 +1,7 @@
 // IPC handlers: email. Moved out of main.js unchanged; main.js passes what they use.
 module.exports = function register(ctx) {
     const {
+        getStoreSettings,
         BRAND,
         ReceiptService,
         getOne,
@@ -24,17 +25,8 @@ module.exports = function register(ctx) {
     const nodemailer = require('nodemailer');
     ipcMain.handle('email:sendPurchaseOrder', async (_, { to, po }) => {
       // Get business settings including SMTP
-      const settingsRows = runQuery('SELECT key, value FROM settings');
-      const settings = {};
-      settingsRows.forEach(row => {
-        try {
-          settings[row.key] = JSON.parse(row.value);
-        } catch {
-          settings[row.key] = row.value;
-        }
-      });
-      // The shop's own details (name, address, signature) are inside store_config
-      Object.assign(settings, settings.store_config || {});
+      // Every setting, the shop's own details (store_config) on top
+      const settings = getStoreSettings();
 
       console.log('Email settings loaded:', {
         email_host: settings.email_host,
@@ -228,15 +220,8 @@ module.exports = function register(ctx) {
     // EMAIL: SEND RECEIPT
     // ==========================================
     ipcMain.handle('email:sendReceipt', async (_, sale, toEmail) => {
-      const settingsRows = runQuery('SELECT key, value FROM settings');
-      const settings = {};
-      settingsRows.forEach(row => {
-        try { settings[row.key] = JSON.parse(row.value); } catch { settings[row.key] = row.value; }
-      });
-
-      // Merge store_config if it exists
-      const storeConfig = settings['store_config'] || {};
-      Object.assign(settings, storeConfig);
+      // Every setting, the shop's own details (store_config) on top
+      const settings = getStoreSettings();
 
       if (!settings.email_host || !settings.email_user || !settings.email_password) {
         throw new Error('Email not configured. Please configure SMTP settings in Settings > Email.');
@@ -331,14 +316,8 @@ module.exports = function register(ctx) {
         const receiptService = new ReceiptService();
 
         // Get all settings (Same approach as creditInvoice:sendEmail for consistency)
-        const rows = runQuery('SELECT key, value FROM settings');
-        const settings = {};
-        rows.forEach(row => {
-          try { settings[row.key] = JSON.parse(row.value); }
-          catch { settings[row.key] = row.value; }
-        });
-        // The shop's own details (name, address, signature) are inside store_config
-        Object.assign(settings, settings.store_config || {});
+        // Every setting, the shop's own details (store_config) on top
+        const settings = getStoreSettings();
 
         // Merge structured settings if they exist (compatibility with new SettingsPage structure)
         // Structure from SettingsPage: { host, port, user, pass, secure }

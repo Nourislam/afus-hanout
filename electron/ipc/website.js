@@ -27,9 +27,11 @@ module.exports = function register(ctx) {
     ipcMain.handle('website:getState', () => website.view());
     ipcMain.handle('website:preview', () => website.preview());
     // The built-in photos (Website › Pictures): name and picture, to choose from
-    ipcMain.handle('website:photos', () => {
-      const { PHOTO_FILES, photoDataUrl } = require('../website/storefront/photos');
-      return PHOTO_FILES.map(file => ({ file, src: photoDataUrl(file) })).filter(p => p.src);
+    // heroDefault: the photo the theme picks by itself for the home page
+    ipcMain.handle('website:photos', (_, theme) => {
+      const { PHOTO_FILES, photoDataUrl, heroPhoto } = require('../website/storefront/photos');
+      const hero = heroPhoto(String(theme || ''));
+      return PHOTO_FILES.map(file => ({ file, src: photoDataUrl(file), heroDefault: file === hero })).filter(p => p.src);
     });
     // A page's built-in text (Website › Pages), to start from
     ipcMain.handle('website:pageDefault', (_, id) => {

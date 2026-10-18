@@ -408,11 +408,7 @@ module.exports = function register(ctx) {
     // A sample purchase order with the shop's details and the signature being
     // set in Settings (not saved yet): what the supplier will receive
     ipcMain.handle('purchaseOrders:previewHtml', (_, overrides = {}) => {
-      const storeSettings = {};
-      runQuery('SELECT key, value FROM settings').forEach(row => {
-        try { storeSettings[row.key] = JSON.parse(row.value); } catch { storeSettings[row.key] = row.value; }
-      });
-      Object.assign(storeSettings, storeSettings.store_config || {});
+      const storeSettings = getStoreSettings();
       for (const key of ['poSignatureName', 'poSignatureTitle', 'poSignatureImage']) {
         if (typeof overrides[key] === 'string') storeSettings[key] = overrides[key];
       }
@@ -429,13 +425,8 @@ module.exports = function register(ctx) {
     // ==========================================
     ipcMain.handle('purchaseOrders:savePdf', async (_, po) => {
       try {
-        const settingsRows = runQuery('SELECT key, value FROM settings');
-        const storeSettings = {};
-        settingsRows.forEach(row => {
-          try { storeSettings[row.key] = JSON.parse(row.value); } catch { storeSettings[row.key] = row.value; }
-        });
-        // The shop's own details (name, address, signature) are inside store_config
-        Object.assign(storeSettings, storeSettings.store_config || {});
+        // Every setting, the shop's own details (store_config) on top
+        const storeSettings = getStoreSettings();
         storeSettings.type = 'purchase_order';
 
         // Fetch full PO with items if missing

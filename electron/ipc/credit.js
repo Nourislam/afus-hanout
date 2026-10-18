@@ -1,6 +1,7 @@
 // IPC handlers: credit. Moved out of main.js unchanged; main.js passes what they use.
 module.exports = function register(ctx) {
     const {
+        getStoreSettings,
         BRAND,
         SyncManager,
         createCreditSale,
@@ -212,14 +213,8 @@ module.exports = function register(ctx) {
       creditSale.payments = runQuery('SELECT * FROM credit_payments WHERE credit_sale_id = ?', [creditSaleId]);
 
       // Get settings
-      const rows = runQuery('SELECT key, value FROM settings');
-      const settings = {};
-      rows.forEach(row => {
-        try { settings[row.key] = JSON.parse(row.value); }
-        catch { settings[row.key] = row.value; }
-      });
-      // The shop's own details (name, address, signature) are inside store_config
-      Object.assign(settings, settings.store_config || {});
+      // Every setting, the shop's own details (store_config) on top
+      const settings = getStoreSettings();
 
       // Initialize email service
       if (!initEmailService({

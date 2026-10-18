@@ -151,7 +151,7 @@ function legalPage(id, lang, shop = {}) {
 /** A page's built-in text, as the owner edits it (a heading line "# ...", then its paragraphs). */
 function legalText(id, lang, shop = {}) {
     const page = legalPage(id, lang, { ...shop, pages: {} });
-    return page ? page.sections.map(s => [`# ${s.h}`, ...s.p].join('\n')).join('\n\n') : '';
+    return page ? page.sections.map(s => [`# ${s.h}`, ...s.p].join('\n\n')).join('\n\n') : '';
 }
 
 module.exports = { LEGAL_PAGES, legalPage, legalText, ownSections };

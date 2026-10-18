@@ -9,14 +9,14 @@ import { useT } from '../../i18n';
 import { resizeImageDataUrl } from '../../lib/imageResize';
 import { SettingsCard } from './shared';
 
-/** The built-in photos, read once. */
-let photosCache = null;
-function usePhotos() {
-    const [photos, setPhotos] = useState(photosCache || []);
+/** The built-in photos, read once per theme (the theme marks its own home photo). */
+const photosCache = {};
+function usePhotos(theme = '') {
+    const [photos, setPhotos] = useState(photosCache[theme] || []);
     useEffect(() => {
-        if (photosCache) return;
-        window.electronAPI.website.photos().then((list) => { photosCache = list || []; setPhotos(photosCache); }).catch(() => {});
-    }, []);
+        if (photosCache[theme]) { setPhotos(photosCache[theme]); return; }
+        window.electronAPI.website.photos(theme).then((list) => { photosCache[theme] = list || []; setPhotos(photosCache[theme]); }).catch(() => {});
+    }, [theme]);
     return photos;
 }
 
@@ -61,14 +61,14 @@ function UploadButton({ label, onFile, busy, testId }) {
 /** The home page's big picture: the shop's own photo, or a ready-made one it picks; two optional texts. */
 export function HeroCard({ site, busy, run }) {
     const { t } = useT();
-    const photos = usePhotos();
+    const photos = usePhotos(site.theme);
     const saved = { image: '', photo: '', title: '', subtitle: '', ...(site.publicInfo?.hero || {}) };
     const [form, setForm] = useState(saved);
     const [uploading, setUploading] = useState(false);
     useEffect(() => { setForm(saved); }, [JSON.stringify(saved)]);
     const own = useOwnPicture(form.image);
     const chosen = photos.find(p => p.file === form.photo);
-    const fallback = photos.find(p => p.file.startsWith('hero-'));
+    const fallback = photos.find(p => p.heroDefault) || photos.find(p => p.file.startsWith('hero-'));
     const src = own || chosen?.src || fallback?.src || null;
     const upload = async (file) => {
         setUploading(true);
@@ -147,6 +147,11 @@ function CategoryPicture({ category, value, photos, onChange }) {
                 {photos.filter(p => !p.file.startsWith('hero-')).map(p => <option key={p.file} value={p.file}>{p.file.replace(/\.webp$/, '')}</option>)}
             </select>
             <UploadButton label={uploading ? t('common.saving') : t('website.pictures.upload')} onFile={upload} busy={uploading} testId={`website-cat-file-${category.id}`} />
+            {value.image && (
+                <button type="button" className="text-xs text-zinc-400 hover:text-white underline" onClick={() => onChange({ image: '', photo: '' })} data-testid={`website-cat-auto-${category.id}`}>
+                    {t('website.pictures.auto')}
+                </button>
+            )}
         </li>
     );
 }

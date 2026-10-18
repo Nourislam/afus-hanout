@@ -199,8 +199,8 @@ class ReceiptService {
                     <div class="info-box ship-to">
                         <div class="info-box-header">${T('doc.shipTo')}</div>
                         <div class="info-box-content">
-                            <div class="company-name">${settings.name}</div>
-                            <div class="detail">${settings.address}</div>
+                            <div class="company-name">${esc(settings.name)}</div>
+                            <div class="detail">${esc(settings.address)}</div>
                             ${settings.phone ? `<div class="detail"><strong>${T('doc.phone')}:</strong> <bdi dir="ltr">${esc(settings.phone)}</bdi></div>` : ''}
                             ${settings.email ? `<div class="detail"><strong>${T('doc.email')}:</strong> <bdi dir="ltr">${esc(settings.email)}</bdi></div>` : ''}
                         </div>
@@ -239,8 +239,8 @@ class ReceiptService {
                         ` : `
                             <div class="signature-line"></div>
                         `}
-                        <div class="signature-name">${settings.poSignatureName || '________________________'}</div>
-                        <div class="signature-title">${settings.poSignatureTitle}</div>
+                        <div class="signature-name">${settings.poSignatureName ? esc(settings.poSignatureName) : '________________________'}</div>
+                        <div class="signature-title">${esc(settings.poSignatureTitle)}</div>
                         <div class="signature-date">${T('doc.date')}: ${dateStr}</div>
                     </div>
                     <div class="terms-box">

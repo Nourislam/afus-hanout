@@ -164,11 +164,11 @@ function publicInfo(info = {}) {
             subtitle: text(info.hero?.subtitle, 160),
         },
         // A category's picture (Website › Pictures): the shop's own, or a built-in photo
-        categoryPictures: Object.fromEntries(Object.entries(info.categoryPictures && typeof info.categoryPictures === 'object' ? info.categoryPictures : {}).slice(0, 100)
+        categoryPictures: Object.fromEntries(Object.entries(info.categoryPictures && typeof info.categoryPictures === 'object' ? info.categoryPictures : {})
             .map(([id, v]) => [String(id).slice(0, 60), {
                 image: typeof v?.image === 'string' && PREVIEW_IMAGE.test(v.image) ? v.image : '',
                 photo: builtIn(v?.photo),
-            }]).filter(([, v]) => v.image || v.photo)),
+            }]).filter(([, v]) => v.image || v.photo).slice(0, 200)),
         // The owner's own text of a page (Website › Pages)
         pages: Object.fromEntries(OWN_PAGES.map(id => [id, multiline(info.pages?.[id], 6000)])),
         // "Few left" from this many pieces down (the counts themselves never leave SQLite)
@@ -194,8 +194,7 @@ function contactInfo(store = {}, info = {}) {
     };
 }
 
-function shopOf(store, info, pic) {
-    const extra = publicInfo(contactInfo(store, info));
+function shopOf(store, extra, pic) {
     return {
         name: text(store.businessName, 120),
         logo: pic(store.shopLogo) || '',
@@ -265,7 +264,9 @@ function toPublic(internal, { now = Date.now(), info = {}, preview = false } = {
         .filter(c => counts.has(String(c.id)))
         .map(c => ({ id: String(c.id), name: text(c.name, 80), count: counts.get(String(c.id)) }))
         .filter(c => c.name);
-    const catPictures = publicInfo(contactInfo(internal.store, info)).categoryPictures;
+    // The public info, cleaned once (the shop and the categories' pictures)
+    const extra = publicInfo(contactInfo(internal.store, info));
+    const catPictures = extra.categoryPictures;
     for (const c of categories) {
         const own = catPictures[c.id] || {};
         c.image = pic(own.image) || '';
@@ -274,7 +275,7 @@ function toPublic(internal, { now = Date.now(), info = {}, preview = false } = {
     return {
         version: VERSION,
         builtAt: new Date(now).toISOString(),
-        shop: shopOf(internal.store, info, pic),
+        shop: shopOf(internal.store, extra, pic),
         categories,
         brands: [...new Set(products.map(p => p.brand).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
         // New products (added in the last 7 days) and best sellers (completed sales of the

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     Rows3, LayoutGrid, CreditCard, Users, Percent, PackageOpen, Gift, Truck, FileText, Mail, Globe, ShoppingBag, Boxes, Wifi, Check, Lock,
 } from 'lucide-react';
@@ -37,16 +37,25 @@ export function ModulesSettings({ features, onFeaturesChange }) {
     const { t } = useT();
     const uiMode = useSettingsStore(state => state.settings.uiMode);
     const loadSettings = useSettingsStore(state => state.loadSettings);
-    const simplePages = useSettingsStore(state => state.settings.simplePages) || [];
+    const storedPages = useSettingsStore(state => state.settings.simplePages);
+    // Shown at once and kept for the next click: quick clicks never undo each other
+    const [simplePages, setSimplePages] = useState(storedPages || []);
+    const latest = useRef(simplePages);
+    useEffect(() => { latest.current = storedPages || []; setSimplePages(latest.current); }, [JSON.stringify(storedPages || [])]);
     // Pages of the menu the shop uses (a hidden module's page is not offered)
     const pages = NAV_GROUPS.flatMap(g => g.items).filter(item => (!item.feature || features?.[item.feature])
         && (!item.show || item.show(features || {}, () => true)));
     const togglePage = async (path) => {
         if (path === SIMPLE_LOCKED) return;
-        const next = simplePages.includes(path) ? simplePages.filter(p => p !== path) : [...simplePages, path];
+        const now = latest.current;
+        const next = now.includes(path) ? now.filter(p => p !== path) : [...now, path];
+        latest.current = next;
+        setSimplePages(next);
         try {
             await saveSimplePages(next);
         } catch (error) {
+            latest.current = now;
+            setSimplePages(now);
             toast.error(translateError(error));
         }
     };
