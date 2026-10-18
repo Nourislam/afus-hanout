@@ -28,14 +28,16 @@ module.exports = {
     categoryPage: { desktopColumns: 4, mobileColumns: 2, filters: true, banner: true },
     footer: { style: 'columns' },
     home: [
+        // Like the all-round classic themes: clear picture and words, categories, tabs, a story, the brands
         { type: 'hero', variant: 'split', cta: 'all' },
         { type: 'trust', style: 'cards' },
         { type: 'categories', style: 'tiles', limit: 6 },
-        { type: 'products', source: 'featured', limit: 8, layout: 'grid', columns: 4 },
+        { type: 'tabs', limit: 8, columns: 4 },
+        { type: 'imageText', style: 'split', photo: 2, topic: 'delivery' },
         { type: 'promo', style: 'split' },
+        { type: 'products', source: 'featured', limit: 8, layout: 'grid', columns: 4 },
+        { type: 'brands', style: 'boxed' },
         { type: 'about', style: 'plain' },
-        { type: 'products', source: 'new', limit: 4, layout: 'grid', columns: 4 },
-        { type: 'products', source: 'best', limit: 8, layout: 'grid', columns: 4 },
         { type: 'contact', style: 'card', whatsapp: true },
     ],
 };

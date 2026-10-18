@@ -431,4 +431,4 @@ function categoryPage(ctx, id) {
     );
 }
 
-module.exports = { featuresOf, formParts, trustList, bottomBar, cartLink, ICONS, categoryName, shopExtras, messagePage, productCard, productGrid, header, footer, productPage, categoryPage, bestPromotion, onSale, optionsOf, navItems, priceOf };
+module.exports = { featuresOf, formParts, trustList, bottomBar, cartLink, ICONS, categoryName, shopExtras, messagePage, productCard, productGrid, header, footer, productPage, categoryPage, bestPromotion, onSale, optionsOf, navItems, priceOf, priceTag };

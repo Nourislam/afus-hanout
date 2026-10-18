@@ -28,14 +28,15 @@ module.exports = {
     categoryPage: { desktopColumns: 4, mobileColumns: 2, filters: true, banner: true },
     footer: { style: 'columns' },
     home: [
-        { type: 'hero', variant: 'full', cta: 'sale' },
-        { type: 'trust', style: 'strip' },
+        // Like the bold drop themes: one huge line, a moving band, tabs of what is hot, a mosaic
+        { type: 'hero', variant: 'statement', cta: 'sale' },
+        { type: 'marquee', style: 'bold' },
+        { type: 'tabs', limit: 8, columns: 4 },
+        { type: 'collage', style: 'mosaic' },
         { type: 'promo', style: 'strip' },
         { type: 'products', source: 'new', limit: 10, layout: 'carousel', columns: 4 },
-        { type: 'categories', style: 'tiles', limit: 6, title: true },
-        { type: 'products', source: 'sale', limit: 8, layout: 'grid', columns: 4 },
+        { type: 'marquee', style: 'outline' },
         { type: 'brands', style: 'boxed' },
-        { type: 'products', source: 'best', limit: 8, layout: 'grid', columns: 4 },
         { type: 'contact', style: 'strip', whatsapp: true },
     ],
 };

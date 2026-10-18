@@ -9,7 +9,7 @@ const { buildPublicData } = require('../electron/website/publicData');
 const { buildSite } = require('../electron/website/publish/siteBuilder');
 const { renderPage } = require('../electron/website/storefront/render');
 const { registry } = require('../electron/website/themes/registry');
-const { categoryPhoto, heroPhoto, readPhoto, PHOTO_FILES } = require('../electron/website/storefront/photos');
+const { categoryPhoto, heroPhoto, themePhotos, readPhoto, PHOTO_FILES } = require('../electron/website/storefront/photos');
 
 const NOW = Date.parse('2026-10-11T12:00:00Z');
 const heroImg = (html) => html.match(/<section class="hero[^"]*">\s*<div class="hero-media"><img src="([^"]+)"/)?.[1] || null;
@@ -45,6 +45,10 @@ describe('website pictures', () => {
         expect(categoryPhoto('حقائب')).toBe('bags.webp');
         expect(PHOTO_FILES).toContain(categoryPhoto('xyz', 3));
         expect(PHOTO_FILES).toContain(heroPhoto('classic'));
+        // Every theme has its own photos, all built in, and no two themes open on the same picture
+        const heroes = registry.list().map(t => heroPhoto(t.id));
+        expect(new Set(heroes).size).toBe(heroes.length);
+        for (const t of registry.list()) for (const f of themePhotos(t.id)) expect(readPhoto(f), f).toBeTruthy();
     });
 
     it('a shop without any picture: every theme shows a real photo on its home, category tiles included', async () => {
@@ -52,7 +56,8 @@ describe('website pictures', () => {
         const data = buildPublicData(api, { now: NOW });
         for (const theme of registry.list()) {
             const html = renderPage({ snapshot: data, theme, page: 'home', lang: 'ar', assetUrl: (n) => `images/${n}` });
-            expect(heroImg(html), theme.id).toMatch(/^photos\/hero-[a-z]+\.webp$/);
+            // Each theme its own photo, matching its kind of shop
+            expect(heroImg(html), theme.id).toBe(`photos/${heroPhoto(theme.id)}`);
             const cats = html.match(/class="cat cat-(tiles|circles)"/);
             if (cats) expect(html, theme.id).toMatch(/<span class="cat-media"><img src="photos\/(women|kids)/);
         }
@@ -84,7 +89,7 @@ describe('website pictures', () => {
         expect(buildPublicData(api, { now: NOW, info: { hero: { image: '../secret.db' } } }).shop.hero.image).toBe('');
         const data = buildPublicData(api, { now: NOW, info: { hero: { image: 'gone.jpg' } } });
         const site = buildSite({ snapshot: data, theme: registry.get('classic'), readImage: (n) => (n === 'jean.jpg' ? Buffer.from([0xff, 0xd8]) : null) });
-        expect(heroImg(site.files.find(f => f.path === 'index.html').content)).toMatch(/^photos\/hero-[a-z]+\.webp$/);
+        expect(heroImg(site.files.find(f => f.path === 'index.html').content)).toBe(`photos/${heroPhoto('classic')}`);
     });
 
     it('the built-in photo chosen in Website › Pictures, for the home and for a category', async () => {

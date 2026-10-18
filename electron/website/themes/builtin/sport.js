@@ -29,13 +29,15 @@ module.exports = {
     categoryPage: { desktopColumns: 3, mobileColumns: 2, filters: true, banner: false },
     footer: { style: 'dark' },
     home: [
+        // Like the promotion-led themes: action picture, a band of offers, three big categories, tabs
         { type: 'hero', variant: 'full', cta: 'all' },
-        { type: 'trust', style: 'strip' },
-        { type: 'products', source: 'new', limit: 10, layout: 'carousel', columns: 4 },
-        { type: 'categories', style: 'tiles', limit: 6 },
+        { type: 'marquee', style: 'bold' },
+        { type: 'collage', style: 'trio' },
+        { type: 'tabs', limit: 8, columns: 4 },
         { type: 'promo', style: 'banner' },
-        { type: 'products', source: 'best', limit: 8, layout: 'grid', columns: 4 },
-        { type: 'products', source: 'featured', limit: 8, layout: 'grid', columns: 4 },
+        { type: 'imageText', style: 'overlay', photo: 2, topic: 'sale' },
+        { type: 'products', source: 'available', limit: 8, layout: 'grid', columns: 4 },
+        { type: 'trust', style: 'strip' },
         { type: 'contact', style: 'card', whatsapp: true },
     ],
 };

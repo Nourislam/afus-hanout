@@ -28,13 +28,15 @@ module.exports = {
     categoryPage: { desktopColumns: 3, mobileColumns: 2, filters: false, banner: true },
     footer: { style: 'dark' },
     home: [
+        // Like the editorial luxury themes: a magazine cover, a quiet band, two big pictures, the look to shop
         { type: 'hero', variant: 'editorial', cta: 'all' },
-        { type: 'trust', style: 'strip' },
+        { type: 'marquee', style: 'plain' },
+        { type: 'collage', style: 'duo' },
         { type: 'products', source: 'featured', limit: 6, layout: 'grid', columns: 3, seeAll: true },
-        { type: 'about', style: 'centered' },
-        { type: 'categories', style: 'list', limit: 8 },
+        { type: 'lookbook', photo: 2, side: 'start' },
+        { type: 'imageText', style: 'overlay', photo: 3, topic: 'story' },
         { type: 'products', source: 'new', limit: 8, layout: 'carousel', columns: 3 },
-        { type: 'products', source: 'best', limit: 8, layout: 'grid', columns: 4 },
+        { type: 'about', style: 'centered' },
         { type: 'contact', style: 'strip', whatsapp: true },
     ],
 };

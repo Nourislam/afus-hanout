@@ -28,11 +28,13 @@ module.exports = {
     categoryPage: { desktopColumns: 4, mobileColumns: 2, filters: true, banner: false },
     footer: { style: 'simple' },
     home: [
-        { type: 'hero', variant: 'centered', cta: 'all' },
-        { type: 'trust', style: 'strip' },
+        // Like the disciplined grid themes: a quiet title, the picture wide, then the articles
+        { type: 'hero', variant: 'minimal', cta: 'all' },
         { type: 'categories', style: 'pills', limit: 10, title: false },
         { type: 'products', source: 'all', limit: 12, layout: 'grid', columns: 4, seeAll: true },
+        { type: 'imageText', style: 'split', photo: 2 },
         { type: 'products', source: 'best', limit: 8, layout: 'grid', columns: 4 },
+        { type: 'trust', style: 'strip' },
         { type: 'contact', style: 'strip', whatsapp: true },
     ],
 };

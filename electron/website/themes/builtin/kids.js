@@ -25,13 +25,15 @@ module.exports = {
     categoryPage: { desktopColumns: 4, mobileColumns: 2, filters: true, banner: true },
     footer: { style: 'columns' },
     home: [
+        // Like the soft rounded themes: playful picture, round categories, tabs, a framed picture with words
         { type: 'hero', variant: 'playful', cta: 'all' },
         { type: 'trust', style: 'cards' },
         { type: 'categories', style: 'circles', limit: 8 },
-        { type: 'products', source: 'new', limit: 8, layout: 'grid', columns: 4 },
-        { type: 'promo', style: 'banner' },
+        { type: 'tabs', limit: 8, columns: 4 },
+        { type: 'imageText', style: 'boxed', photo: 2 },
         { type: 'products', source: 'available', limit: 8, layout: 'grid', columns: 4 },
-        { type: 'products', source: 'best', limit: 8, layout: 'grid', columns: 4 },
+        { type: 'promo', style: 'banner' },
+        { type: 'imageText', style: 'boxed', photo: 3, reverse: true, topic: 'delivery' },
         { type: 'contact', style: 'card', whatsapp: true },
     ],
 };

@@ -5,6 +5,9 @@
  * same photos.
  *
  *   heroPhoto(themeId)         the photo of the home page's big picture
+ *                              (each theme has its own, matching its kind of shop)
+ *   themePhotos(themeId)       the theme's own photos (hero, then its lookbook and
+ *                              picture-with-text sections)
  *   categoryPhoto(name, index) a photo matching the category's name
  *                              (ar / fr / en words), else one of the others
  *   PHOTO_FILES                every built-in photo (file names)
@@ -36,13 +39,29 @@ const WORDS = [
     ['sale', /solde|promo|sale|offre|تخفيض|عروض|تنزيلات/i],
     ['basics', /t-?shirt|tee|pull|sweat|pyjama|basic|تيشيرت|كنزة|بيجام/i],
 ];
+// Each theme's own photos: the first is its hero, the others its picture sections
+const THEME = {
+    luxury: ['look-coats.webp', 'look-suit-dark.webp', 'look-shopping.webp'],
+    atelier: ['look-neutral.webp', 'look-suit.webp', 'look-coats.webp'],
+    streetwear: ['look-street.webp', 'look-sneakers-2.webp', 'look-denim.webp'],
+    sport: ['look-fitness.webp', 'look-runner.webp', 'look-sport.webp'],
+    kids: ['look-kids.webp', 'look-girl.webp', 'look-baby.webp', 'look-kid.webp'],
+    classic: ['look-flatlay.webp', 'look-classic-flat.webp', 'look-suit.webp'],
+    'fashion-modern': ['look-scarf.webp', 'look-coat-street.webp', 'look-rack-color.webp'],
+    minimal: ['look-tee.webp', 'look-knit.webp', 'look-neutral.webp'],
+};
 const ANY = ['folded.webp', 'jackets.webp', 'shirts.webp', 'women.webp', 'men.webp', 'bags.webp', 'shoes.webp', 'kids.webp'];
-const PHOTO_FILES = [...new Set([...HERO, ...Object.values(BY_KIND).flat(), ...ANY])];
+const PHOTO_FILES = [...new Set([...HERO, ...Object.values(THEME).flat(), ...Object.values(BY_KIND).flat(), ...ANY, 'look-sneakers.webp'])];
 
 const hash = (s) => [...String(s || '')].reduce((h, ch) => (h * 31 + ch.codePointAt(0)) >>> 0, 7);
 
 function heroPhoto(themeId) {
-    return HERO[hash(themeId) % HERO.length];
+    return THEME[themeId]?.[0] || HERO[hash(themeId) % HERO.length];
+}
+
+/** The theme's own photos (a theme without its own: the shop photos). */
+function themePhotos(themeId) {
+    return THEME[themeId] || HERO;
 }
 
 function categoryPhoto(name, index = 0) {
@@ -66,4 +85,4 @@ function photoDataUrl(file) {
     return data ? `data:image/webp;base64,${data.toString('base64')}` : '';
 }
 
-module.exports = { heroPhoto, categoryPhoto, readPhoto, photoDataUrl, PHOTO_FILES };
+module.exports = { heroPhoto, themePhotos, categoryPhoto, readPhoto, photoDataUrl, PHOTO_FILES };

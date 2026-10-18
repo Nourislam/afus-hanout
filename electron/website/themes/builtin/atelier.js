@@ -29,11 +29,14 @@ module.exports = {
     categoryPage: { desktopColumns: 4, mobileColumns: 2, filters: true, banner: false },
     footer: { style: 'simple' },
     home: [
+        // Like the long-scroll campaign themes: big pictures that tell a story, the articles between them
         { type: 'hero', variant: 'full', cta: 'all' },
-        { type: 'trust', style: 'strip' },
+        { type: 'imageText', style: 'split', photo: 2 },
         { type: 'products', source: 'new', limit: 8, layout: 'grid', columns: 4 },
+        { type: 'lookbook', photo: 3, side: 'end' },
         { type: 'categories', style: 'list', limit: 8 },
         { type: 'products', source: 'featured', limit: 7, layout: 'large-first', columns: 4 },
+        { type: 'imageText', style: 'split', photo: 1, reverse: true, topic: 'delivery' },
         { type: 'products', source: 'best', limit: 8, layout: 'grid', columns: 4 },
         { type: 'contact', style: 'strip', whatsapp: true },
     ],

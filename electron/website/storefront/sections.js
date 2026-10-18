@@ -8,7 +8,7 @@
  */
 const { esc, html, phoneDigits, phoneHtml } = require('./html');
 const C = require('./components');
-const { heroPhoto, categoryPhoto } = require('./photos');
+const { heroPhoto, themePhotos, categoryPhoto } = require('./photos');
 
 const e = (values, def) => ({ kind: 'enum', values, default: def });
 const int = (min, max, def) => ({ kind: 'int', min, max, default: def });
@@ -37,7 +37,7 @@ const sectionHead = (ctx, title, href) => `<div class="section-head"><h2 class="
 
 const SECTION_TYPES = {
     hero: {
-        options: { variant: e(['split', 'full', 'centered', 'editorial', 'playful'], 'split'), cta: e(['all', 'sale', 'new'], 'all') },
+        options: { variant: e(['split', 'full', 'centered', 'editorial', 'playful', 'statement', 'boxed', 'minimal'], 'split'), cta: e(['all', 'sale', 'new'], 'all') },
         render(ctx, o) {
             const shop = ctx.snap.shop;
             const hero = shop.hero || {};
@@ -117,6 +117,114 @@ const SECTION_TYPES = {
                 `<a class="btn btn-light" href="${esc(ctx.link('category', 'sale'))}">${esc(ctx.t('shopNow'))}</a>`,
                 `</div></section>`,
             );
+        },
+    },
+
+    // A band of short lines going across (the shop's true promises and offers)
+    marquee: {
+        options: { style: e(['plain', 'bold', 'outline'], 'bold') },
+        render(ctx, o) {
+            const promo = C.bestPromotion(ctx);
+            const f = C.featuresOf(ctx);
+            const lines = [
+                f.trustBar && ctx.t('trustCod'),
+                f.trustBar && ctx.t('trustDelivery'),
+                promo && ctx.snap.products.some(p => C.onSale(p) && p.available) && `-${promo.value}% ${promo.name}`,
+                (ctx.snap.newProducts || []).length && ctx.t('newIn'),
+                f.trustBar && ctx.t('trustCall'),
+            ].filter(Boolean);
+            if (lines.length < 2) return '';
+            const row = (hidden) => `<div class="marquee-row"${hidden ? ' aria-hidden="true"' : ''}>${lines.map(l => `<span>${esc(l)}</span>`).join('')}</div>`;
+            return `<section class="marquee marquee-${o.style}"><div class="marquee-track">${row(false)}${row(true)}</div></section>`;
+        },
+    },
+
+    // Shop the look: one big picture with numbered points, and the articles it shows beside it
+    lookbook: {
+        options: { photo: int(1, 3, 2), side: e(['start', 'end'], 'start') },
+        render(ctx, o) {
+            const list = pick(ctx, 'featured').filter(p => p.images.length).slice(0, 4);
+            if (list.length < 2) return '';
+            const photos = themePhotos(ctx.theme.id);
+            const src = ctx.photo(photos[(o.photo - 1) % photos.length]);
+            const dots = list.map((p, i) => `<a class="look-dot look-dot-${i + 1}" href="${esc(ctx.link('product', p.id))}" aria-label="${esc(p.name)}">${i + 1}</a>`).join('');
+            const items = list.map((p, i) => html(
+                `<a class="look-item" href="${esc(ctx.link('product', p.id))}">`,
+                `<span class="look-num">${i + 1}</span>`,
+                `<img src="${esc(ctx.img(p.images[0]))}" alt="" loading="lazy" decoding="async">`,
+                `<span class="look-info"><span class="look-name">${esc(p.name)}</span>${C.priceTag(ctx, p)}</span>`,
+                `</a>`,
+            )).join('');
+            return html(
+                `<section class="container section lookbook lookbook-${o.side}">`,
+                sectionHead(ctx, ctx.t('shopTheLook')),
+                `<div class="look-grid"><div class="look-media"><img src="${esc(src)}" alt="" loading="lazy" decoding="async">${dots}</div>`,
+                `<div class="look-list">${items}<a class="btn btn-outline" href="${esc(ctx.link('page', 'products'))}">${esc(ctx.t('seeAll'))}</a></div></div>`,
+                `</section>`,
+            );
+        },
+    },
+
+    // A picture with a few words and one way in (the shop's own words when it wrote some)
+    imageText: {
+        // topic: what the words are about (auto: the new pieces when there are, else the shop's choice)
+        options: { style: e(['split', 'overlay', 'boxed'], 'split'), photo: int(1, 3, 3), reverse: bool(false), topic: e(['auto', 'story', 'delivery', 'sale'], 'auto') },
+        render(ctx, o) {
+            const shop = ctx.snap.shop;
+            const photos = themePhotos(ctx.theme.id);
+            const src = ctx.photo(photos[(o.photo - 1) % photos.length]);
+            const fresh = (ctx.snap.newProducts || []).length > 0;
+            const sale = ctx.snap.products.some(p => C.onSale(p) && p.available);
+            // Only true words: a sale topic without a sale, or new pieces without any, falls back to the shop's choice
+            const topic = o.topic === 'auto' ? (fresh ? 'new' : 'story') : o.topic === 'sale' && !sale ? 'story' : o.topic;
+            const TOPIC = {
+                new: ['newCollection', shop.description || ctx.t('newCollectionText'), ctx.link('page', 'new')],
+                story: ['ourStory', shop.description || ctx.t('ourStoryText'), ctx.link('page', 'products')],
+                delivery: ['trustDelivery', ctx.t('deliveryText'), ctx.link('page', 'products')],
+                sale: ['offers', ctx.t('saleText'), ctx.link('page', 'offers')],
+            };
+            const [titleKey, text, href] = TOPIC[topic];
+            const title = ctx.t(titleKey);
+            return html(
+                `<section class="image-text image-text-${o.style}${o.reverse ? ' is-reverse' : ''}">`,
+                `<div class="it-media"><img src="${esc(src)}" alt="" loading="lazy" decoding="async"></div>`,
+                `<div class="it-text"><h2 class="section-title">${esc(title)}</h2><p>${esc(text)}</p>`,
+                `<a class="btn btn-primary" href="${esc(href)}">${esc(ctx.t('discover'))}</a></div>`,
+                `</section>`,
+            );
+        },
+    },
+
+    // Categories as a collage: one big picture and smaller ones around it
+    collage: {
+        options: { style: e(['mosaic', 'duo', 'trio'], 'mosaic') },
+        render(ctx, o) {
+            const want = o.style === 'duo' ? 2 : o.style === 'trio' ? 3 : 5;
+            const cats = ctx.snap.categories.slice(0, want);
+            if (cats.length < 2) return '';
+            const tiles = cats.map((c, i) => {
+                const p = ctx.snap.products.find(x => x.categoryId === c.id && x.images.length);
+                const src = c.image ? ctx.img(c.image) : c.photo ? ctx.photo(c.photo) : p ? ctx.img(p.images[0]) : ctx.photo(categoryPhoto(c.name, i));
+                const n = ctx.snap.products.filter(x => x.categoryId === c.id && x.available).length;
+                return `<a class="tile tile-${i + 1}" href="${esc(ctx.link('category', c.id))}"><img src="${esc(src)}" alt="" loading="lazy" decoding="async"><span class="tile-text"><span class="tile-name">${esc(c.name)}</span>${n ? `<small>${n} ${esc(ctx.t('articles'))}</small>` : ''}<span class="tile-cta">${esc(ctx.t('shopNow'))}</span></span></a>`;
+            }).join('');
+            return `<section class="container section"><div class="collage collage-${o.style} collage-n${cats.length}">${tiles}</div></section>`;
+        },
+    },
+
+    // New in / best sellers / sale behind tabs (no script: the page's own form controls)
+    tabs: {
+        options: { limit: int(4, 12, 8), columns: int(2, 5, 4) },
+        render(ctx, o) {
+            const kinds = ['new', 'best', 'sale', 'featured'].map(k => [k, pick(ctx, k).slice(0, o.limit)]).filter(([, l]) => l.length);
+            const used = kinds.filter(([k]) => k !== 'featured' || kinds.length < 2).slice(0, 3);
+            if (!used.length) return '';
+            ctx.tabsCount = (ctx.tabsCount || 0) + 1;
+            const name = `tabs-${ctx.tabsCount}`;
+            const inputs = used.map(([k], i) => `<input class="tab-in" type="radio" name="${name}" id="${name}-${k}"${i === 0 ? ' checked' : ''}>`).join('');
+            const labels = used.map(([k]) => `<label class="tab-label" for="${name}-${k}">${esc(ctx.t(TITLE[k]))}</label>`).join('');
+            const panels = used.map(([k, l]) => `<div class="tab-panel">${C.productGrid(ctx, l, { columns: o.columns })}<p class="tab-more"><a class="see-all" href="${esc(ctx.link(...SEE_ALL[k]))}">${esc(ctx.t('seeAll'))}</a></p></div>`).join('');
+            return `<section class="container section tabs">${inputs}<div class="tab-labels" role="presentation">${labels}</div><div class="tab-panels">${panels}</div></section>`;
         },
     },
 
