@@ -5,7 +5,7 @@ const LANG = document.documentElement.lang === 'fr' ? 'fr' : 'ar';
 const T = (ar, fr) => (LANG === 'fr' ? fr : ar);
 
 const STEPS = [
-    { title: T('مرحبًا في محل تجريبي', 'Bienvenue dans une boutique de démo'), text: T('هذا هو البرنامج الحقيقي ببيانات محل ملابس تجريبي. اختر حساب «ياسين» (المدير) واكتب الرمز 1111.', "C'est le vrai programme, avec une boutique de vêtements d'exemple. Choisissez « Yacine » (gérant) et tapez 1111.") },
+    { title: T('مرحبًا في محل تجريبي', 'Bienvenue dans une boutique de démo'), text: T('هذا هو البرنامج الحقيقي ببيانات محل ملابس تجريبي. اختر حساب «ياسين» (المدير) واكتب الرمز 1111، ثم اضغط «ابدأ» لفتح الصندوق.', "C'est le vrai programme, avec une boutique de vêtements d'exemple. Choisissez « Yacine » (gérant), tapez 1111, puis « Commencer » pour ouvrir la caisse.") },
     { route: '/', title: T('لوحة القيادة', 'Tableau de bord'), text: T('مبيعات اليوم والأسبوع، السلع التي ستنفد، والكريدي المتأخر: كل شيء في نظرة واحدة كل صباح.', "Ventes du jour et de la semaine, articles qui vont manquer, crédits en retard : tout d'un coup d'œil chaque matin.") },
     { route: '/pos', title: T('البيع', 'La caisse'), text: T('امسح الباركود أو اضغط على سلعة، اختر المقاس واللون ثم «تحصيل». الدفع نقدًا أو بالكريدي، والتذكرة بالعربية أو الفرنسية. جرّب بيعًا الآن!', 'Scannez ou touchez un article, choisissez taille et couleur, puis « Encaisser ». Espèces ou crédit, ticket en arabe ou en français. Essayez une vente !') },
     { route: '/products', title: T('السلع والمقاسات', 'Articles et tailles'), text: T('كل سلعة بمقاساتها وألوانها ومخزون كل مقاس ولون. إضافة سلعة جديدة تأخذ أقل من دقيقة.', 'Chaque article avec ses tailles, ses couleurs et le stock de chacune. Un nouvel article en moins d’une minute.') },
@@ -25,8 +25,8 @@ const CSS = `
 #afus-tour .tt-x:hover{background:#f4f4f5}
 #afus-tour h3{margin:6px 18px 6px;font-size:19px;line-height:1.35}
 #afus-tour p{margin:0 18px 14px;font-size:14.5px;line-height:1.7;color:#3f3f46}
-#afus-tour .tt-bar{height:5px;margin:0 18px 12px;border-radius:9px;background:#e4e4e7;overflow:hidden}
-#afus-tour .tt-bar i{display:block;height:100%;background:#6366f1;border-radius:9px;transition:width .25s}
+#afus-tour .tt-bar{display:flex;height:5px;margin:0 18px 12px;border-radius:9px;background:#e4e4e7;overflow:hidden}
+#afus-tour .tt-bar i{flex:none;height:100%;background:#6366f1;border-radius:9px;transition:width .25s}
 #afus-tour .tt-row{display:flex;gap:8px;padding:12px 18px 16px;border-top:1px solid #f4f4f5}
 #afus-tour button.tt-btn,#afus-tour a.tt-btn{flex:1;min-height:44px;border-radius:12px;border:1px solid #e4e4e7;background:#fff;color:#18181b;font:inherit;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
 #afus-tour .tt-primary{background:#6366f1 !important;border-color:#6366f1 !important;color:#fff !important}
