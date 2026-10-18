@@ -262,7 +262,7 @@ function footer(ctx) {
         (extras.hours || extras.social) && `<div>${extras.hours}${extras.social}</div>`,
         `</div><nav class="container ftr-legal" aria-label="${esc(ctx.t('legal'))}">${LEGAL_PAGES.map(id => `<a href="${esc(ctx.link('page', id))}">${esc(legalPage(id, ctx.lang, shop).title)}</a>`).join('')}</nav>`,
         `<div class="container ftr-bottom"><span>© ${year} ${esc(shop.name)} · ${esc(ctx.t('rights'))}</span>`,
-        `<span class="ftr-made">${AFUS_MARK}<span>${esc(ctx.t('madeWith'))} <strong>Afus Boutique</strong></span></span></div></footer>`,
+        `<span class="ftr-made" aria-label="Afus Boutique">${AFUS_MARK}<strong>Afus Boutique</strong></span></div></footer>`,
     );
 }
 
