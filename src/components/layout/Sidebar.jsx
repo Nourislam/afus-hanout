@@ -1,9 +1,9 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import {
     LayoutDashboard, ShoppingCart, Package, Boxes, UserCog, BarChart3, Settings, LogOut, Percent, QrCode,
     History, CreditCard, FileText, LibraryBig, Users, Truck,
-    Globe, ShoppingBag,
+    Globe, ShoppingBag, ChevronDown, MoreHorizontal,
 } from 'lucide-react';
 import { useAuthStore, PERMISSIONS } from '../../stores/authStore';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -55,6 +55,13 @@ const NAV_GROUPS = [
         ],
     },
 ];
+
+// A cashier sees what a sale needs first; the rest is folded under "More"
+const CASHIER_MAIN = ['/pos', '/transactions', '/credit-sales', '/customers'];
+const MORE_KEY = 'ui_sidebar_more';
+function readMore() {
+    try { return localStorage.getItem(MORE_KEY) === '1'; } catch { return false; }
+}
 
 // Settings stays at the bottom in both modes: the mode is changed there
 const SETTINGS_ITEM = { path: '/settings', icon: Settings, label: 'nav.settings', permission: PERMISSIONS.SETTINGS_VIEW };
@@ -119,6 +126,14 @@ export function Sidebar() {
         && (!item.feature || features?.[item.feature])
         && (!item.show || item.show(features || {}, hasPermission))
         && (!simple || SIMPLE_PATHS.includes(item.path));
+
+    const cashier = currentEmployee?.role === 'cashier';
+    const location = useLocation();
+    const [moreOpen, setMoreOpen] = useState(readMore);
+    const toggleMore = () => setMoreOpen(value => {
+        try { localStorage.setItem(MORE_KEY, value ? '0' : '1'); } catch { /* this session only */ }
+        return !value;
+    });
 
     const toggleCollapsed = () => setCollapsed(value => {
         writeCollapsed(!value);
@@ -191,7 +206,30 @@ export function Sidebar() {
             </button>
 
             <nav className="flex-1 min-h-0 px-2 py-2 overflow-y-auto thin-scroll">
-                {NAV_GROUPS.map((group, gi) => {
+                {cashier ? (() => {
+                    // Cashier: the sale, its tickets, kridi and customers; the rest under "More"
+                    const all = NAV_GROUPS.flatMap(group => group.items.filter(visible));
+                    const main = CASHIER_MAIN.map(path => all.find(item => item.path === path)).filter(Boolean);
+                    const more = all.filter(item => !CASHIER_MAIN.includes(item.path));
+                    // The page open now is in "More": shown open
+                    const open = moreOpen || more.some(item => item.path === location.pathname);
+                    return (
+                        <>
+                            {main.map(navItem)}
+                            {more.length > 0 && (
+                                <div className="mt-1.5 pt-1.5 border-t border-dark-border/60" data-testid="nav-more-group">
+                                    <button type="button" onClick={toggleMore} aria-expanded={open} data-testid="nav-more"
+                                        className={`sidebar-item w-full text-zinc-400 ${collapsed ? 'justify-center !px-0' : ''}`} {...tooltip.props(t('nav.more'))}>
+                                        <MoreHorizontal className="w-[18px] h-[18px] flex-none" />
+                                        <span className={collapsed ? 'sr-only' : 'flex-1 min-w-0 text-start'}>{t('nav.more')}</span>
+                                        {!collapsed && <ChevronDown className={`w-4 h-4 flex-none transition-transform ${open ? 'rotate-180' : ''}`} />}
+                                    </button>
+                                    {open && more.map(navItem)}
+                                </div>
+                            )}
+                        </>
+                    );
+                })() : NAV_GROUPS.map((group, gi) => {
                     const items = group.items.filter(visible);
                     if (items.length === 0) return null;
                     return (

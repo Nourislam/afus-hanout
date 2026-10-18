@@ -53,6 +53,7 @@ const RULES = {
     'backup:openFolder': 'admin',
     'backup:reset': 'admin',
     'backup:chooseExternal': 'admin',
+    'backup:toUsb': 'admin',
     'backup:clearExternal': 'admin',
     'sync:set-token': 'admin',
     'sync:force-push': 'admin',

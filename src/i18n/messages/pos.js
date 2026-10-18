@@ -1,5 +1,6 @@
 // [English, French, Arabic]
 export default {
+    'pos.quickPicks': ["Sold most this week", "Les plus vendus cette semaine", "الأكثر مبيعًا هذا الأسبوع"],
     'cart.insufficientStock': ["Not enough stock", "Stock insuffisant", "المخزون غير كافٍ"],
     'cart.itemNotFound': ["Item not found", "Article introuvable", "السلعة غير موجودة"],
     'cart.empty': ["The cart is empty", "Le panier est vide", "السلة فارغة"],

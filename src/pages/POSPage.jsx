@@ -72,6 +72,8 @@ function ProductImage({ product, className = '' }) {
 
 export default function POSPage() {
     const [products, setProducts] = useState([]);
+    // Quick buttons: the articles sold most these 7 days (worked out by the program)
+    const [quickIds, setQuickIds] = useState([]);
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedBrand, setSelectedBrand] = useState('');
@@ -131,6 +133,7 @@ export default function POSPage() {
 
     const loadData = async () => {
         try {
+            window.electronAPI.products.quickPicks?.().then(ids => setQuickIds(Array.isArray(ids) ? ids : [])).catch(() => setQuickIds([]));
             const [productsData, categoriesData, heldData, bundlesData] = await Promise.all([
                 window.electronAPI.products.getAll(),
                 window.electronAPI.categories.getAll(),
@@ -226,6 +229,9 @@ export default function POSPage() {
                 || product.barcode?.toLowerCase().includes(q);
         });
     }, [products, selectedCategory, selectedBrand, searchQuery]);
+
+    const quickPicks = useMemo(() => quickIds.map(id => products.find(p => String(p.id) === String(id) && !p.is_bundle)).filter(p => p && p.stock_quantity > 0), [quickIds, products]);
+    const showQuick = quickPicks.length > 0 && !searchQuery.trim() && selectedCategory === 'all' && !selectedBrand;
 
     const countByCategory = useMemo(() => {
         const counts = {};
@@ -411,6 +417,21 @@ export default function POSPage() {
                 )}
 
                 <div className="flex-1 overflow-y-auto p-5">
+                    {/* Sold most this week: one press each (the articles without a barcode too) */}
+                    {showQuick && (
+                        <div className="mb-4" data-testid="pos-quick-picks">
+                            <p className="text-xs font-semibold text-zinc-400 mb-2">{t('pos.quickPicks')}</p>
+                            <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
+                                {quickPicks.map(product => (
+                                    <button key={product.id} type="button" onClick={() => handleProductClick(product)} data-testid="pos-quick-pick"
+                                        className="h-16 px-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-start flex flex-col justify-center min-w-0 transition-colors">
+                                        <span dir="auto" className="text-sm font-semibold leading-tight line-clamp-1">{product.name}</span>
+                                        <span className="text-xs text-indigo-300 tabular">{money(product.variant_count > 0 ? product.min_variant_price : product.price)}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     {filteredProducts.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-2">
                             <ShoppingBag className="w-12 h-12 opacity-40" />

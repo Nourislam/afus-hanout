@@ -62,7 +62,7 @@ export default function ReceiptPreviewModal({ isOpen, onClose, sale }) {
             toast.success(t('receipt.printed'));
         } catch (error) {
             console.error('Print failed:', error);
-            toast.error(t('receipt.printFailed'));
+            toast.error(t('receipt.printFailed'), undefined, 'printer');
         } finally {
             setPrinting(false);
         }
