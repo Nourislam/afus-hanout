@@ -40,6 +40,10 @@ const NETWORK_ALLOWED = {
     'electron/website/worker/worker.mjs': "the shop's website API, run by Cloudflare (never by the program)",
     // Not run by the program: the published website's script reads its own search.json, in the customer's browser
     'electron/website/storefront/assets/store.js': "the shop website's own catalogue file (same website), in the customer's browser",
+    // Only when the owner links his shops (Settings › My shops, optional): the owner's own link on Cloudflare
+    'electron/shops/shopsService.js': "the owner's own shops link on his Cloudflare account (Settings › My shops, optional)",
+    // Not run by the program: uploaded to the owner's Cloudflare account as the shops link
+    'electron/shops/worker/link.mjs': "the owner's shops link, run by Cloudflare (never by the program)",
     'electron/ipc/email.js': 'e-mail sending handlers only (nodemailer), see the next test',
     // Asked by the shop (Settings › About › check), only when the reseller's
     // installer profile gives an https address; nothing is installed by itself

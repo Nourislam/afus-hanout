@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
     Building, Receipt, Percent, Database, Save, Upload, Mail, CheckCircle, Printer, ScanLine, Hash,
     Languages, Tags, ToggleRight, Globe, ScrollText, Settings as SettingsIcon, Palette, Moon, Sun, Monitor, Eye, FlaskConical, ShoppingCart, Info,
+    Store,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input, TextArea } from '../components/ui/Input';
@@ -17,6 +18,7 @@ import BRAND from '../config/brand';
 import { ScannerSettingsForm } from '../components/settings/ScannerSettingsForm';
 import { ModulesSettings } from '../components/settings/ModulesSettings';
 import { BackupSettings } from '../components/settings/BackupSettings';
+import { ShopsSettings } from '../components/settings/ShopsSettings';
 import { DEFAULT_SHOP, loadShopConfiguration, saveShopConfiguration } from '../lib/shopSettings';
 import { resolveFeatures } from '../lib/features';
 import { isTaxEnabled } from '../lib/tax';
@@ -42,13 +44,13 @@ const SECTION_GROUPS = [
     { id: 'sales', ids: ['posScreen'] },
     { id: 'catalog', ids: ['sku'] },
     { id: 'modules', ids: ['modules'] },
-    { id: 'online', ids: ['mail', 'ecommerce'] },
+    { id: 'online', ids: ['mail', 'ecommerce', 'shops'] },
     { id: 'system', ids: ['backup', 'logs', 'about'] },
 ];
 
 const SECTION_ICONS = {
     business: Building, language: Languages, appearance: Palette, receipt: Receipt, labelPrinter: Tags, scanner: ScanLine,
-    sku: Hash, posScreen: ShoppingCart, modules: ToggleRight, mail: Mail, ecommerce: Globe, backup: Database, logs: ScrollText, about: Info,
+    sku: Hash, posScreen: ShoppingCart, modules: ToggleRight, mail: Mail, ecommerce: Globe, shops: Store, backup: Database, logs: ScrollText, about: Info,
 };
 
 // Old links (?tab=features, ?tab=printers) still open the right section
@@ -105,6 +107,8 @@ export default function SettingsPage() {
         'sku', 'modules',
         ...(features.email ? ['mail'] : []),
         ...(features.ecommerce ? ['ecommerce'] : []),
+        // The owner's other shops
+        ...(isAdmin() ? ['shops'] : []),
         'backup',
         ...(isAdmin() ? ['logs'] : []),
         'about',
@@ -631,6 +635,8 @@ export default function SettingsPage() {
                                 <EcommerceSettings />
                             </Card>
                         )}
+
+                        {currentTab === 'shops' && <ShopsSettings />}
 
                         {currentTab === 'backup' && <BackupSettings appInfo={appInfo} />}
 

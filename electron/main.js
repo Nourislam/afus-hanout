@@ -478,6 +478,22 @@ const website = createWebsiteService({
     allowHttp: !!cloudflareTestBase(),
   },
 });
+// Shops link: the owner's other shops (electron/shops), on the owner's Cloudflare
+const { createShopsService } = require('./shops/shopsService');
+const shops = createShopsService({
+  api: dbApi, getSetting: getSettingValue, saveSetting: saveSettingValue, codedError: catalog.codedError,
+  store: websiteSecureStore,
+  cloudflare: {
+    get client() { return website.cloudflareClient(); },
+    websiteAccess: () => website.cloudflareKeys(),
+    websiteLinked: () => website.cloudflareLinked(),
+  },
+  workerSource: fs.readFileSync(path.join(__dirname, 'shops', 'worker', 'link.mjs'), 'utf8'),
+  schemaSql: fs.readFileSync(path.join(__dirname, 'shops', 'worker', 'schema.sql'), 'utf8'),
+  blockedMode: () => (isDemo() ? 'demo' : null),
+  shopName: () => (getSettingValue('store_config') || {}).businessName || '',
+  employee: () => session.getEmployee()?.id || null,
+});
 // The website's orders come into SQLite by themselves while the program is open
 // (first a little after it starts, then when the last sync says it is time)
 function websiteOrdersTick() {
@@ -633,6 +649,7 @@ console.log('Electron main process started (Phase 5 - Credit Sales enabled)');
 
 // IPC handlers live in ./ipc, one file per topic.
 const ipcContext = {
+    shops,
     BRAND,
     BrowserWindow,
     EcommerceSyncManager,
@@ -720,3 +737,4 @@ require('./ipc/email')(ipcContext);
 require('./ipc/sync')(ipcContext);
 require('./ipc/settings')(ipcContext);
 require('./ipc/app')(ipcContext);
+require('./ipc/shops')(ipcContext);

@@ -591,7 +591,8 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
             // Usually right, sometimes a small difference
             const roll = random();
             const diff = roll < 0.8 ? 0 : roll < 0.9 ? -100 : roll < 0.95 ? -50 : 50;
-            const counted = Math.max(0, Math.round(expected + diff));
+            // Counted to the centime: the difference is exactly the one chosen
+            const counted = Math.max(0, Math.round((expected + diff) * 100) / 100);
             const notes = {};
             let rest = counted;
             for (const value of [2000, 1000, 500, 200, 100, 50, 20, 10, 5]) { const n = Math.floor(rest / value); if (n) notes[value] = n; rest -= n * value; }

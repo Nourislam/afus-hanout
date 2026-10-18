@@ -1137,6 +1137,10 @@ function createWebsiteService({ api, getSetting, saveSetting, codedError, github
         domainCheck, domainRetry, domainSearch, domainOpenBuy, domainHostingerLink, domainHostingerForget, domainHostingerSetup, domainCheckIfDue: () => domains.checkIfDue(),
         publishPending: () => deployer.pending(),
         cloudflareStart, cloudflareCancel, cloudflareChoose, cloudflareDisconnect, cloudflareCheck, cloudflareAccess,
+        // The same Cloudflare account for the shops link (main process only)
+        cloudflareClient: () => cfClient,
+        cloudflareLinked: () => !blockedMode() && cf.linked(),
+        cloudflareKeys: async () => (!blockedMode() && cf.linked() ? cf.access() : null),
         cloudflareFlowPage: () => cf.flowUrl(),
         cloudflareManageUrl: () => cfClient.manageUrl,
         cloudflareDashBase: () => cfClient.dashBase,

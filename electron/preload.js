@@ -179,6 +179,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
         cloudflareOpen: () => ipcRenderer.invoke('website:cloudflareOpen'),
         cloudflareManage: () => ipcRenderer.invoke('website:cloudflareManage'),
     },
+    shops: {
+        view: () => ipcRenderer.invoke('shops:view'),
+        connectMain: (args) => ipcRenderer.invoke('shops:connectMain', args),
+        newCode: (args) => ipcRenderer.invoke('shops:newCode', args),
+        pushCatalog: () => ipcRenderer.invoke('shops:pushCatalog'),
+        list: () => ipcRenderer.invoke('shops:list'),
+        remove: (id) => ipcRenderer.invoke('shops:remove', id),
+        join: (args) => ipcRenderer.invoke('shops:join', args),
+        pullCatalog: () => ipcRenderer.invoke('shops:pullCatalog'),
+        leave: () => ipcRenderer.invoke('shops:leave'),
+    },
     insights: {
         runOut: (args) => ipcRenderer.invoke('insights:runOut', args),
         sellThrough: (args) => ipcRenderer.invoke('insights:sellThrough', args),

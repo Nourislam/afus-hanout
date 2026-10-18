@@ -35,8 +35,9 @@ import about from './about';
 import insights from './insights';
 import website from './website';
 import smart from './smart';
+import shops from './shops';
 
-const MODULES = { common, round2, misc, ecommerce, excel, barcode, modals, purchases, gift, promos, reports, credit, customers, inventory, dashboard, pos, settings, setup, products, errors, catalog, login, printing, layout, settingsHub, catalogHub, partners, dash, operations, demo, trial, help, about, insights, website, smart };
+const MODULES = { common, round2, misc, ecommerce, excel, barcode, modals, purchases, gift, promos, reports, credit, customers, inventory, dashboard, pos, settings, setup, products, errors, catalog, login, printing, layout, settingsHub, catalogHub, partners, dash, operations, demo, trial, help, about, insights, website, smart, shops };
 
 function merge(modules) {
     const all = {};
