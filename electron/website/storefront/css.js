@@ -600,6 +600,12 @@ body.buybar-on .bottom-bar{display:none}
   .quick-order .dchoice small{display:none}
   .quick-order{padding:14px}
   .ftr-nav{display:none}
+  /* Fingers, not a mouse: links and small buttons big enough to tap */
+  .ftr-legal{gap:0 18px}
+  .ftr-legal a,.ftr-links a,.social-links a{display:inline-flex;align-items:center;min-height:40px}
+  .social-links a,.map-link{border-bottom:0;text-decoration:underline;text-underline-offset:4px}
+  .logo{min-height:44px}
+  .btn-sm{min-height:44px}
   .site-footer{padding-top:32px}
   .ftr-grid{gap:20px}
   .ftr-bottom{margin-top:20px;padding-block:16px}
@@ -614,7 +620,7 @@ body.buybar-on .bottom-bar{display:none}
   .trust-row small{font-size:.86em}
 }
 .btn,.size,.fchip span,.cat-pills{min-height:44px}
-.btn-sm{min-height:36px}
+@media (min-width:901px){.btn-sm{min-height:36px}}
 
 /* ===== Each theme's character ===== */
 
