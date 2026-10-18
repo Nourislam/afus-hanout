@@ -95,6 +95,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     website: {
         getState: () => ipcRenderer.invoke('website:getState'),
         preview: () => ipcRenderer.invoke('website:preview'),
+        pageDefault: (id) => ipcRenderer.invoke('website:pageDefault', id),
+        photos: () => ipcRenderer.invoke('website:photos'),
         // A page of the website in a theme (HTML without script, shown in a sandboxed frame)
         previewTheme: (args) => ipcRenderer.invoke('website:previewTheme', args),
         create: (args) => ipcRenderer.invoke('website:create', args),
@@ -324,7 +326,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
         openFolder: () => ipcRenderer.invoke('backup:openFolder'),
         reset: () => ipcRenderer.invoke('backup:reset'),
         chooseExternal: () => ipcRenderer.invoke('backup:chooseExternal'),
-        toUsb: () => ipcRenderer.invoke('backup:toUsb'),
         clearExternal: () => ipcRenderer.invoke('backup:clearExternal'),
     },
 
@@ -387,6 +388,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Purchase Orders
     purchaseOrders: {
         getAll: () => ipcRenderer.invoke('db:purchaseOrders:getAll'),
+        previewHtml: (overrides) => ipcRenderer.invoke('purchaseOrders:previewHtml', overrides),
         getById: (id) => ipcRenderer.invoke('db:purchaseOrders:getById', id),
         create: (po) => ipcRenderer.invoke('db:purchaseOrders:create', po),
         delete: (id) => ipcRenderer.invoke('db:purchaseOrders:delete', id),

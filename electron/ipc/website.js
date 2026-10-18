@@ -4,6 +4,7 @@ module.exports = function register(ctx) {
         BrowserWindow,
         dialog,
         fs,
+        getSettingValue,
         getShopSettingsForPrint,
         githubTestBase,
         ipcMain,
@@ -25,6 +26,17 @@ module.exports = function register(ctx) {
     };
     ipcMain.handle('website:getState', () => website.view());
     ipcMain.handle('website:preview', () => website.preview());
+    // The built-in photos (Website › Pictures): name and picture, to choose from
+    ipcMain.handle('website:photos', () => {
+      const { PHOTO_FILES, photoDataUrl } = require('../website/storefront/photos');
+      return PHOTO_FILES.map(file => ({ file, src: photoDataUrl(file) })).filter(p => p.src);
+    });
+    // A page's built-in text (Website › Pages), to start from
+    ipcMain.handle('website:pageDefault', (_, id) => {
+      const { legalText } = require('../website/storefront/legal');
+      const store = getSettingValue('store_config') || {};
+      return legalText(String(id || ''), store.defaultLanguage || 'ar', { name: store.businessName || '', email: store.businessEmail || '', phone: store.businessPhone || '' });
+    });
     ipcMain.handle('website:previewTheme', (_, args = {}) => website.previewTheme(args));
     ipcMain.handle('website:create', (_, args = {}) => website.create(args));
     ipcMain.handle('website:setTheme', (_, theme, options = {}) => website.setTheme(theme, { publish: !!options?.publish }));

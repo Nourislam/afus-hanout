@@ -266,10 +266,12 @@ describe('website themes: every theme draws the same shop data', () => {
         expect(renderPage({ snapshot, theme: registry.get('atelier'), page: 'home', lang: 'ar', preview: true })).toContain("font-src data:");
     });
 
-    it('in the program\'s preview: links go nowhere, pictures come from the program', () => {
+    it('in the program\'s preview: links stay in the preview (never outside), pictures come from the program', () => {
         for (const theme of registry.list()) {
             const html = renderPage({ snapshot, theme, page: 'product', id: 'jean', lang: 'ar', preview: true, assetUrl: (p) => `app://${encodeURIComponent(p)}` });
-            expect([...html.matchAll(/href="([^"]*)"/g)].every(([, h]) => h === '#')).toBe(true);
+            const hrefs = [...html.matchAll(/href="([^"]*)"/g)].map(([, h]) => h);
+            expect(hrefs.every(h => h === '#' || /^#go=[a-z]+%3A/.test(h)), hrefs.find(h => h !== '#' && !h.startsWith('#go='))).toBe(true);
+            expect(hrefs).toContain('#go=page%3Aabout');
             expect(html).toContain('src="app://jean-1.jpg"');
             expect(html).toMatch(/img-src 'self' data: app:/);
         }

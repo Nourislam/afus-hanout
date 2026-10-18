@@ -1,8 +1,8 @@
-// The review's proposals: the weekly USB copy reminder, the "fix it" button of
+// The review's proposals: the backup reminder, the "fix it" button of
 // an error, the sales screen's quick buttons (the week's best sellers).
 import { describe, it, expect } from 'vitest';
 import { createRequire } from 'module';
-import { backupReminder, USB_EVERY_DAYS } from '../src/lib/backupReminder';
+import { backupReminder } from '../src/lib/backupReminder';
 import { translateError, codeOfMessage } from '../src/i18n/errors';
 import { actionForCode } from '../src/lib/errorActions';
 import { createShop, sell } from './helpers/shop';
@@ -14,12 +14,8 @@ const DAY = 86400000;
 describe('backup reminder', () => {
     const now = new Date('2026-10-18T10:00:00Z');
     const recent = new Date(now.getTime() - DAY).toISOString();
-    it('a recent backup but never on a USB key: once a week, copy it (one press)', () => {
-        expect(backupReminder({ lastBackupAt: recent, external: null }, now)).toEqual({ key: 'dash.alert.usbWeekly', usb: true });
-        const usb = new Date(now.getTime() - 2 * DAY).toISOString();
-        expect(backupReminder({ lastBackupAt: recent, external: { ok: true, at: usb } }, now)).toBeNull();
-        const old = new Date(now.getTime() - USB_EVERY_DAYS * DAY).toISOString();
-        expect(backupReminder({ lastBackupAt: recent, external: { ok: true, at: old } }, now)?.usb).toBe(true);
+    it('a recent backup: nothing to remind (the second copy is up to the owner, in Settings)', () => {
+        expect(backupReminder({ lastBackupAt: recent, external: null }, now)).toBeNull();
     });
     it('the older reminders come first; the demo shop is never reminded', () => {
         expect(backupReminder({ lastBackupAt: null }, now).key).toBe('dash.alert.noBackup');

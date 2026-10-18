@@ -405,6 +405,25 @@ module.exports = function register(ctx) {
     // QR image (SVG) for an identifier, for on-screen previews
     ipcMain.handle('labels:qrSvg', (_, text) => labelService.qrSvg(text));
 
+    // A sample purchase order with the shop's details and the signature being
+    // set in Settings (not saved yet): what the supplier will receive
+    ipcMain.handle('purchaseOrders:previewHtml', (_, overrides = {}) => {
+      const storeSettings = {};
+      runQuery('SELECT key, value FROM settings').forEach(row => {
+        try { storeSettings[row.key] = JSON.parse(row.value); } catch { storeSettings[row.key] = row.value; }
+      });
+      Object.assign(storeSettings, storeSettings.store_config || {});
+      for (const key of ['poSignatureName', 'poSignatureTitle', 'poSignatureImage']) {
+        if (typeof overrides[key] === 'string') storeSettings[key] = overrides[key];
+      }
+      const sample = {
+        id: 'preview', po_number: 'PO-0001', created_at: new Date().toISOString(), supplier_name: shopT('doc.supplierDefault'),
+        items: [{ product_name: 'T-shirt', quantity: 12, unit_cost: 900, total_cost: 10800 }, { product_name: 'Jean', quantity: 6, unit_cost: 2500, total_cost: 15000 }],
+        subtotal: 25800, total: 25800,
+      };
+      return receiptService.generateHtml(sample, { ...storeSettings, type: 'purchase_order' });
+    });
+
     // ==========================================
     // PURCHASE ORDERS: SAVE PDF
     // ==========================================

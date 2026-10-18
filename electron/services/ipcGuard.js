@@ -36,6 +36,7 @@ const RULES = {
     'db:settings:set': (args) => SETTING_RULES[args?.key] || P.SETTINGS_VIEW,
     'db:settings:delete': (key) => SETTING_RULES[key] || P.SETTINGS_VIEW,
     'images:saveLogo': P.SETTINGS_VIEW,
+    'purchaseOrders:previewHtml': P.SETTINGS_VIEW,
 
     // Backups and online store: the owner's
     'support:bundle': P.SETTINGS_VIEW,
@@ -53,7 +54,6 @@ const RULES = {
     'backup:openFolder': 'admin',
     'backup:reset': 'admin',
     'backup:chooseExternal': 'admin',
-    'backup:toUsb': 'admin',
     'backup:clearExternal': 'admin',
     'sync:set-token': 'admin',
     'sync:force-push': 'admin',
@@ -135,6 +135,8 @@ const RULES = {
     // Reading too: the state may hold the short code of a GitHub sign-in in progress
     'website:getState': 'admin',
     'website:preview': 'admin',
+    'website:pageDefault': 'admin',
+    'website:photos': 'admin',
     'website:previewTheme': 'admin',
     'website:create': 'admin',
     'website:setTheme': 'admin',

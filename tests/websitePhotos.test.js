@@ -1,5 +1,5 @@
-// Real pictures in every theme: the shop's own home picture, else its newest
-// article photo, else a built-in photo (never an empty grey box).
+// Real pictures in every theme: the shop's own home picture, else the
+// built-in photo it chose, else the theme's built-in photo (never an article's).
 import { describe, it, expect } from 'vitest';
 import { createRequire } from 'module';
 import { createShop } from './helpers/shop';
@@ -69,7 +69,7 @@ describe('website pictures', () => {
         const api = await shop({ withPhotos: true });
         const info = { hero: { image: 'vitrine.jpg', title: 'Nouvelle collection', subtitle: 'Livraison 58 wilayas' } };
         const data = buildPublicData(api, { now: NOW, info });
-        expect(data.shop.hero).toEqual({ image: 'vitrine.jpg', title: 'Nouvelle collection', subtitle: 'Livraison 58 wilayas' });
+        expect(data.shop.hero).toEqual({ image: 'vitrine.jpg', photo: '', title: 'Nouvelle collection', subtitle: 'Livraison 58 wilayas' });
         const site = buildSite({ snapshot: data, theme: registry.get('fashion-modern'), readImage: (n) => (n === 'vitrine.jpg' || n === 'jean.jpg' ? Buffer.from([0xff, 0xd8, 0xff]) : null) });
         const home = site.files.find(f => f.path === 'index.html').content;
         expect(heroImg(home)).toBe('images/vitrine.jpg');
@@ -79,12 +79,25 @@ describe('website pictures', () => {
         expect(home).not.toMatch(/src="photos\/hero-/);
     });
 
-    it('a home picture that is missing or not a picture is left out (the next one is used)', async () => {
+    it('a home picture that is missing or not a picture is left out: never an article photo, the built-in photo instead', async () => {
         const api = await shop({ withPhotos: true });
         expect(buildPublicData(api, { now: NOW, info: { hero: { image: '../secret.db' } } }).shop.hero.image).toBe('');
         const data = buildPublicData(api, { now: NOW, info: { hero: { image: 'gone.jpg' } } });
         const site = buildSite({ snapshot: data, theme: registry.get('classic'), readImage: (n) => (n === 'jean.jpg' ? Buffer.from([0xff, 0xd8]) : null) });
-        expect(heroImg(site.files.find(f => f.path === 'index.html').content)).toBe('images/jean.jpg');
+        expect(heroImg(site.files.find(f => f.path === 'index.html').content)).toMatch(/^photos\/hero-[a-z]+\.webp$/);
+    });
+
+    it('the built-in photo chosen in Website › Pictures, for the home and for a category', async () => {
+        const api = await shop({ withPhotos: true });
+        const info = { hero: { photo: 'hero-rack.webp' }, categoryPictures: { 'c-f': { photo: 'women-2.webp' }, 'c-x': { photo: '../../etc/passwd' } } };
+        const data = buildPublicData(api, { now: NOW, info });
+        expect(data.shop.hero.photo).toBe('hero-rack.webp');
+        expect(data.categories.find(c => c.id === 'c-f').photo).toBe('women-2.webp');
+        const site = buildSite({ snapshot: data, theme: registry.get('kids'), readImage: () => null });
+        const home = site.files.find(f => f.path === 'index.html').content;
+        expect(heroImg(home)).toBe('photos/hero-rack.webp');
+        expect(home).toContain('photos/women-2.webp');
+        expect(buildPublicData(api, { now: NOW, info: { hero: { photo: 'nope.webp' } } }).shop.hero.photo).toBe('');
     });
 
     it('in the program\'s preview the built-in photos are drawn inside the page (no outside address)', async () => {

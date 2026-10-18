@@ -26,7 +26,7 @@ export default {
     'nav.employees': ['Employees', 'Employés', 'العمال'],
     'nav.reports': ['Reports', 'Rapports', 'التقارير'],
     'nav.settings': ['Settings', 'Paramètres', 'الإعدادات'],
-    'nav.website': ['My website', 'Mon site web', 'موقعي على الإنترنت'],
+    'nav.website': ['My store', 'Ma boutique en ligne', 'متجري'],
     'nav.closeShift': ['Close shift', 'Clôturer la caisse', 'غلق الصندوق'],
     'nav.logout': ['Log out', 'Déconnexion', 'خروج'],
 

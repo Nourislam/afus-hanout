@@ -117,16 +117,41 @@ const BODY = {
 
 const LANG_INDEX = { ar: 0, fr: 1, en: 2 };
 
+/**
+ * The owner's own text of a page (Website › Pages): paragraphs separated by
+ * an empty line; a line starting with "#" is a heading.
+ */
+function ownSections(text) {
+    const sections = [];
+    for (const block of String(text).split(/\n\s*\n/).map(b => b.trim()).filter(Boolean)) {
+        const lines = block.split('\n');
+        if (/^#+\s*/.test(lines[0])) {
+            sections.push({ h: lines[0].replace(/^#+\s*/, ''), p: lines.slice(1).join(' ').trim() ? [lines.slice(1).join(' ').trim()] : [] });
+        } else {
+            if (!sections.length) sections.push({ h: '', p: [] });
+            sections[sections.length - 1].p.push(lines.join(' '));
+        }
+    }
+    return sections;
+}
+
 function legalPage(id, lang, shop = {}) {
     if (!LEGAL_PAGES.includes(id)) return null;
     const language = LANG_INDEX[lang] === undefined ? 'ar' : lang;
     const name = shop.name || '';
     const contact = shop.email || shop.phone || '';
     const fill = (s) => s.replace(/\{shop\}/g, name).replace(/\{contact\}/g, contact);
+    const own = shop.pages?.[id];
     return {
         title: TITLES[id][LANG_INDEX[language]],
-        sections: BODY[id][language].map(([h, p]) => ({ h: fill(h), p: p.map(fill) })),
+        sections: own ? ownSections(own) : BODY[id][language].map(([h, p]) => ({ h: fill(h), p: p.map(fill) })),
     };
 }
 
-module.exports = { LEGAL_PAGES, legalPage };
+/** A page's built-in text, as the owner edits it (a heading line "# ...", then its paragraphs). */
+function legalText(id, lang, shop = {}) {
+    const page = legalPage(id, lang, { ...shop, pages: {} });
+    return page ? page.sections.map(s => [`# ${s.h}`, ...s.p].join('\n')).join('\n\n') : '';
+}
+
+module.exports = { LEGAL_PAGES, legalPage, legalText, ownSections };

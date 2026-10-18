@@ -10,7 +10,7 @@ import { PreviewFrame, themeText } from './DesignTab';
 import { AddressField, DOMAIN_STYLE, STATUS_STYLE, STEP_ICON } from './shared';
 
 // Every page of the website, as the preview offers them
-const SITE_PAGES = ['home', 'products', 'categories', 'category', 'product', 'new', 'best', 'offers', 'cart', 'checkout', 'about', 'contact', 'location'];
+const SITE_PAGES = ['home', 'products', 'categories', 'category', 'product', 'new', 'best', 'offers', 'cart', 'checkout', 'about', 'contact', 'location', 'returns', 'terms', 'privacy', 'shipping'];
 
 /**
  * Preview Website: the website as Update would publish it now (the shop's
@@ -26,6 +26,10 @@ function WebsitePreview({ site, onClose, onUpdate }) {
     const [preview, setPreview] = useState(null);
     const [failed, setFailed] = useState(false);
     const theme = site.themes?.find(x => x.id === site.theme);
+    // A link clicked in the preview: open that page
+    const navigate = (kind, target) => {
+        if (kind === 'home') { setPage('home'); setId(null); } else if (kind === 'page' && SITE_PAGES.includes(target)) { setPage(target); setId(null); } else if (kind === 'category' || kind === 'product') { setPage(kind); setId(target); }
+    };
     useEffect(() => {
         let alive = true;
         setFailed(false);
@@ -58,7 +62,7 @@ function WebsitePreview({ site, onClose, onUpdate }) {
                     </div>
                 </div>
                 {failed ? <p className="p-6 text-sm text-zinc-500">{t('website.previewFailed')}</p>
-                    : <PreviewFrame html={preview?.html} device={device} title={t('website.sitePreview.title')} testId="website-site-preview-frame" theme={preview?.theme} />}
+                    : <PreviewFrame html={preview?.html} device={device} title={t('website.sitePreview.title')} testId="website-site-preview-frame" theme={preview?.theme} onNavigate={navigate} />}
                 {preview && page === 'new' && preview.newProducts === 0 && <p className="text-xs text-zinc-500">{t('website.sitePreview.noNew')}</p>}
                 {preview && page === 'best' && preview.bestSellers === 0 && <p className="text-xs text-zinc-500">{t('website.sitePreview.noBest')}</p>}
                 <div className="flex flex-wrap justify-end gap-2">

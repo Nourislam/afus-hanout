@@ -14,7 +14,6 @@ const e = (values, def) => ({ kind: 'enum', values, default: def });
 const int = (min, max, def) => ({ kind: 'int', min, max, default: def });
 const bool = (def) => ({ kind: 'bool', default: def });
 
-const byNewest = (list) => [...list].sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
 
 /** The articles a "products" section shows. */
 function pick(ctx, source) {
@@ -42,10 +41,9 @@ const SECTION_TYPES = {
         render(ctx, o) {
             const shop = ctx.snap.shop;
             const hero = shop.hero || {};
-            // The picture: the shop's own, else its newest article photo, else a built-in photo
-            const withPic = byNewest(ctx.snap.products.filter(p => p.images.length));
-            const src = hero.image ? ctx.img(hero.image) : withPic[0] ? ctx.img(withPic[0].images[0]) : ctx.photo(heroPhoto(ctx.theme.id));
-            const alt = hero.image || !withPic[0] ? shop.name : withPic[0].name;
+            // The picture: the shop's own, else the built-in photo it chose, else the theme's photo (never an article's)
+            const src = hero.image ? ctx.img(hero.image) : ctx.photo(hero.photo || heroPhoto(ctx.theme.id));
+            const alt = shop.name;
             const sale = ctx.snap.products.some(C.onSale);
             const target = o.cta === 'sale' && sale ? 'sale' : 'all';
             // A small line over the title, only when it is true (new pieces this week, a sale on)
@@ -82,9 +80,9 @@ const SECTION_TYPES = {
             const cats = ctx.snap.categories.slice(0, o.limit);
             if (!cats.length) return '';
             const items = cats.map((c, i) => {
-                // An article photo of the category, else a built-in photo matching its name
+                // The picture chosen for the category (Website › Pictures), else an article photo of it, else a built-in photo matching its name
                 const p = ctx.snap.products.find(x => x.categoryId === c.id && x.images.length);
-                const src = p ? ctx.img(p.images[0]) : ctx.photo(categoryPhoto(c.name, i));
+                const src = c.image ? ctx.img(c.image) : c.photo ? ctx.photo(c.photo) : p ? ctx.img(p.images[0]) : ctx.photo(categoryPhoto(c.name, i));
                 const media = (o.style === 'tiles' || o.style === 'circles') ? `<img src="${esc(src)}" alt="" loading="lazy" decoding="async">` : '';
                 return `<a class="cat cat-${o.style}" href="${esc(ctx.link('category', c.id))}">${media ? `<span class="cat-media">${media}</span>` : ''}<span class="cat-name">${esc(c.name)}</span></a>`;
             }).join('');

@@ -34,5 +34,5 @@ export default {
     'shift.notesOptional': ["Notes (Optional)", "Notes (facultatif)", "ملاحظات (اختياري)"],
     'shift.notesPlaceholder': ["Any discrepancies or comments...", "Écart ou remarque…", "أي فرق أو ملاحظة…"],
     'shift.closing': ["Closing...", "Clôture…", "جارٍ الغلق…"],
-    'shift.closeAndLogout': ["Close the drawer and log out", "Fermer la caisse et sortir", "أغلق الصندوق واخرج"],
+    'shift.closeAndLogout': ["Close the shop", "Fermer la boutique", "أغلق المحل"],
 };

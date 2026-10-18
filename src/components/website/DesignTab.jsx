@@ -1,12 +1,9 @@
-// Website › Design tab: home picture and the theme studio with its preview.
+// Website › Theme tab: the theme studio with its preview.
 import { useEffect, useRef, useState } from 'react';
-import { Palette, CheckCircle2, Image as ImageIcon, X } from 'lucide-react';
+import { Palette, CheckCircle2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { toast } from '../ui/Toast';
-import { translateError } from '../../i18n/errors';
 import { useT } from '../../i18n';
-import { resizeImageDataUrl } from '../../lib/imageResize';
-import { SettingsCard } from './shared';
 
 /** A theme's name / description in the window's language (they come with the theme). */
 export const themeText = (theme, key, lang) => theme?.[key]?.[lang] || theme?.[key]?.ar || theme?.id || '';
@@ -152,7 +149,7 @@ export function ThemeStudio({ site, busy, run }) {
 }
 
 /** The website's page drawn by the program, in a frame that runs no script and cannot reach the program. */
-export function PreviewFrame({ html, device = 'desktop', title, testId = 'website-preview-frame', theme }) {
+export function PreviewFrame({ html, device = 'desktop', title, testId = 'website-preview-frame', theme, onNavigate }) {
     const box = useRef(null);
     const [boxWidth, setBoxWidth] = useState(800);
     useEffect(() => {
@@ -170,7 +167,8 @@ export function PreviewFrame({ html, device = 'desktop', title, testId = 'websit
         <div ref={box} className="w-full">
             <div className="relative rounded-xl border border-dark-border bg-white overflow-hidden mx-auto" style={{ width: Math.floor(width * scale), maxWidth: '100%', height: PREVIEW_HEIGHT }}>
                 {html && (
-                    <iframe title={title} sandbox="" referrerPolicy="no-referrer" srcDoc={html} data-testid={testId} data-theme={theme}
+                    <iframe title={title} sandbox={onNavigate ? 'allow-same-origin' : ''} referrerPolicy="no-referrer" srcDoc={html} data-testid={testId} data-theme={theme}
+                        onLoad={onNavigate ? (e) => followLinks(e.currentTarget, onNavigate) : undefined}
                         style={{ position: 'absolute', top: 0, left: 0, width, height: PREVIEW_HEIGHT / scale, transform: `scale(${scale})`, transformOrigin: 'top left', border: 0, display: 'block' }} />
                 )}
             </div>
@@ -179,72 +177,21 @@ export function PreviewFrame({ html, device = 'desktop', title, testId = 'websit
 }
 
 /**
- * The home page's big picture: the shop's own photo (else its newest article
- * photo, else a built-in photo) and two optional short texts over it.
+ * The preview's links open the page they name, inside the preview (the page
+ * itself runs no script: the program reads the click). Other links do nothing.
  */
-export function HeroCard({ site, busy, run }) {
-    const { t } = useT();
-    const saved = site.publicInfo?.hero || { image: '', title: '', subtitle: '' };
-    const [form, setForm] = useState(saved);
-    const [src, setSrc] = useState(null);
-    const [saving, setSaving] = useState(false);
-    useEffect(() => { setForm(saved); }, [JSON.stringify(saved)]);
-    useEffect(() => {
-        let alive = true;
-        if (!form.image) { setSrc(null); return undefined; }
-        window.electronAPI.images.get(form.image).then((data) => { if (alive) setSrc(data || null); }).catch(() => { });
-        return () => { alive = false; };
-    }, [form.image]);
-    const pick = (e) => {
-        const file = e.target.files?.[0];
-        e.target.value = '';
-        if (!file) return;
-        if (file.size > 15 * 1024 * 1024) { toast.error(t('products.imageTooBig')); return; }
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            setSaving(true);
-            try {
-                // Wide and sharp enough for a computer screen, light enough for a phone
-                const base64Data = await resizeImageDataUrl(event.target.result, { maxSize: 1800, type: 'image/jpeg', quality: 0.82 });
-                const result = await window.electronAPI.images.save({ base64Data, originalName: file.name });
-                if (!result?.success) throw new Error(t('products.imageSaveFailed'));
-                setForm(f => ({ ...f, image: result.fileName }));
-            } catch (error) {
-                toast.error(translateError(error));
-            } finally {
-                setSaving(false);
-            }
-        };
-        reader.readAsDataURL(file);
-    };
-    const save = () => run('hero', () => window.electronAPI.website.setSettings({ hero: form }), () => toast.success(t('website.info.saved')));
-    return (
-        <SettingsCard testId="website-hero" icon={ImageIcon} title={t('website.hero.title')} hint={t('website.hero.hint')} onSave={save} saving={busy === 'hero'}>
-            <div className="grid gap-4 md:grid-cols-[minmax(0,280px)_1fr] items-start">
-                <div className="space-y-2">
-                    <div className="aspect-[16/9] rounded-xl overflow-hidden border border-dark-border bg-dark-tertiary flex items-center justify-center">
-                        {src ? <img src={src} alt="" className="w-full h-full object-cover" /> : <span className="text-xs text-zinc-500 px-3 text-center">{t('website.hero.none')}</span>}
-                    </div>
-                    <div className="flex gap-2">
-                        <label className={`btn btn-secondary px-3 py-2 text-sm flex-1 justify-center cursor-pointer ${saving ? 'opacity-60 pointer-events-none' : ''}`}>
-                            <ImageIcon className="w-4 h-4" />
-                            <span className="truncate">{saving ? t('common.saving') : t(form.image ? 'website.hero.change' : 'website.hero.choose')}</span>
-                            <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={pick} data-testid="website-hero-file" />
-                        </label>
-                        {form.image && <Button size="sm" variant="ghost" onClick={() => setForm(f => ({ ...f, image: '' }))} aria-label={t('common.delete')}><X className="w-4 h-4" /></Button>}
-                    </div>
-                </div>
-                <div className="space-y-3 min-w-0">
-                    <label className="block space-y-1">
-                        <span className="text-xs text-zinc-400">{t('website.hero.heading')}</span>
-                        <input className="input w-full" value={form.title} maxLength={80} placeholder={site.suggestedName || ''} onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))} data-testid="website-hero-heading" />
-                    </label>
-                    <label className="block space-y-1">
-                        <span className="text-xs text-zinc-400">{t('website.hero.subtitle')}</span>
-                        <input className="input w-full" value={form.subtitle} maxLength={160} onChange={(e) => setForm(f => ({ ...f, subtitle: e.target.value }))} data-testid="website-hero-subtitle" />
-                    </label>
-                </div>
-            </div>
-        </SettingsCard>
-    );
+function followLinks(frame, onNavigate) {
+    const doc = frame.contentDocument;
+    if (!doc) return;
+    doc.addEventListener('click', (e) => {
+        const a = e.target.closest?.('a[href]');
+        if (!a) return;
+        e.preventDefault();
+        const m = /^#go=(.+)$/.exec(a.getAttribute('href') || '');
+        if (!m) return;
+        const [kind, ...rest] = decodeURIComponent(m[1]).split(':');
+        onNavigate(kind, rest.join(':') || null);
+    });
+    doc.addEventListener('submit', (e) => e.preventDefault());
 }
+

@@ -14,6 +14,11 @@
  */
 const { labelSalePrice, parseIds, isPromotionLive } = require('../../shared/promotions.mjs');
 const { COURIER_IDS, courierNames } = require('../storefront/couriers');
+const { PHOTO_FILES } = require('../storefront/photos');
+const { LEGAL_PAGES } = require('../storefront/legal');
+// The pages whose text the owner may write (Website › Pages); empty = the built-in text
+const OWN_PAGES = ['about', ...LEGAL_PAGES];
+const builtIn = (file) => (typeof file === 'string' && PHOTO_FILES.includes(file) ? file : '');
 
 const VERSION = 1;
 const IMAGE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,120}\.(jpe?g|png|webp|gif)$/i;
@@ -153,9 +158,19 @@ function publicInfo(info = {}) {
         // The home page's big picture (Website › Design): a picture of the images folder, two short texts
         hero: {
             image: typeof info.hero?.image === 'string' && PREVIEW_IMAGE.test(info.hero.image) ? info.hero.image : '',
+            // Or one of the built-in photos, chosen in Website › Pictures
+            photo: builtIn(info.hero?.photo),
             title: text(info.hero?.title, 80),
             subtitle: text(info.hero?.subtitle, 160),
         },
+        // A category's picture (Website › Pictures): the shop's own, or a built-in photo
+        categoryPictures: Object.fromEntries(Object.entries(info.categoryPictures && typeof info.categoryPictures === 'object' ? info.categoryPictures : {}).slice(0, 100)
+            .map(([id, v]) => [String(id).slice(0, 60), {
+                image: typeof v?.image === 'string' && PREVIEW_IMAGE.test(v.image) ? v.image : '',
+                photo: builtIn(v?.photo),
+            }]).filter(([, v]) => v.image || v.photo)),
+        // The owner's own text of a page (Website › Pages)
+        pages: Object.fromEntries(OWN_PAGES.map(id => [id, multiline(info.pages?.[id], 6000)])),
         // "Few left" from this many pieces down (the counts themselves never leave SQLite)
         fewLeftAt: Number.isInteger(info.fewLeftAt) && info.fewLeftAt >= 1 && info.fewLeftAt <= 20 ? info.fewLeftAt : 3,
     };
@@ -200,7 +215,8 @@ function shopOf(store, info, pic) {
         delivery: extra.delivery,
         tracking: extra.tracking,
         sizeGuides: extra.sizeGuides,
-        hero: { image: pic(extra.hero.image) || '', title: extra.hero.title, subtitle: extra.hero.subtitle },
+        hero: { image: pic(extra.hero.image) || '', photo: extra.hero.photo, title: extra.hero.title, subtitle: extra.hero.subtitle },
+        pages: extra.pages,
     };
 }
 
@@ -249,6 +265,12 @@ function toPublic(internal, { now = Date.now(), info = {}, preview = false } = {
         .filter(c => counts.has(String(c.id)))
         .map(c => ({ id: String(c.id), name: text(c.name, 80), count: counts.get(String(c.id)) }))
         .filter(c => c.name);
+    const catPictures = publicInfo(contactInfo(internal.store, info)).categoryPictures;
+    for (const c of categories) {
+        const own = catPictures[c.id] || {};
+        c.image = pic(own.image) || '';
+        c.photo = own.photo || '';
+    }
     return {
         version: VERSION,
         builtAt: new Date(now).toISOString(),
@@ -283,9 +305,10 @@ const PUBLIC_SHAPE = {
         delivery: { home: 'number|null', office: 'number|null', freeOver: 'number|null', wilayas: { '*': { code: 'number', home: 'number|null', office: 'number|null', off: 'boolean' } } },
         tracking: Object.fromEntries(Object.keys(TRACKERS).map(k => [k, 'string'])),
         sizeGuides: { '*': { categoryId: 'string', text: 'string' } },
-        hero: { image: 'string', title: 'string', subtitle: 'string' },
+        hero: { image: 'string', photo: 'string', title: 'string', subtitle: 'string' },
+        pages: Object.fromEntries(OWN_PAGES.map(id => [id, 'string'])),
     },
-    categories: { '*': { id: 'string', name: 'string', count: 'number' } },
+    categories: { '*': { id: 'string', name: 'string', count: 'number', image: 'string', photo: 'string' } },
     brands: { '*': 'string' },
     newProducts: { '*': 'string' },
     bestSellers: { '*': 'string' },

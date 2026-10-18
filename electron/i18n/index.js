@@ -118,7 +118,6 @@ const MESSAGES = {
     // Dialogs
     'dialog.startFailed': ['{app} could not start', "{app} n'a pas pu démarrer", 'تعذّر تشغيل {app}'],
     'dialog.dbFailed': ['The local database could not be opened.', "La base de données locale n'a pas pu être ouverte.", 'تعذّر فتح قاعدة البيانات المحلية.'],
-    'dialog.usbBackup': ['Choose the USB key for the backup', 'Choisissez la clé USB pour la sauvegarde', 'اختر مفتاح USB للنسخة الاحتياطية'],
     'dialog.externalBackup': ['Folder for a second copy of the backups', 'Dossier pour une deuxième copie des sauvegardes', 'مجلد لنسخة ثانية من النسخ الاحتياطية'],
     'dialog.supportFile': ['Save the support file', 'Enregistrer le fichier d\'assistance', 'حفظ ملف المساعدة'],
     'dialog.exportBackup': ['Create a backup', 'Créer une sauvegarde', 'إنشاء نسخة احتياطية'],

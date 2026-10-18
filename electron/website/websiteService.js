@@ -662,7 +662,7 @@ function createWebsiteService({ api, getSetting, saveSetting, codedError, github
     function setSettings(part = {}) {
         const s = mustExist(read());
         const pub = {};
-        for (const k of ['delivery', 'tracking', 'sizeGuides', 'fewLeftAt', 'hero']) if (k in part) pub[k] = part[k];
+        for (const k of ['delivery', 'tracking', 'sizeGuides', 'fewLeftAt', 'hero', 'categoryPictures', 'pages']) if (k in part) pub[k] = part[k];
         const tools = { ...s.tools };
         if ('confirmMessage' in part) tools.confirmMessage = String(part.confirmMessage || '');
         if ('trackingLinks' in part) tools.trackingLinks = part.trackingLinks;

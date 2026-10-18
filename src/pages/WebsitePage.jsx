@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
-    Globe, Palette, Package, Tag, Image as ImageIcon, Shirt, PackageCheck, ShoppingBag, LayoutDashboard, Settings2, KeyRound,
+    Globe, Palette, Package, Tag, Image as ImageIcon, Shirt, PackageCheck, ShoppingBag, LayoutDashboard, Settings2, KeyRound, FileText,
 } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Tabs } from '../components/ui/Tabs';
@@ -13,7 +13,9 @@ import { CreateWebsite } from '../components/website/CreateWebsite';
 import { WebsiteOrders } from '../components/website/Orders';
 import { WebsiteStats } from '../components/website/Stats';
 import { PublishPanel, WebsiteOverview } from '../components/website/OverviewTab';
-import { HeroCard, ThemeStudio } from '../components/website/DesignTab';
+import { ThemeStudio } from '../components/website/DesignTab';
+import { HeroCard, CategoryPicturesCard } from '../components/website/PicturesTab';
+import { PagesCard } from '../components/website/PagesTab';
 import { WebsiteSettings } from '../components/website/SettingsTab';
 import { AccountsProgress, CloudflareAccount, CustomDomain, GithubAccount } from '../components/website/AccountsTab';
 
@@ -68,7 +70,7 @@ export function WebsiteOrdersPage() {
     );
 }
 
-const DASH_TABS = ['overview', 'design', 'settings', 'accounts'];
+const DASH_TABS = ['overview', 'design', 'pictures', 'pages', 'settings', 'accounts'];
 function WebsiteDashboard({ site, setSite, preview, busy, run }) {
     const { t } = useT();
     const outdated = useOutdated(site);
@@ -78,6 +80,8 @@ function WebsiteDashboard({ site, setSite, preview, busy, run }) {
     const tabs = [
         { id: 'overview', label: t('website.tab.overview'), icon: LayoutDashboard },
         { id: 'design', label: t('website.tab.design'), icon: Palette },
+        { id: 'pictures', label: t('website.tab.pictures'), icon: ImageIcon },
+        { id: 'pages', label: t('website.tab.pages'), icon: FileText },
         { id: 'settings', label: t('website.tab.settings'), icon: Settings2 },
         { id: 'accounts', label: t('website.tab.accounts'), icon: KeyRound },
     ];
@@ -116,7 +120,9 @@ function WebsiteDashboard({ site, setSite, preview, busy, run }) {
             )}
 
             {/* Theme: pick, see the shop's own website in it, keep */}
-            {tab === 'design' && <HeroCard site={site} busy={busy} run={run} />}
+            {tab === 'pictures' && <HeroCard site={site} busy={busy} run={run} />}
+            {tab === 'pictures' && <CategoryPicturesCard site={site} busy={busy} run={run} />}
+            {tab === 'pages' && <PagesCard site={site} busy={busy} run={run} />}
             {tab === 'design' && <ThemeStudio site={site} busy={busy} run={run} />}
 
             {tab === 'settings' && <WebsiteSettings site={site} busy={busy} run={run} />}
