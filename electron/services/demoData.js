@@ -267,6 +267,15 @@ function logoSvg(letter) {
 // The shop
 // ------------------------------------------------------------------
 
+// Real photos of the articles (demoPhotos/, free licence, see CREDITS.md); the drawing when one is missing
+const PHOTOS = path.join(__dirname, 'demoPhotos');
+function articlePhoto(key, writeImage) {
+    try {
+        const data = fs.readFileSync(path.join(PHOTOS, `${key.toLowerCase()}.webp`));
+        return data && data.length ? writeImage(`demo-${key.toLowerCase()}.webp`, data) : null;
+    } catch { return null; }
+}
+
 /**
  * Fill an empty (just created) demo database.
  * @param api       database adapter of the OPEN database (the demo file)
@@ -392,7 +401,7 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
     const barcodes = demoBarcodes(variantsPlan.length, random);
     let barcodeIndex = 0;
     for (const article of articles) {
-        const image = writeImage(`demo-${article.key.toLowerCase()}.svg`, garmentSvg(article.shape, colorOf(article.colors[0]).hex));
+        const image = articlePhoto(article.key, writeImage) || writeImage(`demo-${article.key.toLowerCase()}.svg`, garmentSvg(article.shape, colorOf(article.colors[0]).hex));
         const variants = article.variants.map((v) => {
             // A few pieces sold out, some running low, the rest in stock
             const r = random();

@@ -4,7 +4,7 @@ export const CONTENT = {
     ar: {
         dir: 'rtl',
         other: { code: 'fr', label: 'Français' },
-        nav: { home: 'الرئيسية', solutions: 'الحلول', products: 'البرامج', services: 'الخدمات', about: 'من نحن', contact: 'اتصل بنا', boutique: 'Afus Boutique', demo: 'جرّب البرنامج', menu: 'القائمة', skip: 'انتقل إلى المحتوى' },
+        nav: { home: 'الرئيسية', solutions: 'الحلول', products: 'البرامج', services: 'الخدمات', about: 'من نحن', contact: 'اتصل بنا', boutique: 'Afus Boutique', demo: 'جرّب البرنامج', menu: 'القائمة', themes: 'ثيمات المتجر', skip: 'انتقل إلى المحتوى' },
         home: {
             title: 'Afus — برامج التسيير والإدارة في الجزائر',
             description: 'Afus شركة جزائرية تصمّم وتطوّر برامج التسيير والإدارة للشركات والمحلات والإدارات، بالعربية والفرنسية، مع التنصيب والتدريب والدعم.',
@@ -147,6 +147,19 @@ export const CONTENT = {
                 ['badge-check', 'الجودة', 'نجرّب كل برنامج جيدًا قبل أن يصل إليك.'],
             ],
         },
+        themesPage: {
+            title: 'ثيمات المتجر على الإنترنت — Afus Boutique',
+            description: 'شاهد الثيمات الثمانية لمتجر Afus Boutique على الإنترنت: كل ثيم متجر كامل بالصفحة الرئيسية والأصناف وصفحة المنتج والسلة.',
+            eyebrow: 'Afus Boutique · متجرك على الإنترنت',
+            h1: 'اختر شكل متجر محلك على الإنترنت',
+            lead: 'في البرنامج 8 ثيمات جاهزة. كل ثيم هنا متجر كامل بسلع المحل التجريبي: الصفحة الرئيسية، الأصناف، صفحة المنتج، السلة، الطلب، من نحن والاتصال.',
+            open: 'افتح المتجر', product: 'صفحة منتج', category: 'صفحة صنف',
+            pages: 'صفحة',
+            note: 'معاينة فقط: الطلب معطّل في هذه المتاجر. في محلك، البرنامج ينشئ المتجر بسلعك وأسعارك وصورك.',
+            credits: 'صور المنتجات والصور العامة مجانية من Burst (Shopify) وUnsplash.',
+            bar: { back: 'كل الثيمات', preview: 'معاينة', want: 'أريد هذا لمحلي' },
+            more: 'شاهد الثيمات الثمانية',
+        },
         contactPage: {
             title: 'اتصل بنا — Afus',
             description: 'تواصل مع Afus عبر واتساب أو الهاتف أو فيسبوك.',
@@ -193,7 +206,7 @@ export const CONTENT = {
     fr: {
         dir: 'ltr',
         other: { code: 'ar', label: 'العربية' },
-        nav: { home: 'Accueil', solutions: 'Solutions', products: 'Logiciels', services: 'Services', about: 'À propos', contact: 'Contact', boutique: 'Afus Boutique', demo: 'Essayer', menu: 'Menu', skip: 'Aller au contenu' },
+        nav: { home: 'Accueil', solutions: 'Solutions', products: 'Logiciels', services: 'Services', about: 'À propos', contact: 'Contact', boutique: 'Afus Boutique', demo: 'Essayer', menu: 'Menu', themes: 'Thèmes boutique', skip: 'Aller au contenu' },
         home: {
             title: 'Afus — logiciels de gestion en Algérie',
             description: "Afus est une entreprise algérienne qui conçoit et développe des logiciels de gestion pour les entreprises, les commerces et les administrations, en arabe et en français, avec installation, formation et support.",
@@ -335,6 +348,19 @@ export const CONTENT = {
                 ['shield-check', 'Confiance', 'Vos données vous appartiennent et restent chez vous.'],
                 ['badge-check', 'Qualité', 'Chaque logiciel est bien testé avant de vous arriver.'],
             ],
+        },
+        themesPage: {
+            title: 'Thèmes de la boutique en ligne — Afus Boutique',
+            description: 'Les 8 thèmes de la boutique en ligne Afus Boutique : chaque thème est une boutique complète, accueil, catégories, page article et panier.',
+            eyebrow: 'Afus Boutique · votre boutique en ligne',
+            h1: 'Choisissez le style de votre boutique en ligne',
+            lead: 'Le logiciel a 8 thèmes prêts. Chaque thème ici est une boutique complète avec les articles de la boutique de démonstration : accueil, catégories, page article, panier, commande, à propos et contact.',
+            open: 'Ouvrir la boutique', product: 'Page article', category: 'Page catégorie',
+            pages: 'pages',
+            note: 'Aperçu seulement : la commande est désactivée. Chez vous, le logiciel crée la boutique avec vos articles, vos prix et vos photos.',
+            credits: 'Photos des articles et photos générales gratuites, de Burst (Shopify) et Unsplash.',
+            bar: { back: 'Tous les thèmes', preview: 'Aperçu', want: 'Je veux ça pour ma boutique' },
+            more: 'Voir les 8 thèmes',
         },
         contactPage: {
             title: 'Contact — Afus',

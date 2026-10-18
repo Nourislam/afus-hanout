@@ -4,6 +4,9 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { CONTENT } from '../site/content.mjs';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 const shape = (v) => (Array.isArray(v) ? v.map(shape) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, shape(v[k])])) : typeof v);
 
@@ -39,6 +42,22 @@ describe('Afus website', () => {
             expect(t.boutique.cta2).not.toMatch(/^اطلب البرنامج$|^Commander$/);
             expect(t.boutique.steps.length).toBe(3);
         }
+    });
+
+    it('every demo article has its real photo, each one credited (free licence)', () => {
+        const { ARTICLES } = require('../electron/services/demoData');
+        const dir = path.join(__dirname, '../electron/services/demoPhotos');
+        const credits = fs.readFileSync(path.join(dir, 'CREDITS.md'), 'utf8');
+        let total = 0;
+        for (const [key] of ARTICLES) {
+            const file = `${key.toLowerCase()}.webp`;
+            const size = fs.statSync(path.join(dir, file)).size;
+            total += size;
+            expect(size, file).toBeLessThan(80 * 1024);
+            expect(credits, file).toMatch(new RegExp(`\\| ${file} \\| https://www\\.shopify\\.com/stock-photos/photos/[a-z0-9-]+ \\|`));
+        }
+        // The web demo loads them all when it opens
+        expect(total).toBeLessThan(2 * 1024 * 1024);
     });
 
     it('no contact detail is invented: the order section shows only what config.json gives', () => {
