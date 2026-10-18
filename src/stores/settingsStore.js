@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { resolveFeatures, effectiveFeatures } from '../lib/features';
-import { resolveUiMode } from '../lib/uiMode';
+import { resolveUiMode, resolveSimplePages, SIMPLE_PATHS } from '../lib/uiMode';
 import { useLanguageStore, normalizeLanguage } from '../i18n';
 import { formatMoney } from '../i18n/format';
 
@@ -21,6 +21,7 @@ export const useSettingsStore = create((set, get) => ({
         receiptFooter: '',
         features: resolveFeatures(),
         uiMode: 'full',
+        simplePages: SIMPLE_PATHS,
     },
     loading: false,
     error: null,
@@ -48,6 +49,7 @@ export const useSettingsStore = create((set, get) => ({
             // What the menus and screens show (a module needing a hidden one is hidden)
             parsedSettings.features = effectiveFeatures(data.features);
             parsedSettings.uiMode = resolveUiMode(data.ui_mode);
+            parsedSettings.simplePages = resolveSimplePages(data.ui_simple_pages);
 
             // The language saved with the shop settings wins over the local cache
             if (parsedSettings.defaultLanguage) {

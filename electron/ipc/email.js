@@ -33,6 +33,8 @@ module.exports = function register(ctx) {
           settings[row.key] = row.value;
         }
       });
+      // The shop's own details (name, address, signature) are inside store_config
+      Object.assign(settings, settings.store_config || {});
 
       console.log('Email settings loaded:', {
         email_host: settings.email_host,
@@ -335,6 +337,8 @@ module.exports = function register(ctx) {
           try { settings[row.key] = JSON.parse(row.value); }
           catch { settings[row.key] = row.value; }
         });
+        // The shop's own details (name, address, signature) are inside store_config
+        Object.assign(settings, settings.store_config || {});
 
         // Merge structured settings if they exist (compatibility with new SettingsPage structure)
         // Structure from SettingsPage: { host, port, user, pass, secure }

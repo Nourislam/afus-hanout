@@ -34,6 +34,9 @@ function App() {
     const { isAuthenticated, checkAuth, startSession } = useAuthStore();
     const { loadSettings } = useSettingsStore();
     const uiMode = useSettingsStore(state => state.settings.uiMode);
+    // The simple menu opens on the sales screen, unless the owner kept the dashboard in it
+    const simplePages = useSettingsStore(state => state.settings.simplePages);
+    const simpleHome = uiMode === 'simple' && !(simplePages || []).includes('/');
     const [isLoading, setIsLoading] = useState(true);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     // Subscribing to the language re-renders the whole tree when it changes
@@ -132,7 +135,7 @@ function App() {
         <HashRouter>
             <MainLayout>
                 <Routes>
-                    <Route path="/" element={uiMode === 'simple'
+                    <Route path="/" element={simpleHome
                         // The simple menu has no dashboard: the sales screen is home
                         ? <Navigate to="/pos" replace />
                         : (

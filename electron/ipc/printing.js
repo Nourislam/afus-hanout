@@ -415,6 +415,8 @@ module.exports = function register(ctx) {
         settingsRows.forEach(row => {
           try { storeSettings[row.key] = JSON.parse(row.value); } catch { storeSettings[row.key] = row.value; }
         });
+        // The shop's own details (name, address, signature) are inside store_config
+        Object.assign(storeSettings, storeSettings.store_config || {});
         storeSettings.type = 'purchase_order';
 
         // Fetch full PO with items if missing

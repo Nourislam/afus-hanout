@@ -159,78 +159,86 @@ export default function ProductsPage() {
                     icon={Package}
                     title={t('products.title')}
                     subtitle={t('products.count', { n: products.length })}
-                    actions={(
-                        <PermissionGate permission={PERMISSIONS.PRODUCTS_CREATE}>
-                            <Button variant="secondary" onClick={() => setShowExcelImport(true)}>
-                                <FileSpreadsheet className="w-4 h-4" />
-                                {t('common.importExcel')}
-                            </Button>
-                            <Button onClick={() => {
-                                setInitialValues(null);
-                                setEditingProduct(null);
-                                setShowProductModal(true);
-                            }}>
-                                <Plus className="w-4 h-4" />
-                                {t('products.add')}
-                            </Button>
-                        </PermissionGate>
-                    )}
                 >
-                    <div className="flex flex-wrap items-center gap-3">
-                        <SearchInput
-                            value={searchQuery}
-                            onChange={setSearchQuery}
-                            placeholder={t('products.search')}
-                            className="flex-1 min-w-[240px] max-w-md"
-                        />
-                        <Select
-                            value={selectedCategory}
-                            onChange={setSelectedCategory}
-                            options={[
-                                { value: 'all', label: t('products.allCategories') },
-                                ...categories.map(c => ({ value: c.id, label: c.name }))
-                            ]}
-                            className="w-56"
-                        />
-                        {websiteOn && (
-                            <Select
-                                value={webFilter}
-                                onChange={setWebFilter}
-                                options={[
-                                    { value: 'all', label: `${t('products.filterWebsite')}: ${t('products.filterWebsiteAll')}` },
-                                    { value: 'shown', label: t('products.filterWebsiteShown') },
-                                    { value: 'hidden', label: t('products.filterWebsiteHidden') },
-                                ]}
-                                className="w-44"
-                                data-testid="filter-website"
+                    {/* Row 1: search and the page's buttons; row 2: the filters, the view at the end */}
+                    <div className="space-y-2.5" data-testid="products-toolbar">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <SearchInput
+                                value={searchQuery}
+                                onChange={setSearchQuery}
+                                placeholder={t('products.search')}
+                                className="flex-1 min-w-[220px]"
                             />
-                        )}
-                        <button type="button" onClick={() => setNoCostOnly(!noCostOnly)} aria-pressed={noCostOnly} data-testid="filter-no-cost"
-                            className={`h-10 px-3 rounded-lg border text-sm inline-flex items-center gap-1.5 whitespace-nowrap transition-colors ${noCostOnly ? 'border-amber-500/50 bg-amber-500/15 text-amber-200' : 'border-dark-border text-zinc-400 hover:text-white'}`}>
-                            <Tag className="w-4 h-4" /> {t('products.filterNoCost')}
-                            {noCostOnly && <X className="w-3.5 h-3.5" aria-label={t('common.clear')} />}
-                        </button>
-                        <div className="flex items-center gap-1 bg-dark-tertiary rounded-lg p-1">
-                            <button
-                                type="button"
-                                onClick={() => setViewMode('grid')}
-                                title={t('pos.viewGrid')}
-                                aria-label={t('pos.viewGrid')}
-                                aria-pressed={viewMode === 'grid'}
-                                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-accent-primary' : 'hover:bg-zinc-700'}`}
-                            >
-                                <Grid className="w-4 h-4" />
+                            <PermissionGate permission={PERMISSIONS.PRODUCTS_CREATE}>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="secondary" onClick={() => setShowExcelImport(true)}>
+                                        <FileSpreadsheet className="w-4 h-4" />
+                                        {t('common.importExcel')}
+                                    </Button>
+                                    <Button onClick={() => {
+                                        setInitialValues(null);
+                                        setEditingProduct(null);
+                                        setShowProductModal(true);
+                                    }}>
+                                        <Plus className="w-4 h-4" />
+                                        {t('products.add')}
+                                    </Button>
+                                </div>
+                            </PermissionGate>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Select
+                                value={selectedCategory}
+                                onChange={setSelectedCategory}
+                                options={[
+                                    { value: 'all', label: t('products.allCategories') },
+                                    ...categories.map(c => ({ value: c.id, label: c.name }))
+                                ]}
+                                className="w-52"
+                            />
+                            {websiteOn && (
+                                <Select
+                                    value={webFilter}
+                                    onChange={setWebFilter}
+                                    options={[
+                                        { value: 'all', label: `${t('products.filterWebsite')}: ${t('products.filterWebsiteAll')}` },
+                                        { value: 'shown', label: t('products.filterWebsiteShown') },
+                                        { value: 'hidden', label: t('products.filterWebsiteHidden') },
+                                    ]}
+                                    className="w-48"
+                                    data-testid="filter-website"
+                                />
+                            )}
+                            <button type="button" onClick={() => setNoCostOnly(!noCostOnly)} aria-pressed={noCostOnly} data-testid="filter-no-cost"
+                                className={`h-10 px-3 rounded-lg border text-sm inline-flex items-center gap-1.5 whitespace-nowrap transition-colors ${noCostOnly ? 'border-amber-500/50 bg-amber-500/15 text-amber-200' : 'border-dark-border text-zinc-400 hover:text-white'}`}>
+                                <Tag className="w-4 h-4" /> {t('products.filterNoCost')}
+                                {noCostOnly && <X className="w-3.5 h-3.5" aria-label={t('common.clear')} />}
                             </button>
-                            <button
-                                type="button"
-                                onClick={() => setViewMode('list')}
-                                title={t('pos.viewList')}
-                                aria-label={t('pos.viewList')}
-                                aria-pressed={viewMode === 'list'}
-                                className={`p-2 rounded ${viewMode === 'list' ? 'bg-accent-primary' : 'hover:bg-zinc-700'}`}
-                            >
-                                <List className="w-4 h-4" />
-                            </button>
+                            <div className="ms-auto flex items-center gap-3">
+                                <span className="text-sm text-zinc-500 tabular-nums whitespace-nowrap" data-testid="products-count">{t('products.count', { n: filteredProducts.length })}</span>
+                                <div className="h-10 flex items-center gap-1 bg-dark-tertiary rounded-lg p-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode('grid')}
+                                        title={t('pos.viewGrid')}
+                                        aria-label={t('pos.viewGrid')}
+                                        aria-pressed={viewMode === 'grid'}
+                                        className={`h-8 w-8 inline-flex items-center justify-center rounded-md ${viewMode === 'grid' ? 'bg-accent-primary text-white' : 'text-zinc-400 hover:bg-zinc-700'}`}
+                                    >
+                                        <Grid className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode('list')}
+                                        title={t('pos.viewList')}
+                                        aria-label={t('pos.viewList')}
+                                        aria-pressed={viewMode === 'list'}
+                                        className={`h-8 w-8 inline-flex items-center justify-center rounded-md ${viewMode === 'list' ? 'bg-accent-primary text-white' : 'text-zinc-400 hover:bg-zinc-700'}`}
+                                    >
+                                        <List className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </PageHeader>

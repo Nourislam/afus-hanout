@@ -12,3 +12,12 @@ describe('simple / full menu', () => {
         expect(SIMPLE_PATHS).toEqual(['/pos', '/products', '/inventory', '/labels', '/credit-sales', '/reports']);
     });
 });
+
+describe('simple menu pages', () => {
+    it('keeps the default pages until the owner chooses, and always the sales screen', async () => {
+        const { resolveSimplePages, SIMPLE_PATHS } = await import('../src/lib/uiMode.js');
+        expect(resolveSimplePages(undefined)).toEqual(SIMPLE_PATHS);
+        expect(resolveSimplePages(['/customers', '/customers', 'x', 3])).toEqual(['/pos', '/customers']);
+        expect(resolveSimplePages([])).toEqual(['/pos']);
+    });
+});
