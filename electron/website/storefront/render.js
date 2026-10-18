@@ -78,7 +78,8 @@ function renderPage({ snapshot, theme, page = 'home', id = null, lang = 'ar', pr
     const language = LANGS.includes(lang) ? lang : 'ar';
     const ctx = {
         snap: snapshot, theme, lang: language, t: textsFor(language), preview,
-        link: preview ? () => '#' : linkFor,
+        // In the program's preview a link says which page it opens (the preview window opens it)
+        link: preview ? (kind, id) => `#go=${encodeURIComponent(`${kind}:${id ?? ''}`)}` : linkFor,
         img: (path) => assetUrl(path),
         photo: (file) => photoUrl(file),
         current: page === 'home' ? 'home' : `${page}:${id}`,

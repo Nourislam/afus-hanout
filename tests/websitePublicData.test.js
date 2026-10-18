@@ -22,8 +22,10 @@ const UNSET = {
     tracking: { facebook: '', tiktok: '', snapchat: '', google: '' },
     sizeGuides: [],
 };
-const NO_HERO = { image: '', title: '', subtitle: '' };
-const INFO_UNSET = { ...UNSET, hero: NO_HERO, fewLeftAt: 3 };
+const NO_HERO = { image: '', photo: '', title: '', subtitle: '' };
+// The owner's own page texts (Website › Pages): none yet, the built-in texts are used
+const NO_PAGES = { about: '', returns: '', terms: '', privacy: '', shipping: '' };
+const INFO_UNSET = { ...UNSET, hero: NO_HERO, categoryPictures: {}, pages: NO_PAGES, fewLeftAt: 3 };
 /** Every key used anywhere in an object. */
 const keysOf = (o, out = new Set()) => {
     if (Array.isArray(o)) o.forEach(v => keysOf(v, out));
@@ -67,7 +69,7 @@ async function privateShop() {
 const PRIVATE_VALUES = ['1800', '2350', '1700', 'Fournisseur Secret', '0550998877', 'fournisseur@secret.dz', 'SKU-JEAN-SECRET', '6130000000017',
     'Client Privé', '0661223344', 'client@prive.dz', 'Employé Secret', 'pinhash-ABCDEF123456', 'SECRET40', 'Code caché', 'Ancienne promo',
     'Propriétaire Secret', 'RC-16-B-0099887', 'NIF-001122334455', 'NIS-99887766', 'AI-16001234', 'Ancien article', 'evil.example', 'passwd', 'virus.exe', 'J-N-38'];
-const PRIVATE_KEYS = /cost|wholesale|supplier|sku|barcode|qr_code|stock_quantity|min_stock|pin|password|token|secret|owner|employee|customer|tax|business(Rc|TaxId|Nis|Ai)|receipt/i;
+const PRIVATE_KEYS = /cost|wholesale|supplier|sku|barcode|qr_code|stock_quantity|min_stock|(?<!ship)pin|password|token|secret|owner|employee|customer|tax|business(Rc|TaxId|Nis|Ai)|receipt/i;
 
 describe('website public data: SQLite internal -> website public', () => {
     let api;
@@ -116,7 +118,7 @@ describe('website public data: SQLite internal -> website public', () => {
             address: '12 rue Didouche', city: 'Alger', wilaya: 'Alger', currency: 'DZD', language: 'fr', hours: [], social: {}, mapUrl: '',
             // No courier ticked on the Website screen: every company is offered
             couriers: ['Yalidine', 'ZR Express', 'Maystro Delivery', 'Noest Express', 'Guepex', 'World Express', 'Procolis', 'EMS Algérie Poste'],
-            features: FEATURES, ...UNSET, hero: NO_HERO,
+            features: FEATURES, ...UNSET, hero: NO_HERO, pages: NO_PAGES,
         });
     });
 
@@ -167,7 +169,7 @@ describe('website public data: SQLite internal -> website public', () => {
 
     it('categories: only those with public articles, with their count', () => {
         const data = buildPublicData(api, { now: NOW });
-        expect(data.categories).toEqual([{ id: 'c-jeans', name: 'Jeans', count: 1 }]);
+        expect(data.categories).toEqual([{ id: 'c-jeans', name: 'Jeans', count: 1, image: '', photo: '' }]);
         api.run("UPDATE products SET category_id = 'c-empty' WHERE id = 'belt'");
         expect(buildPublicData(api, { now: NOW }).categories.map(c => [c.name, c.count])).toEqual([['Jeans', 1], ['Vide', 1]]);
         expect(buildPublicData(api, { now: NOW }).brands).toEqual(["Levi's"]);

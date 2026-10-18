@@ -9,7 +9,7 @@
  */
 const { esc, html, phoneDigits, phoneHtml } = require('./html');
 const C = require('./components');
-const { LEGAL_PAGES, legalPage } = require('./legal');
+const { LEGAL_PAGES, legalPage, ownSections } = require('./legal');
 
 const byNewest = (list) => [...list].sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
 
@@ -112,7 +112,7 @@ function cartPage(ctx) {
  */
 function checkoutPage(ctx) {
     const off = ctx.orderUrl ? '' : ' disabled';
-    const { wilayas, field, text, phone, deliveries, home, office, features, prices, coupon, summary } = C.formParts(ctx, off);
+    const { wilayas, commune, field, text, phone, deliveries, home, office, features, prices, coupon, summary } = C.formParts(ctx, off);
     const couriers = ctx.snap.shop.couriers || [];
     return html(
         pageHead(ctx, ctx.t('checkout'), ctx.t('codOnly')),
@@ -126,7 +126,7 @@ function checkoutPage(ctx) {
         field('last_name', ctx.t('lastName'), text('last_name', { max: 40, auto: 'family-name' })),
         field('phone', ctx.t('yourPhone'), phone(), true),
         field('wilaya', ctx.t('wilaya'), wilayas('wilaya')),
-        field('commune', ctx.t('commune'), text('commune', { auto: 'address-level2' })),
+        field('commune', ctx.t('commune'), commune('commune', 'address-level2')),
         `</div></fieldset>`,
         `<fieldset class="co-block"><legend class="co-title"><b>2</b>${esc(ctx.t('delivery'))}</legend>`,
         deliveries,
@@ -135,7 +135,7 @@ function checkoutPage(ctx) {
             `<div class="fields" data-when="office">`,
             field('courier_company', ctx.t('courierCompany'), `<select name="courier_company" required${off}><option value="">${esc(ctx.t('chooseCourier'))}</option>${couriers.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select>`, true),
             field('office_wilaya', ctx.t('officeWilaya'), wilayas('office_wilaya')),
-            field('office_commune', ctx.t('officeCommune'), text('office_commune')),
+            field('office_commune', ctx.t('officeCommune'), commune('office_commune')),
             field('courier_office', ctx.t('courierOffice'), text('courier_office', { max: 120, extra: ` placeholder="${esc(ctx.t('courierOfficeHint'))}"` }), true),
             `</div>`,
         ) : '',
@@ -182,7 +182,9 @@ function aboutPage(ctx) {
         `<main class="container-narrow section about-page">`,
         shop.logo && `<img class="about-logo" src="${esc(ctx.img(shop.logo))}" alt="${esc(shop.name)}">`,
         `<h2 class="section-title">${esc(shop.name)}</h2>`,
-        shop.description && `<p class="lead">${esc(shop.description).replace(/\n/g, '<br>')}</p>`,
+        // The owner's own about text (Website › Pages), else the shop's description
+        shop.pages?.about ? `<div class="legal about-text">${ownSections(shop.pages.about).map(sec => `${sec.h ? `<h3>${esc(sec.h)}</h3>` : ''}${sec.p.map(t => `<p>${esc(t)}</p>`).join('')}`).join('')}</div>`
+            : shop.description && `<p class="lead">${esc(shop.description).replace(/\n/g, '<br>')}</p>`,
         figures.length && `<ul class="figures">${figures.map(([n, l]) => `<li><strong>${n}</strong><span>${esc(l)}</span></li>`).join('')}</ul>`,
         ctx.snap.brands.length > 1 && `<p class="brands brands-text">${ctx.snap.brands.map(b => `<span>${esc(b)}</span>`).join('')}</p>`,
         `<div class="btns"><a class="btn btn-primary" href="${esc(ctx.link('page', 'products'))}">${esc(ctx.t('shopNow'))}</a><a class="btn btn-ghost" href="${esc(ctx.link('page', 'contact'))}">${esc(ctx.t('contact'))}</a></div>`,
@@ -213,7 +215,7 @@ function legal(id) {
         return html(
             pageHead(ctx, page.title),
             `<main class="container-narrow section legal">`,
-            ...page.sections.map(sec => `<section><h2>${esc(sec.h)}</h2>${sec.p.map(t => `<p>${esc(t)}</p>`).join('')}</section>`),
+            ...page.sections.map(sec => `<section>${sec.h ? `<h2>${esc(sec.h)}</h2>` : ''}${sec.p.map(t => `<p>${esc(t)}</p>`).join('')}</section>`),
             `</main>`,
         );
     };

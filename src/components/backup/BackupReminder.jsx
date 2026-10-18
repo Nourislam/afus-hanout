@@ -5,8 +5,6 @@ import { useT } from '../../i18n';
 import { useAuthStore } from '../../stores/authStore';
 import { PERMISSIONS } from '../../lib/permissions';
 import { backupReminder } from '../../lib/backupReminder';
-import { toast } from '../ui/Toast';
-import { translateError } from '../../i18n/errors';
 
 /**
  * A slim bar for the owner when the data is not safe enough: no backup for a
@@ -22,21 +20,6 @@ export default function BackupReminder() {
     const userId = useAuthStore(state => state.user?.id);
     const [reminder, setReminder] = useState(null);
     const [closed, setClosed] = useState(false);
-    const [copying, setCopying] = useState(false);
-    // The weekly USB copy: done from the bar itself, in one press
-    const toUsb = async () => {
-        setCopying(true);
-        try {
-            const r = await window.electronAPI.backup.toUsb();
-            if (r?.success) { toast.success(t('dash.usbDone')); setReminder(null); }
-            else if (!r?.canceled) toast.error(translateError(r?.error));
-        } catch (error) {
-            toast.error(translateError(error));
-        } finally {
-            setCopying(false);
-        }
-    };
-
     useEffect(() => { setClosed(false); }, [userId]);
     // Read again on each screen (a backup may have been made meanwhile)
     useEffect(() => {
@@ -51,13 +34,8 @@ export default function BackupReminder() {
             <Database className="w-4 h-4 shrink-0" />
             <span className="min-w-0">{t(reminder.key, reminder.params)}</span>
             <span className="ms-auto flex items-center gap-1">
-                {reminder.usb ? (
-                    <button type="button" onClick={toUsb} disabled={copying} data-testid="backup-reminder-usb"
-                        className="rounded-md bg-amber-500/20 px-2.5 py-0.5 font-semibold hover:bg-amber-500/30 disabled:opacity-60">{t('dash.do.usbNow')}</button>
-                ) : (
-                    <button type="button" onClick={() => navigate('/settings?tab=backup')}
-                        className="rounded-md bg-amber-500/20 px-2.5 py-0.5 font-semibold hover:bg-amber-500/30">{t(reminder.key === 'dash.alert.externalBackup' ? 'dash.do.checkBackup' : 'dash.do.backupNow')}</button>
-                )}
+                <button type="button" onClick={() => navigate('/settings?tab=backup')}
+                    className="rounded-md bg-amber-500/20 px-2.5 py-0.5 font-semibold hover:bg-amber-500/30">{t(reminder.key === 'dash.alert.externalBackup' ? 'dash.do.checkBackup' : 'dash.do.backupNow')}</button>
                 <button type="button" onClick={() => setClosed(true)} aria-label={t('common.close')} title={t('common.close')}
                     className="rounded-md p-1 hover:bg-amber-500/20"><X className="w-4 h-4" /></button>
             </span>

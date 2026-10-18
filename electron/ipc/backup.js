@@ -70,26 +70,6 @@ module.exports = function register(ctx) {
         || backupService.createBackup(backupFolder(), databasePath(app.getPath('userData')));
       return { success: true, folder: filePaths[0], external: afterBackup(latest, settings) };
     });
-    // One press: a backup now, copied to the USB key (the one chosen before, or picked now)
-    ipcMain.handle('backup:toUsb', async () => {
-      if (isDemo()) return demoBlocked();
-      const settings = getBackupSettings();
-      let folder = settings.externalFolder && fs.existsSync(settings.externalFolder) ? settings.externalFolder : null;
-      if (!folder) {
-        const { filePaths } = await dialog.showOpenDialog({ title: shopT('dialog.usbBackup'), properties: ['openDirectory', 'createDirectory'] });
-        if (!filePaths || !filePaths.length) return { success: false, canceled: true };
-        folder = filePaths[0];
-        saveSettingValue('backup_settings', { ...settings, externalFolder: folder });
-      }
-      try {
-        const backup = backupService.createBackup(backupFolder(), databasePath(app.getPath('userData')));
-        const external = afterBackup(backup, { ...settings, externalFolder: folder });
-        return external && external.ok ? { success: true, backup, external, folder } : { success: false, error: external?.error || catalog.coded('BACKUP_FAILED', {}) };
-      } catch (error) {
-        console.error('USB backup failed:', error);
-        return { success: false, error: backupError(error) };
-      }
-    });
     ipcMain.handle('backup:clearExternal', () => {
       if (isDemo()) return demoBlocked();
       saveSettingValue('backup_settings', { ...getBackupSettings(), externalFolder: '' });

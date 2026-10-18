@@ -186,8 +186,6 @@ export function BackupSettings({ appInfo }) {
 
     const chooseExternal = () => run(() => window.electronAPI.backup.chooseExternal(), t('backup.externalSaved'));
     const clearExternal = () => run(() => window.electronAPI.backup.clearExternal());
-    // One press: a backup now, on the USB key
-    const toUsb = () => run(() => window.electronAPI.backup.toUsb(), t('dash.usbDone'));
 
     const backups = data?.backups || [];
     const auto = data?.settings || {};
@@ -259,9 +257,6 @@ export function BackupSettings({ appInfo }) {
                         <p className="text-xs text-zinc-500">{t('backup.externalText')}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <Button size="sm" onClick={toUsb} data-testid="backup-to-usb">
-                            <HardDrive className="w-4 h-4" /> {t('dash.do.usbNow')}
-                        </Button>
                         <Button size="sm" variant="secondary" onClick={chooseExternal}>
                             <FolderOpen className="w-4 h-4" /> {auto.externalFolder ? t('backup.externalChange') : t('backup.externalChoose')}
                         </Button>

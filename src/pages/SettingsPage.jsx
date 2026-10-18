@@ -524,6 +524,7 @@ export default function SettingsPage() {
                                                 onChange={(e) => handleChange('poSignatureTitle', e.target.value)}
                                             />
                                         </div>
+                                        <PurchaseOrderPreview name={settings.poSignatureName} title={settings.poSignatureTitle} image={settings.poSignatureImage} />
                                     </Panel>
                                 </div>
 
@@ -643,6 +644,31 @@ export default function SettingsPage() {
                 </div>
             </div>
 
+        </div>
+    );
+}
+
+/** The purchase order the supplier receives, with the signature being set (live, before saving). */
+function PurchaseOrderPreview({ name, title, image }) {
+    const { t } = useT();
+    const [html, setHtml] = useState('');
+    useEffect(() => {
+        let cancelled = false;
+        const timer = setTimeout(() => {
+            window.electronAPI.purchaseOrders.previewHtml({ poSignatureName: name || '', poSignatureTitle: title || '', poSignatureImage: image || '' })
+                .then(h => { if (!cancelled) setHtml(h || ''); }).catch(() => {});
+        }, 300);
+        return () => { cancelled = true; clearTimeout(timer); };
+    }, [name, title, image]);
+    if (!html) return null;
+    return (
+        <div className="space-y-1.5" data-testid="po-preview">
+            <p className="text-xs text-zinc-500">{t('settings.signature.preview')}</p>
+            <div className="rounded-lg border border-dark-border bg-white overflow-hidden h-[420px]" dir="ltr">
+                <iframe title={t('settings.signature.preview')} srcDoc={html} sandbox="allow-same-origin" className="border-0 origin-top-left" style={{ width: '166.6%', height: '166.6%', transform: 'scale(0.6)' }}
+                    // The signature is at the bottom of the page: shown first
+                    onLoad={(e) => { try { e.currentTarget.contentDocument?.querySelector('.signature-section')?.scrollIntoView({ block: 'center' }); } catch { /* nothing to scroll */ } }} />
+            </div>
         </div>
     );
 }

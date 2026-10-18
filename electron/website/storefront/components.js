@@ -31,6 +31,10 @@ function formParts(ctx, off) {
     const err = (name) => `<small class="ferr" data-err-for="${name}" hidden></small>`;
     const field = (name, label, input, wide = false) => `<label class="field${wide ? ' field-wide' : ''}" data-field="${name}"><span>${esc(label)}</span>${input}${err(name)}</label>`;
     const text = (name, { min = 2, max = 60, auto = '', extra = '' } = {}) => `<input name="${name}" required minlength="${min}" maxlength="${max}"${auto ? ` autocomplete="${auto}"` : ''}${extra}${off}>`;
+    // The commune: a list of the chosen wilaya's communes (filled by the script; already a list in the program's preview)
+    const commune = (name, auto = '') => (ctx.preview
+        ? `<select name="${name}"${off}><option value="">${esc(ctx.t('chooseWilayaFirst'))}</option></select>`
+        : text(name, auto ? { auto } : {}));
     const phone = () => `<input name="phone" type="tel" inputmode="tel" required maxlength="20" autocomplete="tel" dir="ltr" placeholder="${esc(ctx.t('phoneHint'))}"${off}>`;
     const choice = (value, title, sub, checked) => `<label class="dchoice"><input type="radio" name="delivery" value="${value}"${checked ? ' checked' : ''}${off}><span><strong>${esc(title)}</strong><small>${esc(sub)}</small></span></label>`;
     // The ways of delivery the owner offers (a courier office needs a courier company)
@@ -57,7 +61,7 @@ function formParts(ctx, off) {
         `<p class="sum-row sum-total"><span>${esc(ctx.t('total'))}</span><strong data-sum-total></strong></p>`,
         `</div>`,
     );
-    return { wilayas, err, field, text, phone, deliveries, home, office, features: f, prices, coupon, summary };
+    return { wilayas, commune, err, field, text, phone, deliveries, home, office, features: f, prices, coupon, summary };
 }
 
 const priceOf = (ctx, p) => money(p, ctx.lang, ctx.snap.shop.currency);
@@ -286,7 +290,7 @@ function orderForm(ctx, p) {
     const f = featuresOf(ctx);
     if (!f.orderForm) return whatsappOrder(ctx, p);
     const off = ctx.orderUrl ? '' : ' disabled';
-    const { wilayas, field, text, phone, deliveries, home, prices, coupon, summary } = formParts(ctx, off);
+    const { wilayas, commune, field, text, phone, deliveries, home, prices, coupon, summary } = formParts(ctx, off);
     return html(
         `<form class="quick-order" id="order" method="post" novalidate${ctx.orderUrl ? ` action="${esc(ctx.orderUrl)}"` : ''} accept-charset="utf-8" data-quick-order data-price="${onSale(p) ? p.salePrice : p.price}" data-cat="${esc(p.categoryId || '')}" ${prices}>`,
         `<input type="hidden" name="source" value="product"><input type="hidden" name="order_key" data-order-key value="">`,
@@ -297,7 +301,7 @@ function orderForm(ctx, p) {
         field('customer_name', ctx.t('fullName'), text('customer_name', { min: 3, max: 80, auto: 'name' }), true),
         field('phone', ctx.t('yourPhone'), phone(), true),
         field('wilaya', ctx.t('wilaya'), wilayas('wilaya')),
-        field('commune', ctx.t('commune'), text('commune', { auto: 'address-level2' })),
+        field('commune', ctx.t('commune'), commune('commune', 'address-level2')),
         `</div>`,
         deliveries,
         home && `<div class="fields" data-when="home">${field('address', ctx.t('addressField'), text('address', { min: 3, max: 200, auto: 'street-address' }), true)}</div>`,

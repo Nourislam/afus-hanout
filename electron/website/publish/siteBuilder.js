@@ -85,6 +85,7 @@ function buildSite({ snapshot, theme, orderUrl = null, readImage = () => null, l
             ...(snapshot.shop.hero ? { hero: { ...snapshot.shop.hero, image: keep(snapshot.shop.hero.image) ? snapshot.shop.hero.image : '' } } : {}),
         },
         products: snapshot.products.map(p => ({ ...p, images: p.images.filter(keep) })),
+        categories: (snapshot.categories || []).map(c => ({ ...c, image: c.image && keep(c.image) ? c.image : '' })),
     };
     const language = lang || snap.shop.language || 'ar';
     const asset = (name) => `images/${name}`;
