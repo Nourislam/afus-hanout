@@ -80,7 +80,7 @@ export function LabelPrintPanel({ setup, items, totalLabels, beforePrint, onPrin
             const ready = beforePrint ? await beforePrint() : items;
             if (ready) await fn(ready);
         } catch (error) {
-            toast.error(t('barcode.printFailed', { error: translateError(error) }));
+            toast.error(t('barcode.printFailed', { error: translateError(error) }), undefined, 'labelPrinter');
         } finally {
             setBusy(false);
         }

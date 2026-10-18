@@ -11,6 +11,16 @@ function fieldName(field) {
     return field;
 }
 
+// The code behind each message shown (for the toast's "fix it" button), the last 50
+const CODE_OF_TEXT = new Map();
+function remember(text, code) {
+    CODE_OF_TEXT.delete(text);
+    CODE_OF_TEXT.set(text, code);
+    if (CODE_OF_TEXT.size > 50) CODE_OF_TEXT.delete(CODE_OF_TEXT.keys().next().value);
+}
+/** The error code a translated message came from (first line), or null. */
+export const codeOfMessage = (text) => CODE_OF_TEXT.get(String(text || '').split('\n')[0]) || null;
+
 const IPC_PREFIX = /^Error invoking remote method '[^']+': (?:Error: )?/;
 
 function translateLine(line) {
@@ -20,6 +30,7 @@ function translateLine(line) {
     try { params = JSON.parse(m[2]); } catch { /* keep empty */ }
     if (params.field) params.field = fieldName(params.field);
     const text = t(`errors.${m[1]}`, params);
+    remember(text, m[1]);
     if (params.row) {
         const where = params.variant ? `${t('errors.row', { n: params.row })} (${params.variant})` : t('errors.row', { n: params.row });
         return `${where} : ${text}`;

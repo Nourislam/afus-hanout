@@ -245,6 +245,7 @@ export default {
     'labels.changeInSettings': ["Change the look", "Modifier l'aspect", "تغيير الشكل"],
     'labels.previewReal': ["Real size preview of the first labels.", "Aperçu en taille réelle des premières étiquettes.", "معاينة بالمقاس الحقيقي لأول الملصقات."],
     'labels.previewSample': ["Example label with the look saved in Settings.", "Exemple d'étiquette avec l'aspect des paramètres.", "مثال لملصق بالشكل المحفوظ في الإعدادات."],
+    'nav.more': ["More", "Plus", "المزيد"],
     'nav.closeAndLogout': ["Close drawer & log out", "Fermer caisse et sortir", "غلق الصندوق والخروج"],
     'products.labelQty': ["Number of labels", "Nombre d'étiquettes", "عدد الملصقات"],
     'products.saveAndPrint': ["Save & print", "Enregistrer et imprimer", "حفظ وطباعة"],

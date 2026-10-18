@@ -1,5 +1,11 @@
 // [English, French, Arabic]
 export default {
+    'fix.printer': ["Printer settings", "Réglages de l'imprimante", "إعدادات الطابعة"],
+    'fix.labelPrinter': ["Label printer", "Imprimante d'étiquettes", "طابعة الملصقات"],
+    'fix.backup': ["Open the backup", "Ouvrir la sauvegarde", "افتح النسخ الاحتياطي"],
+    'fix.drawer': ["Open the drawer", "Ouvrir la caisse", "افتح الصندوق"],
+    'fix.websiteAccounts': ["Link the accounts", "Lier les comptes", "اربط الحسابات"],
+    'fix.website': ["Open my website", "Ouvrir mon site", "افتح موقعي"],
     'errors.row': ["Variant {n}", "Variante {n}", "اللون/المقاس {n}"],
     'errors.field.sku': ["SKU", "SKU", "الرمز SKU"],
     'errors.field.qr': ["QR code", "Code QR", "رمز QR"],

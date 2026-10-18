@@ -5,9 +5,9 @@ let toastCounter = 0;
 export const useToastStore = create((set, get) => ({
     toasts: [],
 
-    addToast: (message, type = 'info', duration = 4000) => {
+    addToast: (message, type = 'info', duration = 4000, action = null) => {
         const id = `toast-${++toastCounter}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-        const toast = { id, message, type };
+        const toast = { id, message, type, action };
 
         set(state => ({
             toasts: [...state.toasts, toast]
@@ -29,7 +29,7 @@ export const useToastStore = create((set, get) => ({
     },
 
     success: (message, duration) => get().addToast(message, 'success', duration),
-    error: (message, duration) => get().addToast(message, 'error', duration),
+    error: (message, duration, action) => get().addToast(message, 'error', duration, action),
     warning: (message, duration) => get().addToast(message, 'warning', duration),
     info: (message, duration) => get().addToast(message, 'info', duration),
 }));

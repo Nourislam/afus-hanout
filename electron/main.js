@@ -543,6 +543,26 @@ ipcMain.handle('backup:chooseExternal', async () => {
     || backupService.createBackup(backupFolder(), databasePath(app.getPath('userData')));
   return { success: true, folder: filePaths[0], external: afterBackup(latest, settings) };
 });
+// One press: a backup now, copied to the USB key (the one chosen before, or picked now)
+ipcMain.handle('backup:toUsb', async () => {
+  if (isDemo()) return demoBlocked();
+  const settings = getBackupSettings();
+  let folder = settings.externalFolder && fs.existsSync(settings.externalFolder) ? settings.externalFolder : null;
+  if (!folder) {
+    const { filePaths } = await dialog.showOpenDialog({ title: shopT('dialog.usbBackup'), properties: ['openDirectory', 'createDirectory'] });
+    if (!filePaths || !filePaths.length) return { success: false, canceled: true };
+    folder = filePaths[0];
+    saveSettingValue('backup_settings', { ...settings, externalFolder: folder });
+  }
+  try {
+    const backup = backupService.createBackup(backupFolder(), databasePath(app.getPath('userData')));
+    const external = afterBackup(backup, { ...settings, externalFolder: folder });
+    return external && external.ok ? { success: true, backup, external, folder } : { success: false, error: external?.error || catalog.coded('BACKUP_FAILED', {}) };
+  } catch (error) {
+    console.error('USB backup failed:', error);
+    return { success: false, error: backupError(error) };
+  }
+});
 ipcMain.handle('backup:clearExternal', () => {
   if (isDemo()) return demoBlocked();
   saveSettingValue('backup_settings', { ...getBackupSettings(), externalFolder: '' });
@@ -890,6 +910,9 @@ const PRODUCT_LIST_COLUMNS = `
     (SELECT GROUP_CONCAT(DISTINCT v.size) FROM product_variants v
        WHERE v.product_id = p.id AND v.is_active = 1 AND v.stock_quantity > 0 AND v.size IS NOT NULL AND v.size <> '') AS sizes_in_stock
 `;
+
+// The sales screen's quick buttons: the 8 articles sold most these 7 days (ids only)
+ipcMain.handle('db:products:quickPicks', () => require('./services/storeRankings').bestSellers(dbApi, { limit: 8 }).map(r => r.id));
 
 ipcMain.handle('db:products:getAll', () => {
   return runQuery(`

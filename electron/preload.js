@@ -189,6 +189,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
     products: {
         getAll: () => ipcRenderer.invoke('db:products:getAll'),
+        quickPicks: () => ipcRenderer.invoke('db:products:quickPicks'),
         getById: (id) => ipcRenderer.invoke('db:products:getById', id),
         search: (query) => ipcRenderer.invoke('db:products:search', query),
         getByBarcode: (barcode) => ipcRenderer.invoke('db:products:getByBarcode', barcode),
@@ -323,6 +324,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         openFolder: () => ipcRenderer.invoke('backup:openFolder'),
         reset: () => ipcRenderer.invoke('backup:reset'),
         chooseExternal: () => ipcRenderer.invoke('backup:chooseExternal'),
+        toUsb: () => ipcRenderer.invoke('backup:toUsb'),
         clearExternal: () => ipcRenderer.invoke('backup:clearExternal'),
     },
 
