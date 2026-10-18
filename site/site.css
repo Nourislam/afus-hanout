@@ -1,9 +1,14 @@
 /* Afus company website: one sheet, Arabic first (logical properties: right to
    left works without a second sheet), mobile first. Colours of the logo:
    Afus blue #1239B0 and green #16B26B. */
-@font-face{font-family:Cairo;font-style:normal;font-weight:200 1000;font-display:swap;src:url(cairo-arabic-wght-normal.woff2) format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC}
-@font-face{font-family:Cairo;font-style:normal;font-weight:200 1000;font-display:swap;src:url(cairo-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
-@font-face{font-family:Cairo;font-style:normal;font-weight:200 1000;font-display:swap;src:url(cairo-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:Alexandria;font-style:normal;font-weight:100 900;font-display:swap;src:url(alexandria-arabic-wght-normal.woff2) format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC}
+@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:400;font-display:swap;src:url(plex-arabic-400.woff2) format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC}
+@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:600;font-display:swap;src:url(plex-arabic-600.woff2) format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC}
+@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:700;font-display:swap;src:url(plex-arabic-700.woff2) format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC}
+@font-face{font-family:Alexandria;font-style:normal;font-weight:100 900;font-display:swap;src:url(alexandria-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:400;font-display:swap;src:url(plex-latin-400.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:600;font-display:swap;src:url(plex-latin-600.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:700;font-display:swap;src:url(plex-latin-700.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 
 :root{
   --navy:#071440;--navy-2:#0a2472;--blue:#1239B0;--blue-600:#0e2d8f;--blue-soft:#ebf0ff;
@@ -12,15 +17,16 @@
   --radius:16px;--container:1200px;
   --shadow-sm:0 1px 2px rgba(15,23,42,.06),0 1px 1px rgba(15,23,42,.04);
   --shadow:0 12px 32px rgba(10,36,114,.10);--shadow-lg:0 30px 80px rgba(7,20,64,.35);
-  --ease:cubic-bezier(.2,.8,.2,1);
+  --ease:cubic-bezier(.23,1,.32,1);
 }
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:84px}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Cairo,system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;font-size:17px;line-height:1.75;overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Arabic',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;font-size:17px;line-height:1.8;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.brand,.btn,.eyebrow,.tag,.amount,.flow-n{font-family:Alexandria,'IBM Plex Sans Arabic',system-ui,sans-serif}
 img{display:block;max-width:100%;height:auto}
 a{color:inherit}
-h1,h2,h3{line-height:1.3;margin:0;text-wrap:balance}
+h1,h2,h3{line-height:1.35;margin:0;text-wrap:balance;font-weight:700;letter-spacing:0}
 p{margin:0}
 .container{max-width:var(--container);margin-inline:auto;padding-inline:20px}
 .narrow{max-width:820px}
@@ -116,7 +122,7 @@ p{margin:0}
 .card p{color:var(--muted);font-size:.97em}
 .card .btn{margin-top:auto}
 .card-link{text-decoration:none}
-.card-link:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#c9d5f2}
+@media (hover:hover) and (pointer:fine){.card-link:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#c9d5f2}}
 .card-link .more{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;color:var(--blue);font-weight:700}
 .ic{display:inline-grid;place-items:center;width:50px;height:50px;border-radius:14px;background:var(--blue-soft);color:var(--blue);flex:none}
 .ic-light{background:rgba(255,255,255,.12);color:#fff}
@@ -185,10 +191,35 @@ p{margin:0}
 .channel b{display:block;color:var(--navy)}
 .channel span span{color:var(--muted);font-size:.95em}
 
+/* Afus Boutique page: where it sits, its price, how it works, how to buy it */
+.crumbs{display:flex;gap:8px;align-items:center;margin-bottom:18px;font-size:.92em;color:rgba(255,255,255,.7)}
+.crumbs a{color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.35)}
+.price-chip{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:8px 16px;border-radius:999px;background:rgba(22,178,107,.18);border:1px solid rgba(22,178,107,.5);color:#d6f5e6;font-weight:700}
+.price-line{display:flex;align-items:center;gap:8px;margin:-6px 0 18px;color:var(--green-ink);font-size:1.2em}
+.price-line b{font-family:Alexandria,sans-serif;color:var(--navy)}
+.intro-grid{display:grid;grid-template-columns:1fr;gap:32px;align-items:center}
+.intro-text>p{font-size:1.1em;color:var(--muted);margin-top:14px;max-width:58ch}
+.flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:14px}
+.flow li{position:relative;display:grid;grid-template-columns:auto 1fr;column-gap:16px;row-gap:4px;align-items:start;background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:22px}
+.flow li>.ic{grid-row:1 / span 2}
+.flow li h3{font-size:1.1em;color:var(--navy)}
+.flow li p{grid-column:2;color:var(--muted)}
+.flow-n{position:absolute;top:14px;inset-inline-end:16px;font-size:1.6em;font-weight:800;color:#d5def5;line-height:1}
+.buy-grid{display:grid;grid-template-columns:1fr;gap:28px;align-items:start}
+.buy-grid .steps{grid-template-columns:1fr}
+.price-card{position:relative;display:flex;flex-direction:column;gap:10px;padding:30px;border-radius:24px;background:var(--surface);border:2px solid var(--blue);box-shadow:0 24px 60px rgba(18,57,176,.16)}
+.price-card h2{font-size:1.3em;color:var(--navy)}
+.amount{display:flex;align-items:baseline;gap:8px;margin:4px 0 6px;color:var(--navy)}
+[dir=rtl] .amount{justify-content:flex-end}
+.amount b{font-size:3.2rem;line-height:1;font-weight:800;letter-spacing:-.02em}
+.amount span{font-size:1.2em;font-weight:700;color:var(--blue)}
+.price-card .checks{margin:6px 0 4px}
+.price-card .btn{margin-top:8px}
+
 /* Theme gallery: each card opens a whole shop */
 .themes-grid{display:grid;grid-template-columns:1fr;gap:22px}
 .theme-card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s var(--ease)}
-.theme-card:hover{box-shadow:var(--shadow);transform:translateY(-3px)}
+@media (hover:hover) and (pointer:fine){.theme-card:hover{box-shadow:var(--shadow);transform:translateY(-3px)}}
 .theme-shot{display:block;aspect-ratio:16/10;background:linear-gradient(150deg,var(--blue-soft),#fff);border-bottom:1px solid var(--line);overflow:hidden}
 .theme-shot img{width:100%;height:100%;object-fit:cover;object-position:top;transition:transform .4s var(--ease)}
 .theme-card:hover .theme-shot img{transform:scale(1.03)}
@@ -242,6 +273,7 @@ p{margin:0}
   .steps{grid-template-columns:repeat(2,1fr)}
   .form-row{grid-template-columns:1fr 1fr}
   .themes-grid{grid-template-columns:repeat(2,1fr)}
+  .flow{grid-template-columns:repeat(2,1fr)}
   .ftr{grid-template-columns:1.6fr 1fr 1fr 1fr}
   .cta-inner{grid-template-columns:1fr auto}
 }
@@ -254,12 +286,20 @@ p{margin:0}
   .grid-4{grid-template-columns:repeat(4,1fr)}
   .page-boutique .steps{grid-template-columns:repeat(3,1fr)}
   .steps{grid-template-columns:repeat(4,1fr)}
+  .buy-grid .steps{grid-template-columns:1fr}
   .product-card{grid-template-columns:1fr 1.2fr;padding:40px}
   .sol{grid-template-columns:1fr 1.1fr;gap:56px;padding-block:44px}
   .sol.is-reverse .sol-text,.show.is-reverse .show-text{order:2}
   .show{grid-template-columns:1fr 1.5fr;gap:48px}
   .about-grid{grid-template-columns:1.4fr 1fr;gap:48px}
   .contact-grid{grid-template-columns:1.3fr 1fr;gap:40px}
+  .intro-grid{grid-template-columns:1fr 1.15fr;gap:56px}
+  .flow{grid-template-columns:repeat(5,1fr)}
+  .flow li{grid-template-columns:1fr;padding-top:26px}
+  .flow li>.ic{grid-row:auto;margin-bottom:6px}
+  .flow li p{grid-column:auto}
+  .buy-grid{grid-template-columns:1.25fr 1fr;gap:48px}
+  .price-card{position:sticky;top:96px}
 }
 @media (max-width:719px){
   .hdr .lang{display:none}

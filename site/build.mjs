@@ -1,5 +1,5 @@
 // Builds the Afus website (npm run build:site -> dist-site/): the company pages
-// (home, solutions, software, services, about, contact, privacy, terms), the
+// (home, solutions, software, themes, about, contact, privacy, terms), the
 // Afus Boutique page and the web demo (dist-demo, built first), in Arabic
 // (/) and French (/fr/). Static files only, relative links: it works at any
 // address (GitHub Pages project page today, the company's own domain later).
@@ -36,9 +36,9 @@ const facebookUrl = () => {
 };
 
 /** Every page, Arabic at the root and French under fr/. */
-const PAGES = { home: '', solutions: 'solutions/', products: 'products/', services: 'services/', boutique: 'boutique/', themes: 'themes/', about: 'about/', contact: 'contact/', privacy: 'privacy/', terms: 'terms/' };
+const PAGES = { home: '', solutions: 'solutions/', products: 'products/', boutique: 'boutique/', themes: 'themes/', about: 'about/', contact: 'contact/', privacy: 'privacy/', terms: 'terms/' };
 const pagePath = (lang, key) => `${lang === 'fr' ? 'fr/' : ''}${PAGES[key]}index.html`;
-const NAV = ['home', 'solutions', 'products', 'services', 'about', 'contact'];
+const NAV = ['home', 'solutions', 'products', 'about', 'contact'];
 
 const waDigits = () => String(CONFIG.whatsapp || '').replace(/\D/g, '');
 const waUrl = (text) => (waDigits() ? `https://wa.me/${waDigits()}${text ? `?text=${encodeURIComponent(text)}` : ''}` : '');
@@ -80,11 +80,8 @@ function layout(c, { title, description, body, scripts = '' }) {
     const { lang, t, key, L, u } = c;
     const current = (k) => (k === key || (k === 'products' && ['boutique', 'themes'].includes(key)) ? ' aria-current="page"' : '');
     const links = NAV.map(k => `<a href="${u(k)}"${current(k)}>${esc(t.nav[k])}</a>`).join('');
-    const cta = key === 'boutique'
-        ? `<a class="btn btn-primary btn-sm hdr-cta" href="${c.demo}">${icon('play-circle', 18)}<span>${esc(t.nav.demo)}</span></a>`
-        : key === 'contact' && waDigits()
-            ? `<a class="btn btn-primary btn-sm hdr-cta" href="${esc(waUrl(t.contactPage.hello))}" target="_blank" rel="noopener">${icon('message-circle', 18)}<span>WhatsApp</span></a>`
-            : `<a class="btn btn-primary btn-sm hdr-cta" href="${u('contact')}">${icon('message-circle', 18)}<span>${esc(t.nav.contact)}</span></a>`;
+    // The same header on every page: one call to action, contact
+    const cta = `<a class="btn btn-primary btn-sm hdr-cta" href="${u('contact')}">${icon('message-circle', 18)}<span>${esc(t.nav.contact)}</span></a>`;
     const f = t.footer;
     const col = (head, items) => `<div class="ftr-col"><h2>${esc(head)}</h2><ul>${items.map(([href, label, ext]) => `<li><a href="${esc(href)}"${ext ? ' target="_blank" rel="noopener"' : ''}>${label}</a></li>`).join('')}</ul></div>`;
     return `<!doctype html>
@@ -100,7 +97,9 @@ function layout(c, { title, description, body, scripts = '' }) {
 <meta name="theme-color" content="#0a2472">
 <link rel="icon" type="image/svg+xml" href="${L('icon.svg')}">
 <link rel="alternate" hreflang="${t.other.code}" href="${L(c.alternate)}">
-<link rel="stylesheet" href="${L(`assets/site.css?v=${VERSION}`)}">
+${lang === 'ar' ? `<link rel="preload" href="${L('assets/plex-arabic-400.woff2')}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="${L('assets/alexandria-arabic-wght-normal.woff2')}" as="font" type="font/woff2" crossorigin>
+` : ''}<link rel="stylesheet" href="${L(`assets/site.css?v=${VERSION}`)}">
 </head>
 <body class="page-${key}">
 <a class="skip" href="#main">${esc(t.nav.skip)}</a>
@@ -122,7 +121,7 @@ ${body}
 <footer class="site-footer">
   <div class="container ftr">
     <div class="ftr-brand"><a class="brand" href="${u('home')}"><img src="${L('icon.svg')}" alt="" width="32" height="32"><span>Afus</span></a><p>${esc(f.about)}</p></div>
-    ${col(f.company, [[u('about'), esc(t.nav.about)], [u('services'), esc(t.nav.services)], [u('solutions'), esc(t.nav.solutions)], [u('contact'), esc(t.nav.contact)]])}
+    ${col(f.company, [[u('about'), esc(t.nav.about)], [u('solutions'), esc(t.nav.solutions)], [u('contact'), esc(t.nav.contact)]])}
     ${col(f.software, [[u('boutique'), 'Afus Boutique'], [u('themes'), esc(t.nav.themes)], [c.demo, esc(t.nav.demo)], [u('products'), esc(t.nav.products)]])}
     ${col(f.contact, channels(t).map(([ic, label, href, , ext]) => [href, `${icon(ic, 16)}<span>${esc(label)}</span>`, ext]))}
   </div>
@@ -153,7 +152,7 @@ function ctaBand(c) {
 function boutiqueCard(c) {
     const b = c.t.home.boutique;
     return `<article class="product-card"><div class="pc-text"><span class="tag tag-ok">${esc(b.tag)}</span><h3>${esc(b.name)}</h3><p class="muted">${esc(b.for)}</p>${checks(b.points)}`
-        + `<div class="ctas"><a class="btn btn-primary" href="${c.u('boutique')}">${esc(b.more)}</a><a class="btn btn-ghost" href="${c.demo}">${icon('play-circle', 18)}<span>${esc(c.t.nav.demo)}</span></a></div></div>`
+        + `<p class="price-line">${icon('tag', 18)}<b dir="ltr">${esc(b.price)}</b></p><div class="ctas"><a class="btn btn-primary" href="${c.u('boutique')}">${esc(b.more)}</a><a class="btn btn-ghost" href="${c.demo}">${icon('play-circle', 18)}<span>${esc(c.t.nav.demo)}</span></a></div></div>`
         + `<div class="pc-media">${frame(c.L(`img/pos-${c.lang}.webp`), b.name)}</div></article>`;
 }
 
@@ -170,8 +169,6 @@ function homePage(c) {
         t.audiences.map(([id, ic, title, text, , , more]) => `<a class="card card-link" href="${u('solutions')}#${id}"><span class="ic">${icon(ic, 26)}</span><h3>${esc(title)}</h3><p>${esc(text)}</p><span class="more">${esc(more)}${icon(c.arrow, 18)}</span></a>`),
         `</div></div></section>`,
         `<section class="section alt"><div class="container">${head(h.productTitle)}${boutiqueCard(c)}</div></section>`,
-        `<section class="section"><div class="container">${head(h.servicesTitle)}<div class="grid-3">${t.services.slice(0, 6).map(card).join('')}</div>`,
-        `<p class="center more-row"><a class="btn btn-ghost" href="${u('services')}">${esc(h.servicesMore)}${icon(c.arrow, 18)}</a></p></div></section>`,
         `<section class="section alt"><div class="container">${head(h.processTitle)}${steps(t.process)}${callout(t.buyNote)}</div></section>`,
         `<section class="section"><div class="container">${head(h.whyTitle)}<div class="grid-4">${h.why.map(card).join('')}</div></div></section>`,
         ctaBand(c),
@@ -207,17 +204,6 @@ function productsPage(c) {
         ctaBand(c),
     );
     return layout(c, { title: p.title, description: p.description, body });
-}
-
-function servicesPage(c) {
-    const { t } = c; const s = t.servicesPage;
-    const body = html(
-        pageHero(s),
-        `<section class="section"><div class="container">${head(t.home.servicesTitle)}<div class="grid-4">${t.services.map(card).join('')}</div></div></section>`,
-        `<section class="section alt"><div class="container">${head(t.home.processTitle)}${steps(t.process)}${callout(t.buyNote)}</div></section>`,
-        ctaBand(c),
-    );
-    return layout(c, { title: s.title, description: s.description, body });
 }
 
 function aboutPage(c) {
@@ -259,23 +245,32 @@ const legalPage = (name) => (c) => {
     return layout(c, { title: p.title, description: p.description, body });
 };
 
+/** Afus Boutique: what it is, how it works in the shop, the screens, how to buy it and its price. */
 function boutiquePage(c) {
-    const { t, L, lang, demo } = c; const b = t.boutique;
+    const { t, L, lang, demo, u } = c; const b = t.boutique; const pr = b.price;
     const links = contact(t);
     const body = html(
-        `<section class="hero"><div class="container hero-grid">`,
-        `<div class="hero-text"><span class="eyebrow">${esc(b.eyebrow)}</span><h1>${esc(b.h1)}</h1><p class="lead">${esc(b.lead)}</p>`,
-        `<div class="ctas"><a class="btn btn-light btn-lg" href="${demo}">${icon('play-circle', 20)}<span>${esc(b.cta1)}</span></a><a class="btn btn-ghost-light btn-lg" href="#order">${esc(b.cta2)}</a></div>`,
-        `<p class="note">${esc(b.cta1note)}</p></div>`,
-        `<div class="hero-media">${frame(L(`img/pos-${lang}.webp`), b.show[0][1], { eager: true })}</div>`,
+        `<section class="page-hero boutique-hero"><div class="container narrow-hero">`,
+        `<nav class="crumbs" aria-label="${esc(t.nav.menu)}"><a href="${u('products')}">${esc(t.nav.products)}</a><span aria-hidden="true">/</span><span>Afus Boutique</span></nav>`,
+        `<span class="eyebrow">${esc(b.eyebrow)}</span><h1>${esc(b.h1)}</h1><p class="lead">${esc(b.lead)}</p>`,
+        `<div class="ctas"><a class="btn btn-light btn-lg" href="#buy">${esc(b.cta2)}</a><a class="btn btn-ghost-light btn-lg" href="${demo}">${icon('play-circle', 20)}<span>${esc(b.cta1)}</span></a></div>`,
+        `<p class="price-chip">${icon('tag', 18)}<span>${esc(b.priceTag)}</span></p>`,
         `</div></section>`,
         `<div class="strip"><div class="container strip-row">${b.strip.map(s => `<span>${icon('check-circle-2', 18)}${esc(s)}</span>`).join('')}</div></div>`,
+        `<section class="section"><div class="container intro-grid"><div class="intro-text"><h2 class="section-title">${esc(b.intro.title)}</h2><p>${esc(b.intro.text)}</p>${checks(b.intro.points)}</div>`,
+        `<div>${frame(L(`img/pos-${lang}.webp`), b.show[0][1], { eager: true })}</div></div></section>`,
+        `<section class="section alt"><div class="container">${head(b.workTitle, b.workLead)}<ol class="flow">`,
+        b.work.map(([ic, title, text], i) => `<li><span class="flow-n">${i + 1}</span><span class="ic">${icon(ic, 24)}</span><h3>${esc(title)}</h3><p>${esc(text)}</p></li>`),
+        `</ol></div></section>`,
         `<section class="section"><div class="container">${head(b.featuresTitle)}<div class="grid-3">${b.features.map(card).join('')}</div></div></section>`,
         `<section class="section alt"><div class="container">${head(b.showTitle)}`,
         b.show.map(([img, title, text], i) => `<div class="show${i % 2 ? ' is-reverse' : ''}"><div class="show-text"><h3>${esc(title)}</h3><p>${esc(text)}</p></div><div class="show-media">${frame(L(`img/${img}-${lang}.webp`), title)}</div></div>`),
-        `<div class="ctas center more-row"><a class="btn btn-primary btn-lg" href="${demo}">${icon('play-circle', 20)}<span>${esc(b.cta1)}</span></a><a class="btn btn-ghost btn-lg" href="${c.u('themes')}">${icon('palette', 20)}<span>${esc(t.themesPage.more)}</span></a></div>`,
+        `<div class="ctas center more-row"><a class="btn btn-primary btn-lg" href="${demo}">${icon('play-circle', 20)}<span>${esc(b.cta1)}</span></a><a class="btn btn-ghost btn-lg" href="${u('themes')}">${icon('palette', 20)}<span>${esc(t.themesPage.more)}</span></a></div>`,
         `</div></section>`,
-        `<section class="section"><div class="container">${head(b.stepsTitle)}${steps(b.steps)}</div></section>`,
+        `<section class="section" id="buy"><div class="container buy-grid"><div>${head(b.stepsTitle)}${steps(b.steps)}${callout(t.buyNote)}</div>`,
+        `<aside class="price-card" aria-labelledby="price-title"><span class="tag tag-ok">${esc(pr.label)}</span><h2 id="price-title">${esc(pr.title)}</h2>`,
+        `<p class="amount" dir="ltr"><b>${esc(pr.amount)}</b><span>${esc(pr.currency)}</span></p>${checks(pr.includes)}<p class="muted small">${esc(pr.how)}</p>`,
+        `<a class="btn btn-primary btn-lg" href="#order">${esc(pr.cta)}</a></aside></div></section>`,
         `<section class="section alt"><div class="container narrow">${head(b.faqTitle)}<div class="faq">`,
         b.faq.map(([q, a]) => `<details><summary>${esc(q)}${icon('chevron-down', 20)}</summary><p>${esc(a)}</p></details>`),
         `</div></div></section>`,
@@ -312,7 +307,7 @@ function themesPage(c) {
     return layout(c, { title: p.title, description: p.description, body });
 }
 
-const RENDER = { home: homePage, themes: themesPage, solutions: solutionsPage, products: productsPage, services: servicesPage, boutique: boutiquePage, about: aboutPage, contact: contactPage, privacy: legalPage('privacy'), terms: legalPage('terms') };
+const RENDER = { home: homePage, themes: themesPage, solutions: solutionsPage, products: productsPage, boutique: boutiquePage, about: aboutPage, contact: contactPage, privacy: legalPage('privacy'), terms: legalPage('terms') };
 
 function notFound() {
     const c = { ...ctx('ar', 'home'), key: 'nf' };
@@ -345,8 +340,10 @@ write('.nojekyll', '');
 write('robots.txt', 'User-agent: *\nAllow: /\nDisallow: /demo/\n');
 fs.mkdirSync(path.join(OUT, 'assets'), { recursive: true });
 fs.copyFileSync(path.join(HERE, 'site.css'), path.join(OUT, 'assets', 'site.css'));
-const FONTS = path.join(ROOT, 'node_modules/@fontsource-variable/cairo/files');
-for (const f of ['cairo-arabic-wght-normal.woff2', 'cairo-latin-wght-normal.woff2', 'cairo-latin-ext-wght-normal.woff2']) fs.copyFileSync(path.join(FONTS, f), path.join(OUT, 'assets', f));
+const FONTS = path.join(ROOT, 'node_modules/@fontsource-variable/alexandria/files');
+for (const f of ['alexandria-arabic-wght-normal.woff2', 'alexandria-latin-wght-normal.woff2']) fs.copyFileSync(path.join(FONTS, f), path.join(OUT, 'assets', f));
+const PLEX = path.join(ROOT, 'node_modules/@fontsource/ibm-plex-sans-arabic/files');
+for (const script of ['arabic', 'latin']) for (const w of [400, 600, 700]) fs.copyFileSync(path.join(PLEX, `ibm-plex-sans-arabic-${script}-${w}-normal.woff2`), path.join(OUT, 'assets', `plex-${script}-${w}.woff2`));
 copyDir(path.join(HERE, 'img'), path.join(OUT, 'img'));
 fs.copyFileSync(path.join(ROOT, 'public', 'icon.svg'), path.join(OUT, 'icon.svg'));
 if (fs.existsSync(path.join(ROOT, 'dist-demo', 'index.html'))) copyDir(path.join(ROOT, 'dist-demo'), path.join(OUT, 'demo'));

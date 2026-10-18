@@ -19,10 +19,10 @@ describe('Afus website', () => {
         }
     });
 
-    it('every company page has its title and description, and the demo button stays on the Afus Boutique page', () => {
+    it('every company page has its title and description, the header is the same on every page, Afus Boutique shows its price', () => {
         for (const lang of ['ar', 'fr']) {
             const t = CONTENT[lang];
-            for (const page of [t.home, t.solutions, t.products, t.servicesPage, t.boutique, t.about, t.contactPage, t.privacy, t.terms]) {
+            for (const page of [t.home, t.solutions, t.products, t.boutique, t.about, t.contactPage, t.privacy, t.terms]) {
                 expect(page.title).toBeTruthy();
                 expect(page.description).toBeTruthy();
             }
@@ -30,8 +30,16 @@ describe('Afus website', () => {
         }
         const build = fs.readFileSync(path.join(__dirname, '../site/build.mjs'), 'utf8');
         const header = build.slice(build.indexOf('const cta = '), build.indexOf('const f = t.footer'));
-        expect(header).toMatch(/^const cta = key === 'boutique'\s*\?[^:]*t\.nav\.demo/);
-        expect((header.match(/t\.nav\.demo/g) || []).length).toBe(1);
+        // One call to action whatever the page: no page changes the header
+        expect(header).not.toMatch(/\bkey\b/);
+        expect(header).toMatch(/u\('contact'\)/);
+        // Afus never sells services: no Services page; the software's price is shown
+        expect(build).not.toMatch(/services/);
+        for (const lang of ['ar', 'fr']) {
+            expect(CONTENT[lang].boutique.price.amount).toBe('25 000');
+            expect(CONTENT[lang].home.boutique.price).toMatch(/^25 000 /);
+            expect(JSON.stringify(CONTENT[lang].boutique.faq)).toMatch(/25 000/);
+        }
     });
 
     it('the software is not sold online: the buyer contacts us and a team member visits', () => {
