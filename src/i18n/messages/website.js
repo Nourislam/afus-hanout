@@ -597,6 +597,8 @@ export default {
     'website.gallery.product': ["Article page", "Page article", "صفحة منتج"],
     'website.gallery.category': ["Category page", "Page catégorie", "صفحة صنف"],
     'website.gallery.pages': ["{n} pages", "{n} pages", "{n} صفحة"],
+    'website.gallery.phone': ["On a phone", "Sur téléphone", "على الهاتف"],
+    'website.gallery.liveHint': ["Each theme below is your own website, with your articles, prices and photos: open it to see every page on a computer or a phone, then choose the one you like.", "Chaque thème ci-dessous est votre propre site, avec vos articles, prix et photos : ouvrez-le pour voir chaque page sur ordinateur ou téléphone, puis choisissez celui qui vous plaît.", "كل ثيم هنا هو موقعك أنت بسلعك وأسعارك وصورك: افتحه لترى كل الصفحات على الحاسوب أو الهاتف، ثم اختر الذي يعجبك."],
     'website.gallery.keep': ["Choose this theme", "Choisir ce thème", "اختر هذا الثيم"],
     'website.gallery.chosen': ["Chosen", "Choisi", "المختار"],
     'website.gallery.note': ["Preview only: ordering is off in these shops. In your shop, the program makes the website with your articles, prices and photos.", "Aperçu seulement : la commande est désactivée. Chez vous, le logiciel crée le site avec vos articles, vos prix et vos photos.", "معاينة فقط: الطلب معطّل في هذه المتاجر. في محلك، البرنامج ينشئ الموقع بسلعك وأسعارك وصورك."],

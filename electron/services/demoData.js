@@ -611,8 +611,9 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
 
     // One old kridi left unpaid, so the overdue list is not empty
     const oldest = creditOpen.find(d => d.paid < d.total && (now - d.time) / 86400000 > 40);
-    if (!oldest && creditOpen.length) {
-        const debt = creditOpen[0];
+    const unpaid = creditOpen.find(d => d.paid < d.total);
+    if (!oldest && unpaid) {
+        const debt = unpaid;
         api.run('UPDATE credit_sales SET due_date = ? WHERE id = ?', [new Date(now.getTime() - 10 * 86400000).toISOString(), debt.id]);
     }
 

@@ -1,10 +1,11 @@
-// Website › Theme tab: the theme studio with its preview.
+// Website › Theme tab: the theme gallery, each theme's whole shop on a computer or a phone.
 import { useEffect, useRef, useState } from 'react';
-import { Palette, CheckCircle2 } from 'lucide-react';
+import { Palette, CheckCircle2, Monitor, Smartphone } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { toast } from '../ui/Toast';
 import { useT } from '../../i18n';
 import { DemoThemeGallery, demoShops } from './DemoThemeGallery';
+import { ThemeShot, ThemeViewer } from './ThemeViewer';
 
 /** A theme's name / description in the window's language (they come with the theme). */
 export const themeText = (theme, key, lang) => theme?.[key]?.[lang] || theme?.[key]?.ar || theme?.id || '';
@@ -65,139 +66,93 @@ export function ThemePicker({ themes = [], value, onChange, disabled, current })
     );
 }
 
-const PREVIEW_PAGES = ['home', 'category', 'product'];
-const PREVIEW_WIDTH = { desktop: 1280, mobile: 390 };
-const PREVIEW_HEIGHT = 620;
-
 /**
- * Themes of the website: pick one to see the shop's own website in it
- * (home, a category, an article; computer or phone), then keep it. The
- * page is drawn by the program from the shop's data and shown in a frame
- * that runs no script and cannot reach the program.
+ * Themes of the website, as in the web demo: a card per theme showing the
+ * shop's own home page in it (computer and phone), opening the whole shop
+ * (every page, computer or phone), then keeping the one the shop likes. The
+ * pages are drawn by the program from the shop's data, in frames that run no
+ * script and cannot reach the program.
  */
 export function ThemeStudio(props) {
     // The web demo (Afus website): the theme shops made beforehand, opened in a new page
-    return demoShops() ? <DemoThemeGallery {...props} /> : <LiveThemeStudio {...props} />;
+    return demoShops() ? <DemoThemeGallery {...props} /> : <LiveThemeGallery {...props} />;
 }
 
-function LiveThemeStudio({ site, busy, run }) {
-    const { t, lang } = useT();
-    const api = window.electronAPI.website;
-    const [picked, setPicked] = useState(site.theme);
-    const [page, setPage] = useState('home');
-    const [device, setDevice] = useState('desktop');
-    const [preview, setPreview] = useState(null);
-    const [failed, setFailed] = useState(false);
-
-    useEffect(() => { setPicked(site.theme); }, [site.theme]);
+/** A theme's home page, asked for once its card is on screen. */
+function useHomePreview(themeId, again) {
+    const ref = useRef(null);
+    const [seen, setSeen] = useState(false);
+    const [html, setHtml] = useState(null);
     useEffect(() => {
+        if (seen || !ref.current) return undefined;
+        if (typeof IntersectionObserver === 'undefined') { setSeen(true); return undefined; }
+        const io = new IntersectionObserver((entries) => { if (entries.some(e => e.isIntersecting)) setSeen(true); }, { rootMargin: '200px' });
+        io.observe(ref.current);
+        return () => io.disconnect();
+    }, [seen]);
+    useEffect(() => {
+        if (!seen) return undefined;
         let alive = true;
-        setFailed(false);
-        api.previewTheme({ theme: picked, page }).then((r) => { if (alive) setPreview(r); }, () => { if (alive) setFailed(true); });
+        window.electronAPI.website.previewTheme({ theme: themeId, page: 'home' }).then((r) => { if (alive) setHtml(r.html); }, () => {});
         return () => { alive = false; };
+    }, [seen, themeId, again]);
+    return [ref, html];
+}
+
+function LiveThemeCard({ theme, site, again, onOpen, onKeep, busy }) {
+    const { t, lang } = useT();
+    const [ref, html] = useHomePreview(theme.id, again);
+    const current = site.theme === theme.id;
+    const name = themeText(theme, 'name', lang);
+    return (
+        <article ref={ref} data-testid={`website-gallery-${theme.id}`}
+            className={`rounded-2xl border overflow-hidden flex flex-col bg-zinc-900/60 ${current ? 'border-indigo-400 ring-2 ring-indigo-500/40' : 'border-zinc-800'}`}>
+            <button type="button" onClick={() => onOpen(theme.id)} className="block text-start" aria-label={`${t('website.gallery.open')} · ${name}`}>
+                <ThemeShot html={html} title={t('website.previewTitle', { name })} />
+            </button>
+            <div className="p-4 flex flex-col gap-2 flex-1">
+                <h3 className="font-semibold flex items-center gap-2">
+                    {name}
+                    {current && <span className="badge bg-indigo-500/15 text-indigo-300 inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> {t('website.themeCurrent')}</span>}
+                </h3>
+                <p className="text-sm text-zinc-400">{themeText(theme, 'description', lang)}</p>
+                <div className="flex flex-wrap gap-2 mt-auto pt-1">
+                    <Button size="sm" onClick={() => onOpen(theme.id)} data-testid={`website-gallery-open-${theme.id}`}><Monitor className="w-4 h-4" /> {t('website.gallery.open')}</Button>
+                    <Button size="sm" variant="secondary" onClick={() => onOpen(theme.id, 'home', 'mobile')} data-testid={`website-gallery-phone-${theme.id}`}><Smartphone className="w-4 h-4" /> {t('website.gallery.phone')}</Button>
+                    <Button size="sm" variant="secondary" onClick={() => onOpen(theme.id, 'product')}>{t('website.gallery.product')}</Button>
+                    <Button size="sm" variant="secondary" onClick={() => onOpen(theme.id, 'category')}>{t('website.gallery.category')}</Button>
+                    {!current && <Button size="sm" variant="secondary" onClick={() => onKeep(theme.id)} disabled={busy === 'theme'} data-testid={`website-gallery-keep-${theme.id}`}>{t('website.gallery.keep')}</Button>}
+                </div>
+            </div>
+        </article>
+    );
+}
+
+function LiveThemeGallery({ site, busy, run }) {
+    const { t } = useT();
+    const api = window.electronAPI.website;
+    const [open, setOpen] = useState(null);
     // The home picture changed: drawn again
-    }, [picked, page, JSON.stringify(site.publicInfo?.hero || null)]);
-    const chosen = site.themes.find(x => x.id === picked);
+    const again = JSON.stringify(site.publicInfo?.hero || null);
     const online = !!site.publishedAt;
     // Online already: the website's pages are made again with the new look (the shop's data is only read)
-    const keep = () => run('theme', () => api.setTheme(picked, { publish: online }), (next) => {
+    const keep = (id) => run('theme', () => api.setTheme(id, { publish: online }), (next) => {
         toast.success(t(next?.result?.published ? 'website.themeSavedUpdating' : 'website.themeSaved'));
     });
-
     return (
         <section className="card space-y-4 xl:col-span-2" data-testid="website-theme" id="website-theme">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                    <h2 className="font-semibold flex items-center gap-2"><Palette className="w-4 h-4 text-indigo-300" /> {t('website.theme')}</h2>
-                    <p className="text-xs text-zinc-500 mt-1 leading-relaxed">{t('website.themeHint')}</p>
-                </div>
+            <div>
+                <h2 className="font-semibold flex items-center gap-2"><Palette className="w-4 h-4 text-indigo-300" /> {t('website.theme')}</h2>
+                <p className="text-xs text-zinc-500 mt-1 leading-relaxed">{t('website.gallery.liveHint')}</p>
             </div>
-            <ThemePicker themes={site.themes} value={picked} current={site.theme} disabled={busy === 'theme'} onChange={setPicked} />
-
-            <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap gap-1 rounded-lg bg-dark-tertiary/60 p-1" role="tablist" aria-label={t('website.previewPage')}>
-                    {PREVIEW_PAGES.map(p => (
-                        <button key={p} type="button" role="tab" aria-selected={page === p} onClick={() => setPage(p)} data-testid={`website-preview-page-${p}`}
-                            className={`px-3 py-1.5 rounded-md text-sm ${page === p ? 'bg-dark-secondary text-white' : 'text-zinc-400 hover:text-white'}`}>
-                            {t(`website.previewPages.${p}`)}
-                        </button>
-                    ))}
-                </div>
-                <div className="flex gap-1 rounded-lg bg-dark-tertiary/60 p-1" role="tablist" aria-label={t('website.previewDevice')}>
-                    {['desktop', 'mobile'].map(d => (
-                        <button key={d} type="button" role="tab" aria-selected={device === d} onClick={() => setDevice(d)} data-testid={`website-preview-device-${d}`}
-                            className={`px-3 py-1.5 rounded-md text-sm ${device === d ? 'bg-dark-secondary text-white' : 'text-zinc-400 hover:text-white'}`}>
-                            {t(`website.previewDevices.${d}`)}
-                        </button>
-                    ))}
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" data-testid="website-theme-gallery">
+                {site.themes.map(theme => (
+                    <LiveThemeCard key={theme.id} theme={theme} site={site} again={again} busy={busy} onKeep={keep}
+                        onOpen={(id, page = 'home', device = 'desktop') => setOpen({ id, page, device })} />
+                ))}
             </div>
-
-            {failed ? <p className="p-6 text-sm text-zinc-500">{t('website.previewFailed')}</p>
-                : <PreviewFrame html={preview?.html} device={device} title={t('website.previewTitle', { name: themeText(chosen, 'name', lang) })} theme={preview?.theme} />}
-            {preview && preview.products === 0 && <p className="text-xs text-amber-300">{t('website.previewEmpty')}</p>}
-
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-xs text-zinc-500 leading-relaxed max-w-xl">{t('website.themeSafe')}</p>
-                {picked === site.theme
-                    ? <span className="badge bg-emerald-500/15 text-emerald-300" data-testid="website-theme-current">{t('website.themeInUse', { name: themeText(chosen, 'name', lang) })}</span>
-                    : (
-                        <div className="flex gap-2">
-                            <Button size="sm" variant="ghost" onClick={() => setPicked(site.theme)}>{t('common.cancel')}</Button>
-                            <Button size="sm" onClick={keep} loading={busy === 'theme'} data-testid="website-theme-use">
-                                <CheckCircle2 className="w-4 h-4" /> {t(online ? 'website.themeUseUpdate' : 'website.themeUse', { name: themeText(chosen, 'name', lang) })}
-                            </Button>
-                        </div>
-                    )}
-            </div>
+            <p className="text-xs text-zinc-500 leading-relaxed">{t('website.themeSafe')}</p>
+            {open && <ThemeViewer site={site} theme={open.id} page={open.page} device={open.device} busy={busy} onKeep={keep} onClose={() => setOpen(null)} />}
         </section>
     );
 }
-
-/** The website's page drawn by the program, in a frame that runs no script and cannot reach the program. */
-export function PreviewFrame({ html, device = 'desktop', title, testId = 'website-preview-frame', theme, onNavigate }) {
-    const box = useRef(null);
-    const [boxWidth, setBoxWidth] = useState(800);
-    useEffect(() => {
-        if (!box.current || typeof ResizeObserver === 'undefined') return undefined;
-        const ro = new ResizeObserver(([entry]) => setBoxWidth(entry.contentRect.width));
-        ro.observe(box.current);
-        return () => ro.disconnect();
-    }, []);
-    const width = PREVIEW_WIDTH[device];
-    // Slightly under the measured width, so rounding never pushes the frame out
-    const scale = Math.min(1, Math.max(0.1, (boxWidth - 2) / width));
-    // Laid out at the device's width, then drawn smaller from the box's top-left corner
-    // (the same in every language: the page has its own direction)
-    return (
-        <div ref={box} className="w-full">
-            <div className="relative rounded-xl border border-dark-border bg-white overflow-hidden mx-auto" style={{ width: Math.floor(width * scale), maxWidth: '100%', height: PREVIEW_HEIGHT }}>
-                {html && (
-                    <iframe title={title} sandbox={onNavigate ? 'allow-same-origin' : ''} referrerPolicy="no-referrer" srcDoc={html} data-testid={testId} data-theme={theme}
-                        onLoad={onNavigate ? (e) => followLinks(e.currentTarget, onNavigate) : undefined}
-                        style={{ position: 'absolute', top: 0, left: 0, width, height: PREVIEW_HEIGHT / scale, transform: `scale(${scale})`, transformOrigin: 'top left', border: 0, display: 'block' }} />
-                )}
-            </div>
-        </div>
-    );
-}
-
-/**
- * The preview's links open the page they name, inside the preview (the page
- * itself runs no script: the program reads the click). Other links do nothing.
- */
-function followLinks(frame, onNavigate) {
-    const doc = frame.contentDocument;
-    if (!doc) return;
-    doc.addEventListener('click', (e) => {
-        const a = e.target.closest?.('a[href]');
-        if (!a) return;
-        e.preventDefault();
-        const m = /^#go=(.+)$/.exec(a.getAttribute('href') || '');
-        if (!m) return;
-        const [kind, ...rest] = decodeURIComponent(m[1]).split(':');
-        onNavigate(kind, rest.join(':') || null);
-    });
-    doc.addEventListener('submit', (e) => e.preventDefault());
-}
-

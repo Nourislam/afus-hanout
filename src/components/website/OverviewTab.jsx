@@ -1,79 +1,14 @@
 // Website › Overview tab: publish panel, what the site shows, the preview window.
 import { useEffect, useRef, useState } from 'react';
 import { Globe, Copy, RefreshCw, Sparkles, Store } from 'lucide-react';
-import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { toast } from '../ui/Toast';
 import { formatDate } from '../../i18n/format';
 import { useT } from '../../i18n';
-import { PreviewFrame, themeText } from './DesignTab';
+import { themeText } from './DesignTab';
+import { ThemeViewer } from './ThemeViewer';
 import { demoShops, shopUrl } from './DemoThemeGallery';
 import { AddressField, DOMAIN_STYLE, STATUS_STYLE, STEP_ICON } from './shared';
-
-// Every page of the website, as the preview offers them
-const SITE_PAGES = ['home', 'products', 'categories', 'category', 'product', 'new', 'best', 'offers', 'cart', 'checkout', 'about', 'contact', 'location', 'returns', 'terms', 'privacy', 'shipping'];
-
-/**
- * Preview Website: the website as Update would publish it now (the shop's
- * data as it is, the theme in use), every page, computer or phone — before
- * anything is sent. Read only.
- */
-function WebsitePreview({ site, onClose, onUpdate }) {
-    const { t, lang } = useT();
-    const api = window.electronAPI.website;
-    const [page, setPage] = useState('home');
-    const [id, setId] = useState(null);
-    const [device, setDevice] = useState('desktop');
-    const [preview, setPreview] = useState(null);
-    const [failed, setFailed] = useState(false);
-    const theme = site.themes?.find(x => x.id === site.theme);
-    // A link clicked in the preview: open that page
-    const navigate = (kind, target) => {
-        if (kind === 'home') { setPage('home'); setId(null); } else if (kind === 'page' && SITE_PAGES.includes(target)) { setPage(target); setId(null); } else if (kind === 'category' || kind === 'product') { setPage(kind); setId(target); }
-    };
-    useEffect(() => {
-        let alive = true;
-        setFailed(false);
-        api.previewTheme({ theme: site.theme, page, id }).then((r) => { if (alive) setPreview(r); }, () => { if (alive) setFailed(true); });
-        return () => { alive = false; };
-    }, [page, id, site.theme]);
-    return (
-        <Modal isOpen onClose={onClose} title={t('website.sitePreview.title')} size="xl">
-            <div className="space-y-3" data-testid="website-site-preview">
-                <p className="text-xs text-zinc-400 leading-relaxed">{t(site.publishedAt ? 'website.sitePreview.hintOnline' : 'website.sitePreview.hintFirst', { theme: themeText(theme, 'name', lang) })}</p>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <select className="input py-1.5 text-sm" value={page} onChange={(e) => { setPage(e.target.value); setId(null); }} aria-label={t('website.previewPage')} data-testid="website-site-preview-page">
-                            {SITE_PAGES.map(p => <option key={p} value={p}>{t(`website.sitePreview.page.${p}`)}</option>)}
-                        </select>
-                        {page === 'category' && preview?.categories?.length > 0 && (
-                            <select className="input py-1.5 text-sm" value={id || ''} onChange={(e) => setId(e.target.value || null)} aria-label={t('website.previewPages.category')}>
-                                <option value="">{t('website.sitePreview.page.products')}</option>
-                                {preview.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                        )}
-                    </div>
-                    <div className="flex gap-1 rounded-lg bg-dark-tertiary/60 p-1" role="tablist" aria-label={t('website.previewDevice')}>
-                        {['desktop', 'mobile'].map(d => (
-                            <button key={d} type="button" role="tab" aria-selected={device === d} onClick={() => setDevice(d)} data-testid={`website-site-preview-device-${d}`}
-                                className={`px-3 py-1.5 rounded-md text-sm ${device === d ? 'bg-dark-secondary text-white' : 'text-zinc-400 hover:text-white'}`}>
-                                {t(`website.previewDevices.${d}`)}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                {failed ? <p className="p-6 text-sm text-zinc-500">{t('website.previewFailed')}</p>
-                    : <PreviewFrame html={preview?.html} device={device} title={t('website.sitePreview.title')} testId="website-site-preview-frame" theme={preview?.theme} onNavigate={navigate} />}
-                {preview && page === 'new' && preview.newProducts === 0 && <p className="text-xs text-zinc-500">{t('website.sitePreview.noNew')}</p>}
-                {preview && page === 'best' && preview.bestSellers === 0 && <p className="text-xs text-zinc-500">{t('website.sitePreview.noBest')}</p>}
-                <div className="flex flex-wrap justify-end gap-2">
-                    <Button variant="ghost" onClick={onClose}>{t('common.close')}</Button>
-                    {site.canPublish && <Button onClick={onUpdate} data-testid="website-site-preview-publish"><RefreshCw className="w-4 h-4" /> {t(site.publishedAt ? 'website.updateNow' : 'website.publish.create')}</Button>}
-                </div>
-            </div>
-        </Modal>
-    );
-}
 
 /**
  * Website management in one place: where the website is (status), its
@@ -145,7 +80,7 @@ export function WebsiteOverview({ site, busy, run, outdated = null }) {
                     <RefreshCw className="w-4 h-4" /> {running ? t(published ? 'website.update.running' : 'website.publish.running') : published ? t('website.updateNow') : t('website.publish.create')}
                 </Button>
             </div>
-            {previewing && <WebsitePreview site={site} onClose={() => setPreviewing(false)} onUpdate={() => { setPreviewing(false); update(); }} />}
+            {previewing && <ThemeViewer site={site} theme={site.theme} busy={busy} onClose={() => setPreviewing(false)} onPublish={() => { setPreviewing(false); update(); }} />}
         </section>
     );
 }
