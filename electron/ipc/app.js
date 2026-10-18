@@ -114,9 +114,14 @@ module.exports = function register(ctx) {
     // ------------------------------------------------------------------
     const demoService = require('../services/demoService');
     const { demoStaff } = require('../services/demoData');
+    // The demo shop is tried on the Afus website (the web demo runs this same
+    // program): the installed program no longer offers it. Its data, if any,
+    // stays until the owner deletes it from Settings › About
+    const webDemo = () => !!globalThis.__AFUS_WEB_DEMO__;
     function trialStatus() {
       const clock = ctx.trialClock || { installedAt: Date.now(), now: Date.now() };
-      return trialService.status({ installedAt: clock.installedAt, now: Math.max(Date.now(), clock.now) });
+      const status = trialService.status({ installedAt: clock.installedAt, now: Math.max(Date.now(), clock.now) });
+      return webDemo() ? status : { ...status, demo: { ...status.demo, available: false, daysLeft: 0 } };
     }
     // The demo shop's data stays on disk after its 3 months (only opening it is
     // refused); the owner removes it when they choose, from Settings › About
