@@ -1,60 +1,13 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import {
-    LayoutDashboard, ShoppingCart, Package, Boxes, UserCog, BarChart3, Settings, LogOut, Percent, QrCode,
-    History, CreditCard, FileText, LibraryBig, Users, Truck,
-    Globe, ShoppingBag, ChevronDown, MoreHorizontal,
-} from 'lucide-react';
+import { Settings, LogOut, ChevronDown, MoreHorizontal } from 'lucide-react';
 import { useAuthStore, PERMISSIONS } from '../../stores/authStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useState, useEffect } from 'react';
 import { useT } from '../../i18n';
 import ShiftSummaryDialog from '../shifts/ShiftSummaryDialog';
 import { ShopLogo } from '../shop/ShopLogo';
-import { SIMPLE_PATHS } from '../../lib/uiMode';
-import { offerTabs } from '../../lib/modules';
-
-// Grouped menu. Brands, categories, suppliers and customers live together in
-// "Catalogue"; promotions and packs together in "Offers".
-const NAV_GROUPS = [
-    {
-        id: 'sell',
-        items: [
-            { path: '/', icon: LayoutDashboard, label: 'nav.dashboard', permission: PERMISSIONS.DASHBOARD_VIEW },
-            { path: '/pos', icon: ShoppingCart, label: 'nav.sales', permission: PERMISSIONS.POS_VIEW },
-            { path: '/transactions', icon: History, label: 'nav.transactions', permission: PERMISSIONS.POS_VIEW },
-            { path: '/credit-sales', icon: CreditCard, label: 'nav.credit', permission: PERMISSIONS.CUSTOMERS_VIEW, feature: 'credit' },
-        ],
-    },
-    {
-        id: 'stock',
-        items: [
-            { path: '/products', icon: Package, label: 'nav.products', permission: PERMISSIONS.PRODUCTS_VIEW },
-            { path: '/inventory', icon: Boxes, label: 'nav.inventory', permission: PERMISSIONS.INVENTORY_VIEW },
-            { path: '/labels', icon: QrCode, label: 'nav.labels', permission: PERMISSIONS.PRODUCTS_VIEW },
-            { path: '/catalog', icon: LibraryBig, label: 'nav.catalog', permission: PERMISSIONS.PRODUCTS_VIEW },
-            { path: '/customers', icon: Users, label: 'nav.customers', permission: PERMISSIONS.CUSTOMERS_VIEW, feature: 'customers' },
-            { path: '/suppliers', icon: Truck, label: 'nav.suppliers', permission: PERMISSIONS.INVENTORY_ADJUST, feature: 'suppliers' },
-            { path: '/purchase-orders', icon: FileText, label: 'nav.purchases', permission: PERMISSIONS.INVENTORY_ADJUST, feature: 'purchaseOrders' },
-        ],
-    },
-    {
-        id: 'grow',
-        items: [
-            // Promotions, packs and gift cards: shown while one of them is on and allowed
-            { path: '/offers', icon: Percent, label: 'nav.offers', show: (features, can) => offerTabs(features, can).length > 0 },
-            { path: '/website', icon: Globe, label: 'nav.website', permission: PERMISSIONS.SETTINGS_VIEW, feature: 'website' },
-            { path: '/website-orders', icon: ShoppingBag, label: 'nav.websiteOrders', permission: PERMISSIONS.SETTINGS_VIEW, feature: 'website' },
-        ],
-    },
-    {
-        id: 'manage',
-        items: [
-            { path: '/employees', icon: UserCog, label: 'nav.employees', permission: PERMISSIONS.EMPLOYEES_VIEW },
-            { path: '/reports', icon: BarChart3, label: 'nav.reports', permission: PERMISSIONS.REPORTS_VIEW },
-        ],
-    },
-];
+import { NAV_GROUPS } from './navItems';
 
 // A cashier sees what a sale needs first; the rest is folded under "More"
 const CASHIER_MAIN = ['/pos', '/transactions', '/credit-sales', '/customers'];
@@ -108,6 +61,7 @@ export function Sidebar() {
     const shopLogo = useSettingsStore(state => state.settings.shopLogo);
     const uiMode = useSettingsStore(state => state.settings.uiMode);
     const simple = uiMode === 'simple';
+    const simplePages = useSettingsStore(state => state.settings.simplePages);
     const tooltip = useTooltip(collapsed);
 
     useEffect(() => {
@@ -125,7 +79,7 @@ export function Sidebar() {
     const visible = (item) => (!item.permission || hasPermission(item.permission))
         && (!item.feature || features?.[item.feature])
         && (!item.show || item.show(features || {}, hasPermission))
-        && (!simple || SIMPLE_PATHS.includes(item.path));
+        && (!simple || (simplePages || []).includes(item.path));
 
     const cashier = currentEmployee?.role === 'cashier';
     const location = useLocation();

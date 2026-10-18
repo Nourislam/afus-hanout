@@ -218,6 +218,8 @@ module.exports = function register(ctx) {
         try { settings[row.key] = JSON.parse(row.value); }
         catch { settings[row.key] = row.value; }
       });
+      // The shop's own details (name, address, signature) are inside store_config
+      Object.assign(settings, settings.store_config || {});
 
       // Initialize email service
       if (!initEmailService({

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import {
-    Rows3, LayoutGrid, CreditCard, Users, Percent, PackageOpen, Gift, Truck, FileText, Mail, Globe, ShoppingBag, Boxes, Wifi,
+    Rows3, LayoutGrid, CreditCard, Users, Percent, PackageOpen, Gift, Truck, FileText, Mail, Globe, ShoppingBag, Boxes, Wifi, Check, Lock,
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { toast } from '../ui/Toast';
 import { useT } from '../../i18n';
 import { translateError } from '../../i18n/errors';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { saveUiMode } from '../../lib/uiMode';
+import { saveUiMode, saveSimplePages, SIMPLE_LOCKED } from '../../lib/uiMode';
+import { NAV_GROUPS } from '../layout/navItems';
 import { MODULE_GROUPS, MODULE_REQUIRES, resolveFeatures, offersEnabled } from '../../lib/features';
 
 const MODULE_ICONS = {
@@ -36,6 +37,19 @@ export function ModulesSettings({ features, onFeaturesChange }) {
     const { t } = useT();
     const uiMode = useSettingsStore(state => state.settings.uiMode);
     const loadSettings = useSettingsStore(state => state.loadSettings);
+    const simplePages = useSettingsStore(state => state.settings.simplePages) || [];
+    // Pages of the menu the shop uses (a hidden module's page is not offered)
+    const pages = NAV_GROUPS.flatMap(g => g.items).filter(item => (!item.feature || features?.[item.feature])
+        && (!item.show || item.show(features || {}, () => true)));
+    const togglePage = async (path) => {
+        if (path === SIMPLE_LOCKED) return;
+        const next = simplePages.includes(path) ? simplePages.filter(p => p !== path) : [...simplePages, path];
+        try {
+            await saveSimplePages(next);
+        } catch (error) {
+            toast.error(translateError(error));
+        }
+    };
     const [saving, setSaving] = useState('');
 
     const chooseMode = async (mode) => {
@@ -85,6 +99,31 @@ export function ModulesSettings({ features, onFeaturesChange }) {
                         </button>
                     ))}
                 </div>
+                {/* Simple menu: the owner picks its pages */}
+                {uiMode === 'simple' && (
+                    <div className="rounded-xl border border-dark-border p-4 space-y-3" data-testid="simple-pages">
+                        <div>
+                            <h4 className="text-sm font-semibold">{t('nav.mode.pagesTitle')}</h4>
+                            <p className="text-xs text-zinc-500">{t('nav.mode.pagesText')}</p>
+                        </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                            {pages.map(({ path, icon: Icon, label }) => {
+                                const locked = path === SIMPLE_LOCKED;
+                                const on = locked || simplePages.includes(path);
+                                return (
+                                    <button key={path} type="button" onClick={() => togglePage(path)} disabled={locked} aria-pressed={on}
+                                        data-testid={`simple-page-${path.replace(/\//g, '') || 'home'}`}
+                                        className={`h-11 px-3 rounded-lg border text-sm inline-flex items-center gap-2 text-start transition-colors ${on ? 'border-indigo-500/60 bg-indigo-500/10 text-white' : 'border-dark-border text-zinc-400 hover:border-zinc-600 hover:text-white'} ${locked ? 'cursor-default' : ''}`}>
+                                        <Icon className={`w-4 h-4 flex-none ${on ? 'text-indigo-300' : ''}`} />
+                                        <span className="flex-1 min-w-0 truncate">{t(label)}</span>
+                                        {locked ? <Lock className="w-3.5 h-3.5 flex-none text-zinc-500" aria-label={t('nav.mode.always')} />
+                                            : on && <Check className="w-4 h-4 flex-none text-indigo-300" />}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
             </Card>
 
             {/* Optional modules, by what they are for */}

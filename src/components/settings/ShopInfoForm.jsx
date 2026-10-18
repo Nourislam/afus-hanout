@@ -106,20 +106,18 @@ export function ShopInfoForm({ value, onChange }) {
     };
 
     return (
-        <div className="grid gap-6 xl:grid-cols-[minmax(140px,168px)_1fr] items-start">
-            {/* The shop's own identity: its logo, or its initials */}
-            <div className="flex xl:flex-col items-center xl:items-stretch gap-4">
-                <p className="form-label hidden xl:block mb-0">{t('shop.logoOptional')}</p>
-                <div className="w-28 h-28 xl:w-full xl:h-auto xl:aspect-square flex-none rounded-2xl border border-dark-border bg-white/95 flex items-center justify-center overflow-hidden">
-                    {logoPreview
-                        ? <img src={logoPreview} alt={t('shop.logo')} className="w-full h-full object-contain p-3" />
-                        : <ShopLogo name={value.businessName} size={96} rounded="rounded-2xl" />}
-                </div>
-                <div className="flex-1 min-w-0 space-y-2">
-                    <p className="form-label xl:hidden mb-0">{t('shop.logoOptional')}</p>
-                    <div className="flex gap-2">
-                        <label className={`btn btn-secondary px-3 py-2 text-sm flex-1 justify-center cursor-pointer ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
-                            <ImagePlus className="w-4 h-4" />
+        <div className="space-y-6" data-testid="shop-form">
+            {/* Identity: the logo (or initials) beside the four main fields */}
+            <div className="flex flex-col sm:flex-row gap-5 items-start">
+                <div className="flex-none w-full sm:w-36 flex sm:flex-col items-center sm:items-stretch gap-3">
+                    <div className="w-24 h-24 sm:w-36 sm:h-36 flex-none rounded-2xl border border-dark-border bg-white/95 flex items-center justify-center overflow-hidden">
+                        {logoPreview
+                            ? <img src={logoPreview} alt={t('shop.logo')} className="w-full h-full object-contain p-3" />
+                            : <ShopLogo name={value.businessName} size={96} rounded="rounded-2xl" />}
+                    </div>
+                    <div className="flex-1 min-w-0 flex gap-2">
+                        <label className={`btn btn-secondary px-3 py-2 text-sm flex-1 justify-center cursor-pointer ${uploading ? 'opacity-60 pointer-events-none' : ''}`} title={logoPreview ? t('shop.logoHint') : t('shop.logoFallback')}>
+                            <ImagePlus className="w-4 h-4 flex-none" />
                             <span className="truncate">{uploading ? t('common.saving') : (logoPreview ? t('shop.changeLogo') : t('shop.chooseLogo'))}</span>
                             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/svg+xml" onChange={handleLogoSelect} className="hidden" />
                         </label>
@@ -129,13 +127,9 @@ export function ShopInfoForm({ value, onChange }) {
                             </Button>
                         )}
                     </div>
-                    <p className="text-xs text-zinc-500 leading-relaxed">{logoPreview ? t('shop.logoHint') : t('shop.logoFallback')}</p>
                 </div>
-            </div>
-
-            <div className="space-y-5 min-w-0">
-                <Section title={t('shop.groupShop')}>
-                    <div className="grid gap-x-4 gap-y-3 fit-grid">
+                <div className="flex-1 min-w-0 w-full">
+                    <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
                         <Input
                             label={t('shop.name')}
                             value={value.businessName || ''}
@@ -163,44 +157,47 @@ export function ShopInfoForm({ value, onChange }) {
                             className="ltr"
                         />
                     </div>
-                </Section>
+                    <p className="text-xs text-zinc-500 leading-relaxed mt-2">{logoPreview ? t('shop.logoHint') : t('shop.logoFallback')}</p>
+                </div>
+            </div>
 
-                <Section title={t('shop.groupAddress')}>
-                    <div className="grid gap-x-4 gap-y-3 fit-grid">
+            <Section title={t('shop.groupAddress')}>
+                <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <Combobox
+                        label={t('shop.wilaya')}
+                        value={value.businessWilaya || ''}
+                        onChange={(v) => onChange({ ...value, businessWilaya: v, ...(parseInt(v, 10) !== wilayaNumber ? { businessCity: '' } : {}) })}
+                        options={wilayas}
+                        placeholder={t('shop.wilayaPlaceholder')}
+                        emptyText={t('shop.wilayaNone')}
+                    />
+                    {communes.length ? (
                         <Combobox
-                            label={t('shop.wilaya')}
-                            value={value.businessWilaya || ''}
-                            onChange={(v) => onChange({ ...value, businessWilaya: v, ...(parseInt(v, 10) !== wilayaNumber ? { businessCity: '' } : {}) })}
-                            options={wilayas}
-                            placeholder={t('shop.wilayaPlaceholder')}
+                            label={t('shop.commune')}
+                            value={value.businessCity || ''}
+                            onChange={(v) => set('businessCity', v)}
+                            options={value.businessCity && !communes.some(c => c.value === value.businessCity)
+                                ? [{ value: value.businessCity, label: value.businessCity }, ...communes] : communes}
+                            placeholder={t('shop.communePlaceholder')}
                             emptyText={t('shop.wilayaNone')}
                         />
-                        {communes.length ? (
-                            <Combobox
-                                label={t('shop.commune')}
-                                value={value.businessCity || ''}
-                                onChange={(v) => set('businessCity', v)}
-                                options={value.businessCity && !communes.some(c => c.value === value.businessCity)
-                                    ? [{ value: value.businessCity, label: value.businessCity }, ...communes] : communes}
-                                placeholder={t('shop.communePlaceholder')}
-                                emptyText={t('shop.wilayaNone')}
-                            />
-                        ) : (
-                            <Input
-                                label={t('shop.commune')}
-                                value={value.businessCity || ''}
-                                onChange={(e) => set('businessCity', e.target.value)}
-                                placeholder={t('shop.communeFirst')}
-                            />
-                        )}
+                    ) : (
                         <Input
-                            label={t('shop.address')}
-                            value={value.businessAddress || ''}
-                            onChange={(e) => set('businessAddress', e.target.value)}
+                            label={t('shop.commune')}
+                            value={value.businessCity || ''}
+                            onChange={(e) => set('businessCity', e.target.value)}
+                            placeholder={t('shop.communeFirst')}
                         />
-                    </div>
-                </Section>
+                    )}
+                    <Input
+                        label={t('shop.address')}
+                        value={value.businessAddress || ''}
+                        onChange={(e) => set('businessAddress', e.target.value)}
+                    />
+                </div>
+            </Section>
 
+            <div className="grid gap-3 lg:grid-cols-2 items-start">
                 {/* Social pages, map and opening hours (shown on the shop's website) */}
                 <div className="rounded-xl border border-dark-border" data-testid="shop-social">
                     <button
