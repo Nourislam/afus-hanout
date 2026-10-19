@@ -157,9 +157,29 @@ async function initDatabase() {
         }
     }
 
+    enableForeignKeys();
+
     console.log('Database initialized successfully');
     return db;
 }
+
+// Links between tables are checked by SQLite (a sale line cannot point to a
+// missing sale...). Turned on only when the data has no broken link left from
+// older versions: those are logged instead, and the shop keeps working.
+let foreignKeysOn = false;
+function enableForeignKeys() {
+    const broken = db.exec('PRAGMA foreign_key_check');
+    const count = broken.length ? broken[0].values.length : 0;
+    if (count) {
+        console.warn(`Foreign key checks left off: ${count} old row(s) point to a missing record`);
+        foreignKeysOn = false;
+        return false;
+    }
+    db.run('PRAGMA foreign_keys = ON');
+    foreignKeysOn = true;
+    return true;
+}
+const foreignKeysEnabled = () => foreignKeysOn;
 
 function runMigrations() {
     // Migration: Add credit columns to customers table
@@ -641,6 +661,8 @@ function getTableColumns(tableName) {
 function saveDatabase() {
     if (db) {
         const data = db.export();
+        // sql.js resets the connection's settings when it exports
+        if (foreignKeysOn) db.run('PRAGMA foreign_keys = ON');
         const buffer = Buffer.from(data);
         // Write to a temporary file first and then rename it over the real
         // file, so a crash or power loss mid-write cannot leave a truncated
@@ -809,5 +831,5 @@ function getOne(sql, params = []) {
 module.exports = {
     initDatabase, getDatabase, saveDatabase, runQuery, runInsert, runStatement, runTransaction,
     getOne, getTableColumns, addDatabaseChangeListener, getDbPath, bindable,
-    setProfile, getProfile, isDemo, getDataRoot, realDbPath, closeDatabase, DEMO_FOLDER, DEMO_FILE,
+    setProfile, getProfile, isDemo, getDataRoot, realDbPath, closeDatabase, DEMO_FOLDER, DEMO_FILE, foreignKeysEnabled,
 };

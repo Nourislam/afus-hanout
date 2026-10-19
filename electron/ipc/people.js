@@ -351,7 +351,12 @@ module.exports = function register(ctx) {
       return supplier;
     });
 
+    // A supplier with purchases, payments, receivings or returns is kept: deleting it
+    // would take that history with it (the database removes their payments and returns)
     ipcMain.handle('db:suppliers:delete', (_, id) => {
+      const used = ['purchase_orders', 'supplier_payments', 'receivings', 'purchase_returns', 'supplier_invoices']
+        .some(table => getOne(`SELECT 1 AS used FROM ${table} WHERE supplier_id = ? LIMIT 1`, [id]));
+      if (used) throw catalog.codedError('SUPPLIER_HAS_HISTORY');
       runInsert('DELETE FROM suppliers WHERE id = ?', [id]);
       return true;
     });

@@ -1,8 +1,10 @@
 // IPC handlers: email. Moved out of main.js unchanged; main.js passes what they use.
+const { documentEmail } = require('../services/emailTemplates');
+const { translate } = require('../i18n');
+
 module.exports = function register(ctx) {
     const {
         getStoreSettings,
-        BRAND,
         ReceiptService,
         getOne,
         ipcMain,
@@ -71,110 +73,12 @@ module.exports = function register(ctx) {
         },
       });
 
-      // Build modern email HTML
-      const itemsHtml = (fullPO.items || []).map((item, index) => `
-    <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'};">
-      <td style="padding: 12px 16px; color: #1e293b; border-bottom: 1px solid #e2e8f0;">${item.product_name}</td>
-      <td class="mobile-hide" style="padding: 12px 16px; color: #475569; text-align: center; border-bottom: 1px solid #e2e8f0;">${item.quantity}</td>
-      <td class="mobile-hide" style="padding: 12px 16px; color: #475569; text-align: right; border-bottom: 1px solid #e2e8f0;">$${(item.unit_cost || 0).toFixed(2)}</td>
-      <td style="padding: 12px 16px; color: #0f172a; text-align: right; font-weight: 600; border-bottom: 1px solid #e2e8f0;">$${(item.total_cost || 0).toFixed(2)}</td>
-    </tr>
-  `).join('');
-
-      const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Purchase Order</title>
-      <style>
-        @media only screen and (max-width: 600px) {
-          .container { width: 100% !important; margin: 20px 0 !important; border-radius: 0 !important; }
-          .content { padding: 20px !important; }
-          .header { padding: 20px !important; }
-          .info-grid { flex-direction: column !important; gap: 20px; }
-          .info-grid > div { text-align: left !important; padding: 0 !important; }
-          .mobile-hide { display: none !important; }
-          h1 { font-size: 20px !important; }
-        }
-      </style>
-    </head>
-    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9;">
-      <div class="container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); margin-top: 40px; margin-bottom: 40px;">
-        
-        <!-- Header -->
-        <div class="header" style="background-color: #10b981; padding: 32px 40px; text-align: center;">
-          <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">Purchase Order</h1>
-          <p style="margin: 8px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 16px;">#${fullPO.po_number || fullPO.id?.slice(0, 8)}</p>
-        </div>
-
-        <!-- Content -->
-        <div class="content" style="padding: 40px;">
-          
-          <!-- Context -->
-          <div style="margin-bottom: 32px; text-align: center; color: #64748b; font-size: 16px; line-height: 1.5;">
-            <p>Hello ${fullPO.supplier_contact_person || fullPO.supplier_name || 'Supplier'},</p>
-            <p>Please find attached our purchase order. We would appreciate if you could process this order at your earliest convenience.</p>
-          </div>
-
-          <!-- Info Grid -->
-          <div class="info-grid" style="display: flex; justify-content: space-between; margin-bottom: 32px; background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <div style="flex: 1; padding-right: 20px;">
-              <h3 style="margin: 0 0 8px; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">From</h3>
-              <p style="margin: 0; color: #0f172a; font-weight: 600;">${settings.businessName || 'Our Company'}</p>
-              <p style="margin: 4px 0 0; color: #475569; font-size: 14px;">${settings.businessEmail || ''}</p>
-            </div>
-            <div style="flex: 1; text-align: right;">
-              <h3 style="margin: 0 0 8px; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">To</h3>
-              <p style="margin: 0; color: #0f172a; font-weight: 600;">${fullPO.supplier_name || 'Supplier'}</p>
-              <p style="margin: 4px 0 0; color: #475569; font-size: 14px;">${fullPO.supplier_email || ''}</p>
-            </div>
-          </div>
-
-          <!-- Table -->
-          <table style="width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 32px;">
-            <thead>
-              <tr>
-                <th style="background-color: #f8fafc; padding: 12px 16px; text-align: left; color: #64748b; font-weight: 600; font-size: 13px; border-bottom: 2px solid #e2e8f0; border-top-left-radius: 6px;">ITEM</th>
-                <th class="mobile-hide" style="background-color: #f8fafc; padding: 12px 16px; text-align: center; color: #64748b; font-weight: 600; font-size: 13px; border-bottom: 2px solid #e2e8f0;">QTY</th>
-                <th class="mobile-hide" style="background-color: #f8fafc; padding: 12px 16px; text-align: right; color: #64748b; font-weight: 600; font-size: 13px; border-bottom: 2px solid #e2e8f0;">UNIT COST</th>
-                <th style="background-color: #f8fafc; padding: 12px 16px; text-align: right; color: #64748b; font-weight: 600; font-size: 13px; border-bottom: 2px solid #e2e8f0; border-top-right-radius: 6px;">TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHtml}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="3" class="mobile-hide" style="padding: 20px 16px; text-align: right; font-weight: 600; color: #64748b;">Total Amount:</td>
-                <td colspan="1" style="padding: 20px 16px; text-align: right; font-weight: 700; color: #0f172a; font-size: 18px;">$${(fullPO.total || 0).toFixed(2)}</td>
-              </tr>
-            </tfoot>
-          </table>
-
-          ${fullPO.notes ? `
-            <div style="background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px; padding: 16px; margin-bottom: 32px;">
-              <h4 style="margin: 0 0 8px; color: #92400e; font-size: 14px; font-weight: 600;">Notes:</h4>
-              <p style="margin: 0; color: #b45309; font-size: 14px;">${fullPO.notes}</p>
-            </div>
-          ` : ''}
-
-          <!-- Footer -->
-          <div style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 32px;">
-            <p style="margin: 0 0 8px; color: #64748b; font-weight: 500;">Please verify this order and confirm receipt.</p>
-            <p style="margin: 0; color: #94a3b8; font-size: 14px;">${settings.businessName || ''} &bull; ${settings.businessPhone || ''}</p>
-          </div>
-          
-        </div>
-      </div>
-      
-      <div style="text-align: center; padding-bottom: 40px; color: #94a3b8; font-size: 12px;">
-        <p>Sent from our point of sale system</p>
-      </div>
-    </body>
-    </html>
-  `;
+      // In the shop's language, amounts in dinars
+      const { subject: poSubject, html } = documentEmail('purchase_order', {
+        number: fullPO.po_number || fullPO.id?.slice(0, 8), date: fullPO.created_at, to: fullPO.supplier_contact_person || fullPO.supplier_name,
+        lines: (fullPO.items || []).map(i => ({ name: i.product_name, qty: i.quantity, price: i.unit_cost, total: i.total_cost })),
+        total: fullPO.total, note: fullPO.notes,
+      }, settings);
 
       // Generate PDF to attach
       let pdfPath = null;
@@ -207,7 +111,7 @@ module.exports = function register(ctx) {
       await transporter.sendMail({
         from: settings.email_user,
         to,
-        subject: `Purchase Order #${fullPO.po_number || fullPO.id?.slice(0, 8)} from ${settings.businessName || 'our store'}`,
+        subject: poSubject,
         html,
         attachments,
       });
@@ -233,7 +137,6 @@ module.exports = function register(ctx) {
       // Normalize data for email template
       const receiptNumber = sale.receipt_number || sale.invoice_number || 'N/A';
       const totalAmount = isCreditPayment ? (sale.amount || 0) : (sale.total || 0);
-      const dateStr = new Date(sale.created_at).toLocaleString();
 
       // Ensure sale has items (only for standard sales)
       if (!isCreditPayment && (!sale.items || sale.items.length === 0)) {
@@ -248,35 +151,13 @@ module.exports = function register(ctx) {
         auth: { user: settings.email_user, pass: settings.email_password },
       });
 
-      let itemsHtml = '';
-      if (isCreditPayment) {
-        itemsHtml = `
-      <tr>
-        <td>Payment for Invoice #${sale.invoice_number}</td>
-        <td>1</td>
-        <td>$${totalAmount.toFixed(2)}</td>
-        <td>$${totalAmount.toFixed(2)}</td>
-      </tr>
-    `;
-      } else {
-        itemsHtml = (sale.items || []).map(item => `
-      <tr><td>${item.product_name}</td><td>${item.quantity}</td><td>$${(item.unit_price || 0).toFixed(2)}</td><td>$${(item.total || 0).toFixed(2)}</td></tr>
-    `).join('');
-      }
-
-      const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h1 style="color: #6366f1;">${settings.businessName || 'Receipt'}</h1>
-      <p><strong>Receipt #:</strong> ${receiptNumber}</p>
-      <p><strong>Date:</strong> ${dateStr}</p>
-      <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-        <thead><tr style="background: #f3f4f6;"><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-        <tbody>${itemsHtml}</tbody>
-      </table>
-      <p style="font-size: 20px; font-weight: bold;">Total: $${totalAmount.toFixed(2)}</p>
-      <p style="color: #6b7280; margin-top: 30px;">${settings.receiptFooter || 'Thank you for your business!'}</p>
-    </div>
-  `;
+      const { subject: receiptSubject, html } = documentEmail(isCreditPayment ? 'credit_payment' : 'receipt', {
+        number: receiptNumber, date: sale.created_at, to: sale.customer_name,
+        lines: isCreditPayment
+          ? [{ name: translate(settings.defaultLanguage, 'email.creditLine', { number: sale.invoice_number || '' }), qty: 1, price: totalAmount, total: totalAmount }]
+          : (sale.items || []).map(i => ({ name: i.product_name, qty: i.quantity, price: i.unit_price, total: i.total })),
+        subtotal: sale.subtotal, discount: sale.discount, tax: sale.tax, total: totalAmount,
+      }, settings);
 
       // Generate PDF to attach
       let pdfPath = null;
@@ -303,7 +184,7 @@ module.exports = function register(ctx) {
       await transporter.sendMail({
         from: settings.email_user,
         to: toEmail,
-        subject: `Receipt #${receiptNumber} from ${settings.businessName || 'our store'}`,
+        subject: receiptSubject,
         html,
         attachments,
       });
@@ -372,16 +253,11 @@ module.exports = function register(ctx) {
         };
 
         if (emailService.initEmailService(emailConfig)) {
+          const { subject, html } = documentEmail('gift_card', { number: giftCard.code, amount: giftCard.current_balance }, settings);
           await emailService.sendEmail({
             to: email,
-            subject: `Your Gift Card from ${settings.businessName || BRAND.productName}`,
-            html: `
-                <h2>Here is your Gift Card!</h2>
-                <p>Enjoy your gift card of <strong>${receiptService.formatCurrency(giftCard.current_balance)}</strong>.</p>
-                <p>Please find the printable card attached.</p>
-                <br>
-                <p>Thank you!</p>
-            `,
+            subject,
+            html,
             attachments: [{
               filename: `GiftCard_${giftCard.code}.pdf`,
               path: pdfPath
