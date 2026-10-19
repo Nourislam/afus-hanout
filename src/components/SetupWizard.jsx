@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { translateError } from '../i18n/errors';
-import { Check, ChevronRight, ChevronLeft, Store, User, Percent, Printer, Languages, WifiOff, FlaskConical, ScanLine, Sparkles } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, Store, User, Percent, Languages, WifiOff } from 'lucide-react';
 import { AfusLogo } from './brand/AfusLogo';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -8,12 +8,8 @@ import { Select } from './ui/Select';
 import { toast } from './ui/Toast';
 import { v4 as uuid } from 'uuid';
 import { ShopInfoForm } from './settings/ShopInfoForm';
-import { PrinterSettingsForm, PrintTestPanel, Panel } from './settings/PrinterSettingsForm';
-import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
 import { ShopLogo } from './shop/ShopLogo';
 import { TitleBar } from './layout/TitleBar';
-import { useDemoStore } from '../stores/demoStore';
-import { useTrialStore } from '../stores/trialStore';
 import { LANGUAGES, setLanguage, useT } from '../i18n';
 import { CATEGORY_SUGGESTIONS, DEFAULT_CATEGORY_CODES, categoryName } from '../lib/clothing';
 import {
@@ -26,7 +22,6 @@ const STEPS = [
     { id: 'shop', title: 'setup.step.shop', icon: Store },
     { id: 'admin', title: 'setup.step.admin', icon: User },
     { id: 'money', title: 'setup.step.tax', icon: Percent },
-    { id: 'printing', title: 'setup.step.printing', icon: Printer },
     { id: 'complete', title: 'setup.step.done', icon: Check },
 ];
 
@@ -43,8 +38,9 @@ export default function SetupWizard({ onComplete }) {
 
     const [shop, setShop] = useState({ ...DEFAULT_SHOP, defaultLanguage: lang });
     const [admin, setAdmin] = useState({ name: '', pin: '', confirmPin: '' });
-    const [printers, setPrinters] = useState(DEFAULT_PRINTER_SETTINGS);
-    const [labels, setLabels] = useState({ template: 'roll-40x30' });
+    // Printers, labels and receipt texts are set later, in Settings (the defaults until then)
+    const printers = DEFAULT_PRINTER_SETTINGS;
+    const labels = { template: 'roll-40x30' };
 
     useEffect(() => {
         // Keep anything that is already saved (e.g. after restoring a backup)
@@ -85,21 +81,6 @@ export default function SetupWizard({ onComplete }) {
                 return true;
             default:
                 return true;
-        }
-    };
-
-    // The demo shop: its own database, the real shop stays to be set up
-    const [openingDemo, setOpeningDemo] = useState(false);
-    const demoTrial = useTrialStore(state => state.demo);
-    const loadTrial = useTrialStore(state => state.load);
-    useEffect(() => { loadTrial(); }, [loadTrial]);
-    const tryDemo = async () => {
-        setOpeningDemo(true);
-        try {
-            await useDemoStore.getState().enter(shop.defaultLanguage);
-        } catch (error) {
-            toast.error(`${t('demo.failed')} — ${translateError(error)}`);
-            setOpeningDemo(false);
         }
     };
 
@@ -196,30 +177,12 @@ export default function SetupWizard({ onComplete }) {
                                 </button>
                             ))}
                         </div>
-
-                        {/* Real shop or the demo shop (its own data, never mixed with the real shop) */}
-                        {demoTrial.available && <p className="form-label mt-8 mb-3">{t('demo.choiceTitle')}</p>}
-                        <div className={`grid gap-3 ${demoTrial.available ? 'sm:grid-cols-2' : 'mt-8'}`}>
-                            <button type="button" onClick={handleNext} data-testid="setup-start-real"
-                                className="rounded-xl border-2 border-indigo-500 bg-indigo-500/10 p-4 text-start hover:bg-indigo-500/20">
-                                <span className="flex items-center gap-2 font-semibold"><Store className="w-5 h-5 shrink-0" /> {t('demo.startReal')}</span>
-                                <span className="block text-sm text-zinc-400 mt-1">{t('demo.startRealHint')}</span>
-                            </button>
-                            {/* The demo shop: 3 months from the install date */}
-                            {demoTrial.available && (
-                                <button type="button" onClick={tryDemo} disabled={openingDemo} data-testid="setup-try-demo"
-                                    className="rounded-xl border-2 border-orange-500/50 p-4 text-start hover:bg-orange-500/10 disabled:opacity-60">
-                                    <span className="flex items-center gap-2 font-semibold text-orange-300"><Sparkles className="w-5 h-5 shrink-0" /> {openingDemo ? t('demo.opening') : t('demo.try')}</span>
-                                    <span className="block text-sm text-zinc-400 mt-1">{t('demo.tryHint')}</span>
-                                </button>
-                            )}
-                        </div>
                         </div>
 
                         <div className="rounded-2xl bg-dark-tertiary/60 border border-dark-border p-5">
                             <p className="text-sm font-semibold text-zinc-300 mb-4">{t('setup.whatWeSet')}</p>
                             <div className="space-y-3">
-                                {['setup.check.shop', 'setup.check.admin', 'setup.check.printing'].map(key => (
+                                {['setup.check.shop', 'setup.check.admin'].map(key => (
                                     <div key={key} className="flex items-start gap-3 text-zinc-300">
                                         <Check className="w-5 h-5 text-green-500 shrink-0 mt-0.5" /><span>{t(key)}</span>
                                     </div>
@@ -309,39 +272,6 @@ export default function SetupWizard({ onComplete }) {
                     </div>
                 );
 
-            case 'printing':
-                return (
-                    <div className="space-y-4">
-                        <h2 className="text-2xl font-bold mb-2">{t('setup.printingTitle')}</h2>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Input
-                                label={t('settings.receiptHeader')}
-                                value={shop.receiptHeader}
-                                onChange={(e) => setShopField('receiptHeader', e.target.value)}
-                            />
-                            <Input
-                                label={t('settings.receiptFooter')}
-                                value={shop.receiptFooter}
-                                onChange={(e) => setShopField('receiptFooter', e.target.value)}
-                                placeholder={t('settings.receiptFooterDefault')}
-                            />
-                        </div>
-                        <PrinterSettingsForm
-                            printers={printers}
-                            onPrintersChange={setPrinters}
-                            labels={labels}
-                            onLabelsChange={setLabels}
-                            compact
-                        />
-                        {/* Optional checks: nothing here blocks the setup (devices can be plugged in later) */}
-                        <Panel icon={FlaskConical} title={t('setup.check.title')} hint={t('setup.check.hint')}>
-                            <PrintTestPanel printers={printers} layout={labels} shop={shop} only={['receipt']} />
-                            <ScannerCheck />
-                        </Panel>
-                        <p className="text-xs text-zinc-500">{t('setup.printingHint')}</p>
-                    </div>
-                );
-
             case 'complete':
                 return (
                     <div className="text-center">
@@ -355,8 +285,6 @@ export default function SetupWizard({ onComplete }) {
                                 <div className="flex justify-between gap-4"><span className="text-zinc-400">{t('setup.step.admin')}</span><span>{admin.name}</span></div>
                                 <div className="flex justify-between gap-4"><span className="text-zinc-400">{t('settings.language')}</span><span>{LANGUAGES.find(l => l.value === shop.defaultLanguage)?.label}</span></div>
                                 <div className="flex justify-between gap-4"><span className="text-zinc-400">{t('settings.taxName')}</span><span>{shop.taxRate || 0}% ({shop.taxType === 'exclusive' ? t('settings.taxExclusive') : t('settings.taxInclusive')})</span></div>
-                                <div className="flex justify-between gap-4"><span className="text-zinc-400">{t('printers.receipt')}</span><span className="truncate">{printers.receipt.printerName || t('printers.askEveryTime')}</span></div>
-                                <div className="flex justify-between gap-4"><span className="text-zinc-400">{t('printers.label')}</span><span className="truncate">{printers.label.printerName || t('printers.askEveryTime')}</span></div>
                             </div>
                         </div>
                     </div>
@@ -451,20 +379,3 @@ export default function SetupWizard({ onComplete }) {
     );
 }
 
-/** Scan any code: shows it, to check the scanner is plugged in (never required). */
-function ScannerCheck() {
-    const { t } = useT();
-    const [last, setLast] = useState('');
-    useBarcodeScanner((code) => setLast(code));
-    return (
-        <div className="flex items-center gap-3 rounded-lg border border-dark-border px-3 py-2.5" data-testid="setup-scanner-check">
-            <ScanLine className="w-5 h-5 text-zinc-400 flex-none" />
-            <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{t('setup.check.scanner')}</p>
-                <p className={`text-xs break-words ${last ? 'text-emerald-400' : 'text-zinc-500'}`}>
-                    {last ? t('setup.check.scanned', { code: last }) : t('setup.check.scanHint')}
-                </p>
-            </div>
-        </div>
-    );
-}

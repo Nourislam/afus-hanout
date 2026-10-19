@@ -1,10 +1,6 @@
 // Demo shop: entry, bar, start again, leave. Each entry is [English, French, Arabic].
 export default {
-    'demo.choiceTitle': ["How do you want to start?", "Comment voulez-vous commencer ?", "كيف تريد أن تبدأ؟"],
-    'demo.startReal': ["Start my real shop", "Démarrer ma vraie boutique", "ابدأ محلي الحقيقي"],
-    'demo.startRealHint': ["Set up your shop with your own articles, staff and settings.", "Configurez votre boutique avec vos articles, votre équipe et vos réglages.", "جهّز محلك بسلعك وعمالك وإعداداتك أنت."],
     'demo.try': ["Try the demo shop", "Essayer la boutique de démo", "جرّب المحل التجريبي"],
-    'demo.tryHint': ["A complete clothing shop with sample data: 60 articles, 3 months of sales, kridi and two employees. Kept apart from your shop.", "Une boutique de vêtements complète avec des données d'exemple : 60 articles, 3 mois de ventes, du crédit et deux employés. Séparée de votre boutique.", "محل ملابس كامل ببيانات تجريبية: 60 سلعة، 3 أشهر من المبيعات، كريدي وموظفان. منفصل تمامًا عن محلك."],
     'demo.opening': ["Preparing the demo shop…", "Préparation de la boutique de démo…", "جاري تجهيز المحل التجريبي…"],
     'demo.entered': ["You are in the demo shop: try everything, nothing touches your real shop", "Vous êtes dans la boutique de démo : essayez tout, rien ne touche votre vraie boutique", "أنت في المحل التجريبي: جرّب كل شيء، لا شيء يمسّ محلك الحقيقي"],
     'demo.banner': ["DEMO SHOP — sample data, kept apart from your real shop", "BOUTIQUE DE DÉMO — données d'exemple, séparées de votre vraie boutique", "وضع العرض — هذه البيانات تجريبية ومنفصلة عن محلك الحقيقي"],

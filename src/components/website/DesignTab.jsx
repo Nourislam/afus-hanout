@@ -1,6 +1,6 @@
 // Website › Theme tab: the theme gallery, each theme's whole shop on a computer or a phone.
 import { useEffect, useRef, useState } from 'react';
-import { Palette, CheckCircle2, Monitor, Smartphone } from 'lucide-react';
+import { Palette, CheckCircle2, Store } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { toast } from '../ui/Toast';
 import { useT } from '../../i18n';
@@ -117,10 +117,7 @@ function LiveThemeCard({ theme, site, again, onOpen, onKeep, busy }) {
                 </h3>
                 <p className="text-sm text-zinc-400">{themeText(theme, 'description', lang)}</p>
                 <div className="flex flex-wrap gap-2 mt-auto pt-1">
-                    <Button size="sm" onClick={() => onOpen(theme.id)} data-testid={`website-gallery-open-${theme.id}`}><Monitor className="w-4 h-4" /> {t('website.gallery.open')}</Button>
-                    <Button size="sm" variant="secondary" onClick={() => onOpen(theme.id, 'home', 'mobile')} data-testid={`website-gallery-phone-${theme.id}`}><Smartphone className="w-4 h-4" /> {t('website.gallery.phone')}</Button>
-                    <Button size="sm" variant="secondary" onClick={() => onOpen(theme.id, 'product')}>{t('website.gallery.product')}</Button>
-                    <Button size="sm" variant="secondary" onClick={() => onOpen(theme.id, 'category')}>{t('website.gallery.category')}</Button>
+                    <Button size="sm" onClick={() => onOpen(theme.id)} data-testid={`website-gallery-open-${theme.id}`}><Store className="w-4 h-4" /> {t('website.gallery.open')}</Button>
                     {!current && <Button size="sm" variant="secondary" onClick={() => onKeep(theme.id)} disabled={busy === 'theme'} data-testid={`website-gallery-keep-${theme.id}`}>{t('website.gallery.keep')}</Button>}
                 </div>
             </div>
@@ -148,11 +145,11 @@ function LiveThemeGallery({ site, busy, run }) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" data-testid="website-theme-gallery">
                 {site.themes.map(theme => (
                     <LiveThemeCard key={theme.id} theme={theme} site={site} again={again} busy={busy} onKeep={keep}
-                        onOpen={(id, page = 'home', device = 'desktop') => setOpen({ id, page, device })} />
+                        onOpen={(id) => setOpen({ id })} />
                 ))}
             </div>
             <p className="text-xs text-zinc-500 leading-relaxed">{t('website.themeSafe')}</p>
-            {open && <ThemeViewer site={site} theme={open.id} page={open.page} device={open.device} busy={busy} onKeep={keep} onClose={() => setOpen(null)} />}
+            {open && <ThemeViewer site={site} theme={open.id} busy={busy} onKeep={keep} onClose={() => setOpen(null)} />}
         </section>
     );
 }

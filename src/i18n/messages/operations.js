@@ -139,11 +139,6 @@ export default {
     'import.rows': ["Row(s) {rows}", "Ligne(s) {rows}", "الصف(وف) {rows}"],
 
     // Setup: device checks
-    'setup.check.title': ["Check the devices (optional)", "Tester les appareils (facultatif)", "تجربة الأجهزة (اختياري)"],
-    'setup.check.hint': ["Not plugged in yet? Continue: you can test them later in Settings › Devices.", "Pas encore branchés ? Continuez : vous pourrez les tester plus tard dans Réglages › Appareils.", "غير موصولة بعد؟ تابع: يمكنك تجربتها لاحقًا من الإعدادات › الأجهزة."],
-    'setup.check.scanner': ["Barcode scanner", "Lecteur de codes", "قارئ الباركود"],
-    'setup.check.scanHint': ["Scan any barcode or QR code to check it", "Scannez n'importe quel code pour vérifier", "امسح أي باركود أو QR للتجربة"],
-    'setup.check.scanned': ["Scanner works: {code}", "Le lecteur fonctionne : {code}", "القارئ يعمل: {code}"],
 
     // Credit reminder by WhatsApp
     'whatsapp.remind': ["Remind on WhatsApp", "Rappel WhatsApp", "تذكير عبر واتساب"],

@@ -1,8 +1,8 @@
 // Website › Themes, in the web demo (Afus website): each theme is a whole shop
 // made beforehand from the demo shop (demo/shops/, site/themes.mjs), opened in
-// a new page. Keeping a theme works as in the program.
+// the program's viewer (computer or phone) or a new page. Keeping a theme works as in the program.
 import { useEffect, useState } from 'react';
-import { ArrowUpRight, CheckCircle2, Palette, Smartphone } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, Palette, Store } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Modal, ModalBody } from '../ui/Modal';
 import { toast } from '../ui/Toast';
@@ -21,17 +21,17 @@ export function shopUrl(lang, theme, page = 'index.html') {
 
 const open = (url) => window.open(url, '_blank', 'noopener');
 
-/** A theme's shop on a phone (or a computer), inside the demo: its own links work. */
+/** A theme's shop on a computer or a phone, inside the demo (its own links work), or in a new page. */
 function DemoShopViewer({ theme, lang, onClose }) {
     const { t } = useT();
-    const [device, setDevice] = useState('mobile');
+    const [device, setDevice] = useState('desktop');
     const name = themeText(theme, 'name', lang);
     const height = Math.max(420, Math.min(780, window.innerHeight - 240));
     return (
         <Modal isOpen onClose={onClose} title={t('website.previewTitle', { name })} size="full">
             <ModalBody><div className="space-y-3" data-testid="website-demo-viewer">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => open(shopUrl(lang, theme.id))}><ArrowUpRight className="w-4 h-4" /> {t('website.gallery.open')}</Button>
+                    <Button size="sm" variant="secondary" onClick={() => open(shopUrl(lang, theme.id))}><ArrowUpRight className="w-4 h-4" /> {t('website.gallery.newPage')}</Button>
                     <DeviceTabs value={device} onChange={setDevice} testId="website-demo-viewer-device" />
                 </div>
                 <PreviewFrame key={device} src={shopUrl(lang, theme.id)} device={device} title={name} testId="website-demo-viewer-frame" height={height} />
@@ -43,7 +43,7 @@ function DemoShopViewer({ theme, lang, onClose }) {
 export function DemoThemeGallery({ site, busy, run }) {
     const { t, lang } = useT();
     const [shops, setShops] = useState(null);
-    const [phone, setPhone] = useState(null);
+    const [viewing, setViewing] = useState(null);
     const shopLang = lang === 'ar' ? 'ar' : 'fr';
     useEffect(() => {
         let alive = true;
@@ -65,7 +65,7 @@ export function DemoThemeGallery({ site, busy, run }) {
                     return (
                         <article key={theme.id} data-testid={`website-gallery-${theme.id}`}
                             className={`rounded-2xl border overflow-hidden flex flex-col bg-zinc-900/60 ${current ? 'border-indigo-400 ring-2 ring-indigo-500/40' : 'border-zinc-800'}`}>
-                            <button type="button" onClick={() => open(shopUrl(lang, theme.id))} className="block text-start" aria-label={t('website.gallery.open')}>
+                            <button type="button" onClick={() => setViewing(theme)} className="block text-start" aria-label={t('website.gallery.open')}>
                                 <ThemeShot desktopImg={`${demoShops()}img/${theme.id}-${shopLang}.webp`} phoneImg={`${demoShops()}img/${theme.id}-${shopLang}-m.webp`} />
                             </button>
                             <div className="p-4 flex flex-col gap-2 flex-1">
@@ -76,10 +76,7 @@ export function DemoThemeGallery({ site, busy, run }) {
                                 <p className="text-sm text-zinc-400">{themeText(theme, 'description', lang)}</p>
                                 {shop && <p className="text-xs text-zinc-500">{t('website.gallery.pages', { n: shop.pages })}</p>}
                                 <div className="flex flex-wrap gap-2 mt-auto pt-1">
-                                    <Button size="sm" onClick={() => open(shopUrl(lang, theme.id))} data-testid={`website-gallery-open-${theme.id}`}><ArrowUpRight className="w-4 h-4" /> {t('website.gallery.open')}</Button>
-                                    <Button size="sm" variant="secondary" onClick={() => setPhone(theme)} data-testid={`website-gallery-phone-${theme.id}`}><Smartphone className="w-4 h-4" /> {t('website.gallery.phone')}</Button>
-                                    {shop?.first?.product && <Button size="sm" variant="secondary" onClick={() => open(shopUrl(lang, theme.id, shop.first.product))}>{t('website.gallery.product')}</Button>}
-                                    {shop?.first?.category && <Button size="sm" variant="secondary" onClick={() => open(shopUrl(lang, theme.id, shop.first.category))}>{t('website.gallery.category')}</Button>}
+                                    <Button size="sm" onClick={() => setViewing(theme)} data-testid={`website-gallery-open-${theme.id}`}><Store className="w-4 h-4" /> {t('website.gallery.open')}</Button>
                                     {!current && <Button size="sm" variant="secondary" onClick={() => keep(theme.id)} disabled={busy === 'theme'} data-testid={`website-gallery-keep-${theme.id}`}>{t('website.gallery.keep')}</Button>}
                                 </div>
                             </div>
@@ -88,7 +85,7 @@ export function DemoThemeGallery({ site, busy, run }) {
                 })}
             </div>
             <p className="text-xs text-zinc-500">{t('website.gallery.note')}</p>
-            {phone && <DemoShopViewer theme={phone} lang={lang} onClose={() => setPhone(null)} />}
+            {viewing && <DemoShopViewer theme={viewing} lang={lang} onClose={() => setViewing(null)} />}
         </section>
     );
 }
