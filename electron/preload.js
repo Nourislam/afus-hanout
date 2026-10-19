@@ -289,6 +289,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         stop: (data) => ipcRenderer.invoke('charges:stop', data),
         netProfit: (data) => ipcRenderer.invoke('charges:netProfit', data),
     },
+    // Employee commissions and the employee of the month (add-on)
+    commissions: {
+        board: (data) => ipcRenderer.invoke('commissions:board', data),
+        saveRule: (rule) => ipcRenderer.invoke('commissions:saveRule', rule),
+        mine: (data) => ipcRenderer.invoke('commissions:mine', data),
+    },
     // Stock count: what is on the shelves, applied only when confirmed
     stockCount: {
         current: () => ipcRenderer.invoke('stockCount:current'),

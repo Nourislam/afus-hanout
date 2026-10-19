@@ -89,7 +89,7 @@ const range = (month) => {
 };
 
 /** The month: profit on sales, every charge's share, the drawer's expenses, what is left. */
-function monthResult(api, value) {
+function monthResult(api, value, { withCommissions = false } = {}) {
     const month = parseMonth(value);
     const { startDate, endDate } = range(month);
     const stats = salesStats(api, { startDate, endDate });
@@ -99,22 +99,24 @@ function monthResult(api, value) {
     const drawer = r2(api.get('SELECT COALESCE(SUM(amount), 0) AS total FROM cash_expenses WHERE datetime(created_at) >= datetime(?) AND datetime(created_at) < datetime(?)', [startDate, endDate])?.total);
     const chargesTotal = r2(charges.reduce((s, c) => s + c.amount, 0));
     const salesProfit = r2(stats.total_profit);
+    // Employees' commissions (when that add-on is on); required here to avoid a require cycle
+    const commissions = withCommissions ? require('./commissionService').monthTotal(api, monthKey(month)) : 0;
     return {
         month: monthKey(month),
-        revenue: r2(stats.net_revenue), salesProfit, charges, chargesTotal, drawerExpenses: drawer,
-        net: r2(salesProfit - chargesTotal - drawer),
+        revenue: r2(stats.net_revenue), salesProfit, charges, chargesTotal, drawerExpenses: drawer, commissions,
+        net: r2(salesProfit - chargesTotal - drawer - commissions),
     };
 }
 
 /** The month and the ones before it, for the chart (oldest first). */
-function netProfit(api, value, months = 6) {
+function netProfit(api, value, { months = 6, withCommissions = false } = {}) {
     const month = parseMonth(value);
     const series = [];
     for (let i = months - 1; i >= 0; i--) {
-        const r = monthResult(api, monthKey(fromIndex(monthIndex(month) - i)));
-        series.push({ month: r.month, salesProfit: r.salesProfit, costs: r2(r.chargesTotal + r.drawerExpenses), net: r.net });
+        const r = monthResult(api, monthKey(fromIndex(monthIndex(month) - i)), { withCommissions });
+        series.push({ month: r.month, salesProfit: r.salesProfit, costs: r2(r.chargesTotal + r.drawerExpenses + r.commissions), net: r.net });
     }
-    const current = monthResult(api, monthKey(month));
+    const current = monthResult(api, monthKey(month), { withCommissions });
     const previous = series.length > 1 ? series[series.length - 2] : null;
     return { ...current, previousNet: previous ? previous.net : null, series };
 }
@@ -148,4 +150,4 @@ const averageCost = ({ stock, cost, quantity, unitCost }) => {
     return r2((before * (Number(cost) || 0) + q * (Number(unitCost) || 0)) / (before + q));
 };
 
-module.exports = { KINDS, EVERY, monthShare, list, save, stop, monthResult, netProfit, landedCosts, averageCost, parseMonth, monthKey };
+module.exports = { KINDS, EVERY, monthShare, list, save, stop, monthResult, netProfit, landedCosts, averageCost, parseMonth, monthKey, monthRange: range };

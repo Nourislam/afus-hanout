@@ -92,6 +92,10 @@ const RULES = {
     'charges:save': 'admin',
     'charges:stop': 'admin',
     'charges:netProfit': 'admin',
+    // Commissions: the owner sets and sees them; an employee asks for their own month only
+    'commissions:board': 'admin',
+    'commissions:saveRule': 'admin',
+    'commissions:mine': 'login',
     'stockCount:start': P.INVENTORY_ADJUST,
     'stockCount:scan': P.INVENTORY_ADJUST,
     'stockCount:setCounted': P.INVENTORY_ADJUST,

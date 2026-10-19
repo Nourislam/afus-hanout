@@ -609,6 +609,21 @@ const MIGRATIONS = [
             }
         },
     },
+    {
+        version: '2026_10_employee_commissions',
+        description: 'Commission of each employee (share of the sales or an amount per piece) and the monthly goal',
+        up(db) {
+            db.run(`
+                CREATE TABLE IF NOT EXISTS employee_commissions (
+                    employee_id TEXT PRIMARY KEY REFERENCES employees(id) ON DELETE CASCADE,
+                    kind TEXT NOT NULL DEFAULT 'none',
+                    rate REAL NOT NULL DEFAULT 0,
+                    monthly_goal REAL NOT NULL DEFAULT 0,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-    Rows3, LayoutGrid, CreditCard, Users, Percent, PackageOpen, Gift, Truck, FileText, Mail, Globe, ShoppingBag, Boxes, Wifi, Check, Lock, Calculator, Sparkles,
+    Rows3, LayoutGrid, CreditCard, Users, Percent, PackageOpen, Gift, Truck, FileText, Mail, Globe, ShoppingBag, Boxes, Wifi, Check, Lock, Calculator, Sparkles, Trophy,
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { toast } from '../ui/Toast';
@@ -14,7 +14,7 @@ import { MODULE_GROUPS, MODULE_REQUIRES, resolveFeatures, offersEnabled } from '
 const MODULE_ICONS = {
     credit: CreditCard, customers: Users, promotions: Percent, bundles: PackageOpen, giftCards: Gift,
     suppliers: Truck, purchaseOrders: FileText, email: Mail, ecommerce: ShoppingBag, website: Globe,
-    charges: Calculator,
+    charges: Calculator, commissions: Trophy,
 };
 const GROUP_ICONS = { sales: ShoppingBag, offers: Percent, stock: Boxes, online: Wifi, addons: Sparkles };
 

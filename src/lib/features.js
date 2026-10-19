@@ -14,6 +14,7 @@ export const DEFAULT_FEATURES = {
     website: true,         // the shop's own website (Website Manager)
     // Shop add-ons: off until the owner turns them on
     charges: false,        // shop charges (rent, salaries, bills) and the month's net profit
+    commissions: false,    // employees' commissions, monthly goals, employee of the month
 };
 
 // How the modules are shown in Settings
@@ -22,7 +23,7 @@ export const MODULE_GROUPS = [
     { id: 'offers', modules: ['promotions', 'bundles', 'giftCards'] },
     { id: 'stock', modules: ['suppliers', 'purchaseOrders'] },
     { id: 'online', modules: ['email', 'ecommerce', 'website'] },
-    { id: 'addons', modules: ['charges'] },
+    { id: 'addons', modules: ['charges', 'commissions'] },
 ];
 
 // A module that cannot work without another one

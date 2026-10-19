@@ -151,6 +151,12 @@ export default function NetProfit() {
                                     <span className="text-zinc-300">{signed('−', c.amount)}</span>
                                 </li>
                             ))}
+                            {data?.commissions > 0 && (
+                                <li className="flex items-center justify-between gap-3 py-2.5" data-testid="net-commissions">
+                                    <span>{t('net.commissions')}</span>
+                                    <span className="text-zinc-300">{signed('−', data.commissions)}</span>
+                                </li>
+                            )}
                             {data?.drawerExpenses > 0 && (
                                 <li className="flex items-center justify-between gap-3 py-2.5">
                                     <span>{t('net.drawer')}</span>

@@ -20,6 +20,7 @@ import OpeningCashDialog from '../components/shifts/OpeningCashDialog';
 import CashExpenseDialog from '../components/shifts/CashExpenseDialog';
 import { VariantPickerModal } from '../components/pos/VariantPickerModal';
 import FirstSaleGuide from '../components/pos/FirstSaleGuide';
+import MyMonthLine from '../components/pos/MyMonthLine';
 import { ReserveDialog, ReservationsDialog } from '../components/pos/Reservations';
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
 import { colorHex, colorName, sortSizes, variantLabel } from '../lib/clothing';
@@ -530,6 +531,7 @@ export default function POSPage() {
                             <span className="text-zinc-500">{t('pos.addCustomer')}</span>
                         )}
                     </button>
+                    {features?.commissions === true && <MyMonthLine refreshKey={lastSale?.id} />}
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">

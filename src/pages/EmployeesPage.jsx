@@ -17,6 +17,9 @@ import { v4 as uuid } from 'uuid';
 import { ExcelImport } from '../components/ui/ExcelImport';
 import { FileSpreadsheet } from 'lucide-react';
 import CashierRights from '../components/employees/CashierRights';
+import CommissionsBoard from '../components/employees/CommissionsBoard';
+import { useSettingsStore } from '../stores/settingsStore';
+import { effectiveFeatures } from '../lib/features';
 
 const roleIcons = {
     admin: ShieldCheck,
@@ -126,6 +129,8 @@ export default function EmployeesPage() {
     const [history, setHistory] = useState([]);
 
     const { currentEmployee, isAdmin } = useAuthStore();
+    const savedFeatures = useSettingsStore(state => state.settings.features);
+    const goals = effectiveFeatures(savedFeatures).commissions && isAdmin();
 
     const loadData = async () => {
         try {
@@ -224,15 +229,15 @@ export default function EmployeesPage() {
             >
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="segmented">
-                        {['team', 'drawers', ...(isAdmin() ? ['rights'] : [])].map(id => (
+                        {['team', ...(goals ? ['goals'] : []), 'drawers', ...(isAdmin() ? ['rights'] : [])].map(id => (
                             <button key={id} type="button" className={view === id ? 'active' : ''} onClick={() => setView(id)}>{t(`employees.view.${id}`)}</button>
                         ))}
                     </div>
-                    <div className="segmented">
+                    {view !== 'goals' && <div className="segmented">
                         {PERIODS.map(id => (
                             <button key={id} type="button" className={period === id ? 'active' : ''} onClick={() => setPeriod(id)}>{t(`employees.period.${id}`)}</button>
                         ))}
-                    </div>
+                    </div>}
                     {view === 'team' && (
                         <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder={t('employees.search')} className="w-64 max-w-full" />
                     )}
@@ -241,7 +246,7 @@ export default function EmployeesPage() {
 
             <div className="page-body space-y-4">
                 {/* Team totals for the period */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {view !== 'goals' && <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {[
                         [Clock, t('employees.hoursWorked'), formatDuration(team.minutes)],
                         [Receipt, t('reports.totalSales'), formatMoney(team.sales)],
@@ -253,9 +258,11 @@ export default function EmployeesPage() {
                             <div className={`text-xl font-bold mt-1 tabular ${tone || ''}`}>{value}</div>
                         </div>
                     ))}
-                </div>
+                </div>}
 
-                {loading ? (
+                {view === 'goals' && goals ? (
+                    <CommissionsBoard />
+                ) : loading ? (
                     <div className="flex items-center justify-center h-48">
                         <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                     </div>
@@ -326,7 +333,7 @@ export default function EmployeesPage() {
                         })}
                     </div>
                 )}
-                <p className="text-xs text-zinc-500">{t('employees.activityHint', { from: formatLocalDate(range.start, 'date'), to: formatLocalDate(range.end, 'date') })}</p>
+                {view !== 'goals' && <p className="text-xs text-zinc-500">{t('employees.activityHint', { from: formatLocalDate(range.start, 'date'), to: formatLocalDate(range.end, 'date') })}</p>}
             </div>
 
             {/* Employee Form Modal */}

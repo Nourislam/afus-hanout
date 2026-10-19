@@ -739,3 +739,4 @@ require('./ipc/settings')(ipcContext);
 require('./ipc/app')(ipcContext);
 require('./ipc/shops')(ipcContext);
 require('./ipc/charges')(ipcContext);
+require('./ipc/commissions')(ipcContext);
