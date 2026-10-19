@@ -9,7 +9,7 @@ import { translateError } from '../../i18n/errors';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { saveUiMode, saveSimplePages, SIMPLE_LOCKED } from '../../lib/uiMode';
 import { NAV_GROUPS } from '../layout/navItems';
-import { MODULE_GROUPS, MODULE_REQUIRES, resolveFeatures, offersEnabled } from '../../lib/features';
+import { MODULE_GROUPS, MODULE_REQUIRES, ADDON_PAGES, ADDON_LINKS, resolveFeatures, offersEnabled } from '../../lib/features';
 
 const MODULE_ICONS = {
     credit: CreditCard, customers: Users, promotions: Percent, bundles: PackageOpen, giftCards: Gift,
@@ -81,6 +81,10 @@ export function ModulesSettings({ features, onFeaturesChange }) {
             await window.electronAPI.settings.set({ key: 'features', value: next });
             await loadSettings();
             window.dispatchEvent(new Event('pos:settings-changed'));
+            // An add-on turned on: say where it is, with a button that opens it
+            if (on && ADDON_PAGES[key]) {
+                toast.success(t(`addons.where.${key}`), 9000, { label: 'addons.open', to: ADDON_LINKS[key] });
+            }
         } catch (error) {
             onFeaturesChange(previous);
             toast.error(translateError(error));
@@ -89,8 +93,60 @@ export function ModulesSettings({ features, onFeaturesChange }) {
         }
     };
 
+    // bare: inside the add-ons card, which already has the title
+    const renderGroup = (group, bare = false) => {
+                        const GroupIcon = GROUP_ICONS[group.id];
+                        return (
+                            <section key={group.id} className="rounded-xl border border-dark-border">
+                                {!bare && (
+                                    <h4 className="flex items-center gap-2 px-4 pt-3 pb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                                        <GroupIcon className="w-4 h-4" /> {t(`modules.group.${group.id}`)}
+                                    </h4>
+                                )}
+                                <ul className="divide-y divide-dark-border">
+                                    {group.modules.map(key => {
+                                        const Icon = MODULE_ICONS[key];
+                                        const needs = MODULE_REQUIRES[key];
+                                        const blocked = needs && !features[needs];
+                                        const on = !!features[key] && !blocked;
+                                        return (
+                                            <li key={key}>
+                                                <label className={`flex items-center gap-3 px-4 py-3 ${blocked ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-dark-tertiary/40'}`}>
+                                                    <Icon className={`w-5 h-5 flex-none ${on ? 'text-indigo-400' : 'text-zinc-500'}`} />
+                                                    <span className="flex-1 min-w-0">
+                                                        <span className="block text-sm font-medium">{t(`settings.feature.${key}`)}</span>
+                                                        <span className="block text-xs text-zinc-500">
+                                                            {blocked ? t('modules.needs', { name: t(`settings.feature.${needs}`) }) : t(`settings.feature.${key}Hint`)}
+                                                        </span>
+                                                    </span>
+                                                    <Switch checked={on} disabled={blocked || saving === key} onChange={(v) => toggle(key, v)} label={t(`settings.feature.${key}`)} />
+                                                </label>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                                {group.id === 'offers' && !offersEnabled(features) && (
+                                    <p className="px-4 pb-3 text-xs text-amber-400">{t('modules.offersHidden')}</p>
+                                )}
+                            </section>
+                        );
+    };
+
+    const addons = MODULE_GROUPS.find(g => g.id === 'addons');
     return (
         <div className="space-y-4">
+            {/* Shop add-ons first, set apart: what an owner comes here for */}
+            <Card className="space-y-3 border-amber-400/40 bg-amber-400/[0.04]" data-testid="addons-card">
+                <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-amber-400/15 text-amber-300 flex items-center justify-center flex-none"><Sparkles className="w-5 h-5" /></div>
+                    <div className="min-w-0">
+                        <h3 className="font-semibold">{t('modules.group.addons')}</h3>
+                        <p className="text-sm text-zinc-500">{t('addons.intro')}</p>
+                    </div>
+                </div>
+                {renderGroup(addons, true)}
+            </Card>
+
             {/* Simple or full menu */}
             <Card className="space-y-4">
                 <div className="flex items-start gap-3">
@@ -146,41 +202,7 @@ export function ModulesSettings({ features, onFeaturesChange }) {
                     </div>
                 </div>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                    {MODULE_GROUPS.map(group => {
-                        const GroupIcon = GROUP_ICONS[group.id];
-                        return (
-                            <section key={group.id} className="rounded-xl border border-dark-border">
-                                <h4 className="flex items-center gap-2 px-4 pt-3 pb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                                    <GroupIcon className="w-4 h-4" /> {t(`modules.group.${group.id}`)}
-                                </h4>
-                                <ul className="divide-y divide-dark-border">
-                                    {group.modules.map(key => {
-                                        const Icon = MODULE_ICONS[key];
-                                        const needs = MODULE_REQUIRES[key];
-                                        const blocked = needs && !features[needs];
-                                        const on = !!features[key] && !blocked;
-                                        return (
-                                            <li key={key}>
-                                                <label className={`flex items-center gap-3 px-4 py-3 ${blocked ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-dark-tertiary/40'}`}>
-                                                    <Icon className={`w-5 h-5 flex-none ${on ? 'text-indigo-400' : 'text-zinc-500'}`} />
-                                                    <span className="flex-1 min-w-0">
-                                                        <span className="block text-sm font-medium">{t(`settings.feature.${key}`)}</span>
-                                                        <span className="block text-xs text-zinc-500">
-                                                            {blocked ? t('modules.needs', { name: t(`settings.feature.${needs}`) }) : t(`settings.feature.${key}Hint`)}
-                                                        </span>
-                                                    </span>
-                                                    <Switch checked={on} disabled={blocked || saving === key} onChange={(v) => toggle(key, v)} label={t(`settings.feature.${key}`)} />
-                                                </label>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                                {group.id === 'offers' && !offersEnabled(features) && (
-                                    <p className="px-4 pb-3 text-xs text-amber-400">{t('modules.offersHidden')}</p>
-                                )}
-                            </section>
-                        );
-                    })}
+                    {MODULE_GROUPS.filter(g => g.id !== 'addons').map(g => renderGroup(g))}
                 </div>
                 <p className="text-xs text-zinc-500 pt-2">{t('modules.appliedNow')}</p>
             </Card>

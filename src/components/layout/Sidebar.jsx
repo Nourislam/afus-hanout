@@ -8,6 +8,7 @@ import { useT } from '../../i18n';
 import ShiftSummaryDialog from '../shifts/ShiftSummaryDialog';
 import { ShopLogo } from '../shop/ShopLogo';
 import { NAV_GROUPS } from './navItems';
+import { addonPaths } from '../../lib/features';
 
 // A cashier sees what a sale needs first; the rest is folded under "More"
 const CASHIER_MAIN = ['/pos', '/transactions', '/credit-sales', '/customers'];
@@ -79,7 +80,7 @@ export function Sidebar() {
     const visible = (item) => (!item.permission || hasPermission(item.permission))
         && (!item.feature || features?.[item.feature])
         && (!item.show || item.show(features || {}, hasPermission))
-        && (!simple || (simplePages || []).includes(item.path));
+        && (!simple || (simplePages || []).includes(item.path) || addonPaths(features).includes(item.path));
 
     const cashier = currentEmployee?.role === 'cashier';
     const location = useLocation();

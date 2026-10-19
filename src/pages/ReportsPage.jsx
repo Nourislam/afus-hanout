@@ -2,6 +2,7 @@ import { t } from '../i18n';
 import { formatDate as formatLocalDate } from '../i18n/format';
 import { formatMoney } from '../i18n/format';
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { BarChart3, TrendingUp, Banknote, ShoppingCart, Shirt, RotateCcw, Percent, FileSpreadsheet } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { translateError } from '../i18n/errors';
@@ -47,7 +48,10 @@ export default function ReportsPage() {
     const [categoryData, setCategoryData] = useState([]);
     const [paymentMethods, setPaymentMethods] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('overview');
+    // ?tab=net opens a tab directly (the "Open" button after turning an add-on on)
+    const [params] = useSearchParams();
+    const [activeTab, setActiveTab] = useState(() => params.get('tab') || 'overview');
+    useEffect(() => { const tab = params.get('tab'); if (tab) setActiveTab(tab); }, [params]);
     const viz = useVizColors();
     // Purchase prices are the owner's; discounts need the promotions right (and module)
     const role = useAuthStore(state => state.currentEmployee?.role);
@@ -56,10 +60,11 @@ export default function ReportsPage() {
     const features = useMemo(() => effectiveFeatures(savedFeatures), [savedFeatures]);
     const canDiscount = !!features.promotions && hasPermission(PERMISSIONS.PROMOTIONS_MANAGE);
     const owner = role === 'admin';
-    const tabs = [['overview', t('reports.overview')], ['smart', t('smart.tab')], ['articles', t('reports.articlesTab')], ['seasons', t('season.tab')],
-        ...(features.promotions ? [['markdowns', t('markdown.tab')]] : []), ['shifts', t('reports.shifts')],
-        // Add-on: what is left after the shop's charges (the owner's)
-        ...(features.charges && owner ? [['net', t('net.tab')]] : [])];
+    const tabs = [['overview', t('reports.overview')],
+        // Add-on: what is left after the shop's charges (the owner's), right after the overview
+        ...(features.charges && owner ? [['net', t('net.tab')]] : []),
+        ['smart', t('smart.tab')], ['articles', t('reports.articlesTab')], ['seasons', t('season.tab')],
+        ...(features.promotions ? [['markdowns', t('markdown.tab')]] : []), ['shifts', t('reports.shifts')]];
     const byPeriod = !['seasons', 'markdowns', 'smart', 'net'].includes(activeTab);
     const [shiftData, setShiftData] = useState([]);
 

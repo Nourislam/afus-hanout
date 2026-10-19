@@ -95,4 +95,8 @@ export default {
     'goals.mine': ["This month: {sold}", "Ce mois : {sold}", "هذا الشهر: {sold}"],
     'goals.mineGoal': ["{percent}% of your goal", "{percent} % de votre objectif", "{percent}% من هدفك"],
     'goals.mineCommission': ["your commission {amount}", "votre commission {amount}", "عمولتك {amount}"],
+    'addons.intro': ["Optional extras: turn on only what your shop needs. Each one appears in its page as soon as it is on.", "Des extras facultatifs : activez seulement ce dont votre magasin a besoin. Chacun apparaît dans sa page dès qu'il est activé.", "إضافات اختيارية: شغّل فقط ما يحتاجه محلك. كل إضافة تظهر في صفحتها بمجرد تشغيلها."],
+    'addons.where.charges': ["Turned on. You find it in Reports › Net profit.", "Activé. Vous le trouvez dans Rapports › Bénéfice net.", "تم التشغيل. تجدها في: التقارير ← الربح الصافي."],
+    'addons.where.commissions': ["Turned on. You find it in Employees › Goals and commissions.", "Activé. Vous le trouvez dans Employés › Objectifs et commissions.", "تم التشغيل. تجدها في: العمال ← الأهداف والعمولات."],
+    'addons.open': ["Open", "Ouvrir", "افتح"],
 };

@@ -13,7 +13,7 @@ database.
 | npm package name | `afus-<product>` (lowercase) | afus-boutique |
 | App ID | `dz.afus.<product>` – one per product, never shared | dz.afus.boutique |
 | Executable | `Afus<Product>.exe` | AfusBoutique.exe |
-| Windows installer | `Afus <Product> Setup <version>.exe` | Afus Boutique Setup 1.1.2.exe |
+| Windows installer | `Afus <Product> Setup <version>.exe` | Afus Boutique Setup 1.2.0.exe |
 | macOS application | `Afus <Product>.app` in `Afus-<Product>-<version>-<arch>.dmg` | Afus Boutique.app |
 | Data folder | `%APPDATA%\Afus<Product>` (macOS `~/Library/Application Support/Afus<Product>`) | AfusBoutique |
 | Database file | `afus-<product>.db` | afus-boutique.db |

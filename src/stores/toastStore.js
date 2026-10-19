@@ -28,7 +28,7 @@ export const useToastStore = create((set, get) => ({
         }));
     },
 
-    success: (message, duration) => get().addToast(message, 'success', duration),
+    success: (message, duration, action) => get().addToast(message, 'success', duration, action),
     error: (message, duration, action) => get().addToast(message, 'error', duration, action),
     warning: (message, duration) => get().addToast(message, 'warning', duration),
     info: (message, duration) => get().addToast(message, 'info', duration),

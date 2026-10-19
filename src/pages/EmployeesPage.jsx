@@ -2,6 +2,7 @@ import { t } from '../i18n';
 import { translateError } from '../i18n/errors';
 import { formatDate as formatLocalDate, formatMoney } from '../i18n/format';
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Edit2, Trash2, UserCog, Shield, ShieldCheck, User, Clock, Receipt, ShoppingBag, Banknote, Printer } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { formatDuration } from '../components/shifts/ShiftSummaryDialog';
@@ -124,13 +125,18 @@ export default function EmployeesPage() {
     const [editingEmployee, setEditingEmployee] = useState(null);
     const [loading, setLoading] = useState(true);
     const [period, setPeriod] = useState('today');
-    const [view, setView] = useState('team');
+    // ?view=goals opens a view directly (the "Open" button after turning an add-on on)
+    const [params] = useSearchParams();
+    const [view, setView] = useState(() => params.get('view') || 'team');
+    useEffect(() => { const v = params.get('view'); if (v) setView(v); }, [params]);
     const [activity, setActivity] = useState([]);
     const [history, setHistory] = useState([]);
 
     const { currentEmployee, isAdmin } = useAuthStore();
     const savedFeatures = useSettingsStore(state => state.settings.features);
     const goals = effectiveFeatures(savedFeatures).commissions && isAdmin();
+    // The goals view only while the add-on is on (an old link falls back to the team)
+    const shown = view === 'goals' && !goals ? 'team' : view;
 
     const loadData = async () => {
         try {
@@ -230,15 +236,15 @@ export default function EmployeesPage() {
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="segmented">
                         {['team', ...(goals ? ['goals'] : []), 'drawers', ...(isAdmin() ? ['rights'] : [])].map(id => (
-                            <button key={id} type="button" className={view === id ? 'active' : ''} onClick={() => setView(id)}>{t(`employees.view.${id}`)}</button>
+                            <button key={id} type="button" className={shown === id ? 'active' : ''} onClick={() => setView(id)}>{t(`employees.view.${id}`)}</button>
                         ))}
                     </div>
-                    {view !== 'goals' && <div className="segmented">
+                    {shown !== 'goals' && <div className="segmented">
                         {PERIODS.map(id => (
                             <button key={id} type="button" className={period === id ? 'active' : ''} onClick={() => setPeriod(id)}>{t(`employees.period.${id}`)}</button>
                         ))}
                     </div>}
-                    {view === 'team' && (
+                    {shown === 'team' && (
                         <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder={t('employees.search')} className="w-64 max-w-full" />
                     )}
                 </div>
@@ -246,7 +252,7 @@ export default function EmployeesPage() {
 
             <div className="page-body space-y-4">
                 {/* Team totals for the period */}
-                {view !== 'goals' && <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {shown !== 'goals' && <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {[
                         [Clock, t('employees.hoursWorked'), formatDuration(team.minutes)],
                         [Receipt, t('reports.totalSales'), formatMoney(team.sales)],
@@ -260,15 +266,15 @@ export default function EmployeesPage() {
                     ))}
                 </div>}
 
-                {view === 'goals' && goals ? (
+                {shown === 'goals' && goals ? (
                     <CommissionsBoard />
                 ) : loading ? (
                     <div className="flex items-center justify-center h-48">
                         <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                     </div>
-                ) : view === 'drawers' ? (
+                ) : shown === 'drawers' ? (
                     <DrawerHistory shifts={history} />
-                ) : view === 'rights' ? (
+                ) : shown === 'rights' ? (
                     <CashierRights />
                 ) : filteredEmployees.length === 0 ? (
                     <EmptyState icon={UserCog} title={t('employees.none')} description={t('employees.addHint')} />
@@ -333,7 +339,7 @@ export default function EmployeesPage() {
                         })}
                     </div>
                 )}
-                {view !== 'goals' && <p className="text-xs text-zinc-500">{t('employees.activityHint', { from: formatLocalDate(range.start, 'date'), to: formatLocalDate(range.end, 'date') })}</p>}
+                {shown !== 'goals' && <p className="text-xs text-zinc-500">{t('employees.activityHint', { from: formatLocalDate(range.start, 'date'), to: formatLocalDate(range.end, 'date') })}</p>}
             </div>
 
             {/* Employee Form Modal */}

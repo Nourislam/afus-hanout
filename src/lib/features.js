@@ -17,13 +17,23 @@ export const DEFAULT_FEATURES = {
     commissions: false,    // employees' commissions, monthly goals, employee of the month
 };
 
-// How the modules are shown in Settings
+// The page where each shop add-on lives. While the add-on is on, its page is in
+// the menu even in the simple menu (otherwise turning it on would show nothing).
+export const ADDON_PAGES = { charges: '/reports', commissions: '/employees' };
+
+/** Where "Open" goes once an add-on is turned on (its own tab). */
+export const ADDON_LINKS = { charges: '/reports?tab=net', commissions: '/employees?view=goals' };
+
+/** Pages the add-ons that are on need in the menu. */
+export const addonPaths = (features = {}) => Object.entries(ADDON_PAGES).filter(([key]) => features?.[key] === true).map(([, path]) => path);
+
+// How the modules are shown in Settings (the shop add-ons first: they are what an owner looks for)
 export const MODULE_GROUPS = [
+    { id: 'addons', modules: ['charges', 'commissions'] },
     { id: 'sales', modules: ['credit', 'customers'] },
     { id: 'offers', modules: ['promotions', 'bundles', 'giftCards'] },
     { id: 'stock', modules: ['suppliers', 'purchaseOrders'] },
     { id: 'online', modules: ['email', 'ecommerce', 'website'] },
-    { id: 'addons', modules: ['charges', 'commissions'] },
 ];
 
 // A module that cannot work without another one

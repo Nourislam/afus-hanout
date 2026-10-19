@@ -22,9 +22,10 @@ export function Toast({ toast }) {
     const { removeToast } = useToastStore();
     const Icon = iconMap[toast.type] || Info;
     // An error says what to do: one button that opens the right place
+    // A success may also carry one button ({ label, to }), e.g. "Open" after turning an add-on on
     const action = toast.type === 'error'
         ? (typeof toast.action === 'string' ? ERROR_ACTIONS[toast.action] : toast.action) || actionForCode(codeOfMessage(toast.message))
-        : null;
+        : toast.action?.to ? toast.action : null;
 
     return (
         <div
@@ -64,7 +65,7 @@ export function Toaster() {
 }
 
 export const toast = {
-    success: (message, duration) => useToastStore.getState().success(message, duration),
+    success: (message, duration, action) => useToastStore.getState().success(message, duration, action),
     // action: one of ERROR_ACTIONS (lib/errorActions.js) or { label, to }; else found from the error's code
     error: (message, duration, action) => useToastStore.getState().error(message, duration ?? (action || actionForCode(codeOfMessage(message)) ? 8000 : undefined), action),
     warning: (message, duration) => useToastStore.getState().warning(message, duration),
