@@ -7,6 +7,8 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { toast } from '../ui/Toast';
 import { lineStatus, receivingSummary, groupByArticle, arrivedLabelsLink } from '../../lib/receiving';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { effectiveFeatures } from '../../lib/features';
 
 const STATUS_STYLE = {
     short: 'bg-amber-500/15 text-amber-300',
@@ -24,6 +26,10 @@ export default function ReceiveStockModal({ isOpen, onClose, onComplete, purchas
     const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [notes, setNotes] = useState('');
+    // Add-on "Charges": transport, customs, travel added to the cost of what arrives
+    const savedFeatures = useSettingsStore(state => state.settings.features);
+    const withCharges = useMemo(() => effectiveFeatures(savedFeatures).charges, [savedFeatures]);
+    const [extras, setExtras] = useState({ transport: '', customs: '', travel: '', other: '' });
     const [loading, setLoading] = useState(false);
     const [done, setDone] = useState(null); // { number, received: [{ product_id, variant_id, quantity }] }
 
@@ -31,6 +37,7 @@ export default function ReceiveStockModal({ isOpen, onClose, onComplete, purchas
         if (isOpen && purchaseOrder) {
             setDone(null);
             setNotes('');
+            setExtras({ transport: '', customs: '', travel: '', other: '' });
             loadLatestPO();
         }
     }, [isOpen, purchaseOrder]);
@@ -86,7 +93,8 @@ export default function ReceiveStockModal({ isOpen, onClose, onComplete, purchas
             const result = await window.electronAPI.purchaseOrders.createGRN({
                 poId: purchaseOrder.id,
                 items: itemsToReceive,
-                notes
+                notes,
+                ...(withCharges ? { extras: Object.fromEntries(Object.entries(extras).map(([k, v]) => [k, Number(v) || 0])) } : {}),
             });
             toast.success(t('receive.done'));
             setDone({
@@ -181,6 +189,19 @@ export default function ReceiveStockModal({ isOpen, onClose, onComplete, purchas
                                 ))}
                             </table>
                         </div>
+
+                        {withCharges && (
+                            <fieldset className="rounded-lg border border-dark-border p-3" data-testid="receive-extras">
+                                <legend className="px-1 text-sm font-medium">{t('charges.purchase.title')}</legend>
+                                <p className="text-xs text-zinc-500 mb-2">{t('charges.purchase.hint')}</p>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    {['transport', 'customs', 'travel', 'other'].map(k => (
+                                        <Input key={k} label={t(`charges.purchase.${k}`)} type="number" min="0" inputMode="numeric" value={extras[k]}
+                                            onChange={e => setExtras(x => ({ ...x, [k]: e.target.value }))} data-testid={`receive-extra-${k}`} />
+                                    ))}
+                                </div>
+                            </fieldset>
+                        )}
 
                         <div>
                             <label className="block text-sm text-zinc-400 mb-1">{t('receive.notes')}</label>

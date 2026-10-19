@@ -585,6 +585,30 @@ const MIGRATIONS = [
             }
         },
     },
+    {
+        version: '2026_10_shop_charges',
+        description: 'Shop charges (rent, salaries, electricity every 3 months...) for the net profit, and the purchase charges of a receiving (transport, customs, travel)',
+        up(db) {
+            db.run(`
+                CREATE TABLE IF NOT EXISTS shop_charges (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    kind TEXT NOT NULL DEFAULT 'other',
+                    amount REAL NOT NULL,
+                    every_months INTEGER NOT NULL DEFAULT 1,
+                    start_date TEXT NOT NULL,
+                    end_date TEXT,
+                    employee_id TEXT REFERENCES employees(id) ON DELETE SET NULL,
+                    is_active INTEGER NOT NULL DEFAULT 1,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            if (tableExists(db, 'receivings')) {
+                for (const col of ['extra_transport', 'extra_customs', 'extra_travel', 'extra_other']) addColumnIfMissing(db, 'receivings', col, 'REAL NOT NULL DEFAULT 0');
+            }
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {

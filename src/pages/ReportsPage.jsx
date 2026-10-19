@@ -20,6 +20,7 @@ import { PERMISSIONS } from '../lib/permissions';
 import SeasonReport from '../components/reports/SeasonReport';
 import MarkdownManager from '../components/reports/MarkdownManager';
 import ShopIntelligence from '../components/reports/ShopIntelligence';
+import NetProfit from '../components/reports/NetProfit';
 
 // Built on each render so the labels follow the interface language
 const dateRanges = () => [
@@ -56,8 +57,10 @@ export default function ReportsPage() {
     const canDiscount = !!features.promotions && hasPermission(PERMISSIONS.PROMOTIONS_MANAGE);
     const owner = role === 'admin';
     const tabs = [['overview', t('reports.overview')], ['smart', t('smart.tab')], ['articles', t('reports.articlesTab')], ['seasons', t('season.tab')],
-        ...(features.promotions ? [['markdowns', t('markdown.tab')]] : []), ['shifts', t('reports.shifts')]];
-    const byPeriod = !['seasons', 'markdowns', 'smart'].includes(activeTab);
+        ...(features.promotions ? [['markdowns', t('markdown.tab')]] : []), ['shifts', t('reports.shifts')],
+        // Add-on: what is left after the shop's charges (the owner's)
+        ...(features.charges && owner ? [['net', t('net.tab')]] : [])];
+    const byPeriod = !['seasons', 'markdowns', 'smart', 'net'].includes(activeTab);
     const [shiftData, setShiftData] = useState([]);
 
     useEffect(() => {
@@ -214,7 +217,9 @@ export default function ReportsPage() {
             </PageHeader>
 
             <div className="page-body">
-                {activeTab === 'smart' ? (
+                {activeTab === 'net' && features.charges && owner ? (
+                    <NetProfit />
+                ) : activeTab === 'smart' ? (
                     <ShopIntelligence />
                 ) : activeTab === 'seasons' ? (
                     <SeasonReport money={owner} canDiscount={canDiscount} />

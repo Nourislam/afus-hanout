@@ -1,4 +1,6 @@
 // IPC handlers: people. Moved out of main.js unchanged; main.js passes what they use.
+const chargesService = require('../services/chargesService');
+
 module.exports = function register(ctx) {
     const {
         SyncManager,
@@ -454,8 +456,11 @@ module.exports = function register(ctx) {
 
     // GOODS RECEIVING (GRN)
     ipcMain.handle('db:receivings:create', (_, data) => {
-      const { poId, items, notes } = data;
+      const { poId, items, notes, extras = {} } = data;
       const receivingId = uuid();
+      // Purchase charges (transport, customs, travel): added to the cost of what arrived
+      const extra = (k) => Math.max(0, Number(extras[k]) || 0);
+      const extrasTotal = extra('transport') + extra('customs') + extra('travel') + extra('other');
       const receiveNumber = 'GRN-' + Date.now().toString().slice(-6);
 
       try {
@@ -465,6 +470,16 @@ module.exports = function register(ctx) {
         INSERT INTO receivings (id, receive_number, purchase_order_id, supplier_id, notes)
         SELECT ?, ?, id, supplier_id, ? FROM purchase_orders WHERE id = ?
       `, [receivingId, receiveNumber, notes, poId]);
+          let extraPerPiece = new Map();
+          if (extrasTotal > 0) {
+            runInsert('UPDATE receivings SET extra_transport = ?, extra_customs = ?, extra_travel = ?, extra_other = ? WHERE id = ?',
+              [extra('transport'), extra('customs'), extra('travel'), extra('other'), receivingId]);
+            extraPerPiece = chargesService.landedCosts(items.filter(i => i.quantity_received > 0).map(i => ({
+              key: i.po_item_id || i.product_id,
+              quantity: i.quantity_received,
+              unitCost: getOne('SELECT unit_cost FROM purchase_order_items WHERE id = ?', [i.po_item_id])?.unit_cost || 0,
+            })), extrasTotal);
+          }
 
           // 2. Process Items (stock goes to the ordered variant)
           for (const item of items) {
@@ -485,6 +500,21 @@ module.exports = function register(ctx) {
           SET received_quantity = received_quantity + ?
           WHERE id = ?
         `, [item.quantity_received, item.po_item_id]);
+
+            // With purchase charges: the piece's cost becomes the average of the stock and what arrived
+            const perPiece = extraPerPiece.get(item.po_item_id || item.product_id) || 0;
+            if (perPiece > 0) {
+              const product = getOne('SELECT cost FROM products WHERE id = ?', [item.product_id]) || {};
+              const variant = variantId ? getOne('SELECT cost, stock_quantity FROM product_variants WHERE id = ?', [variantId]) : null;
+              const unitCost = getOne('SELECT unit_cost FROM purchase_order_items WHERE id = ?', [item.po_item_id])?.unit_cost || 0;
+              const before = variant ? variant.stock_quantity : (getOne('SELECT stock_quantity FROM products WHERE id = ?', [item.product_id])?.stock_quantity || 0);
+              const cost = chargesService.averageCost({
+                stock: before, cost: variant && variant.cost !== null && variant.cost !== undefined ? variant.cost : product.cost,
+                quantity: item.quantity_received, unitCost: unitCost + perPiece,
+              });
+              if (variant) runInsert('UPDATE product_variants SET cost = ? WHERE id = ?', [cost, variantId]);
+              else runInsert('UPDATE products SET cost = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [cost, item.product_id]);
+            }
 
             catalog.adjustStock(dbApi, {
               productId: item.product_id,

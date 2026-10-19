@@ -87,6 +87,11 @@ const RULES = {
 
     // Stock, suppliers, purchases
     'db:products:updateStock': P.INVENTORY_ADJUST,
+    // Shop charges and net profit: the owner's
+    'charges:list': 'admin',
+    'charges:save': 'admin',
+    'charges:stop': 'admin',
+    'charges:netProfit': 'admin',
     'stockCount:start': P.INVENTORY_ADJUST,
     'stockCount:scan': P.INVENTORY_ADJUST,
     'stockCount:setCounted': P.INVENTORY_ADJUST,

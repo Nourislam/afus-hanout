@@ -131,6 +131,8 @@ export default {
     'errors.MARKDOWN_NO_ARTICLE': ["This article no longer exists", "Cet article n'existe plus", "هذه السلعة لم تعد موجودة"],
     'errors.MARKDOWN_RUNNING': ["A markdown is still running on this article", "Une démarque est encore en cours sur cet article", "يوجد تخفيض ما زال جارياً على هذه السلعة"],
     'errors.SUPPLIER_HAS_HISTORY': ["This supplier has purchases or payments: it is kept so their history stays. You can stop using it.", "Ce fournisseur a des achats ou des paiements : il est gardé pour conserver leur historique. Vous pouvez ne plus l'utiliser.", "لهذا المورّد مشتريات أو دفعات: يبقى محفوظًا حتى لا يضيع سجلها. يمكنك ألا تتعامل معه بعد الآن."],
+    'errors.CHARGE_NAME_REQUIRED': ["Give the charge a name.", "Donnez un nom à la charge.", "اكتب اسم المصروف."],
+    'errors.CHARGE_AMOUNT_REQUIRED': ["Enter the amount of one payment.", "Saisissez le montant d'un paiement.", "اكتب مبلغ الدفعة الواحدة."],
     'errors.PO_PAID_DELETE': ["A purchase with payments cannot be deleted.", "Un achat avec des paiements ne peut pas être supprimé.", "لا يمكن حذف شراء فيه دفعات."],
     'errors.BRAND_NAME_REQUIRED': ["Brand name is required", "Le nom de la marque est obligatoire", "اسم الماركة إجباري"],
     'errors.BRAND_EXISTS': ["This brand already exists", "Cette marque existe déjà", "هذه الماركة موجودة"],

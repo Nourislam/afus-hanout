@@ -738,3 +738,4 @@ require('./ipc/sync')(ipcContext);
 require('./ipc/settings')(ipcContext);
 require('./ipc/app')(ipcContext);
 require('./ipc/shops')(ipcContext);
+require('./ipc/charges')(ipcContext);

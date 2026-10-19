@@ -282,6 +282,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
         getItems: (id) => ipcRenderer.invoke('db:returns:getItems', id),
     },
 
+    // Shop charges and the month's net profit (add-on, the owner's)
+    charges: {
+        list: () => ipcRenderer.invoke('charges:list'),
+        save: (charge) => ipcRenderer.invoke('charges:save', charge),
+        stop: (data) => ipcRenderer.invoke('charges:stop', data),
+        netProfit: (data) => ipcRenderer.invoke('charges:netProfit', data),
+    },
     // Stock count: what is on the shelves, applied only when confirmed
     stockCount: {
         current: () => ipcRenderer.invoke('stockCount:current'),
