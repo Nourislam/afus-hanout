@@ -25,7 +25,7 @@ describe('e-mails', () => {
         const { subject, html } = documentEmail('receipt', doc, { businessName: 'Boutique Islam', defaultLanguage: 'fr' });
         expect(subject).toBe('Ticket n° T-7 — Boutique Islam');
         expect(html).toMatch(/dir="ltr"/);
-        expect(html).toMatch(/6\u00a0500\u00a0DA/);
+        expect(html).toMatch(/6\u202f500\u202fDA/);
     });
 
     it('no e-mail template is left in English with dollars', () => {

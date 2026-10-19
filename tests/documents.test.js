@@ -8,7 +8,7 @@ const receiptService = new ReceiptService();
 const labelService = require('../electron/services/labelService');
 const i18n = require('../electron/i18n');
 // Amounts use no-break spaces; compare with normal spaces for readability
-const sp = (text) => text.replace(/\u00a0/g, ' ');
+const sp = (text) => text.replace(/\u202f/g, ' ');
 
 const SHOP = {
     businessName: 'Boutique Amina',
@@ -128,7 +128,7 @@ describe('money formatting', () => {
     });
 
     it('keeps amounts in one piece for right-to-left text (no-break spaces)', () => {
-        expect(i18n.formatMoney(2500, 'ar')).toBe('2\u00a0500\u00a0د.ج');
+        expect(i18n.formatMoney(2500, 'ar')).toBe('2\u202f500\u202fد.ج');
         expect(i18n.formatDate('2025-06-01 10:30:00', 'ar')).toMatch(/^\d{2}\/\d{2}\/2025 \d{2}:30$/);
     });
 

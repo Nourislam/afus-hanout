@@ -181,7 +181,7 @@ function translator(lang) {
 }
 
 const SPACE = /[\u202f\u00a0 ]/g;
-const NBSP = '\u00a0';
+const NBSP = '\u202f'; // narrow: U+00A0 splits "9 000" in Arabic ("000 9")
 
 /** "2 500 DA" / "2 500 د.ج"; decimals only when needed. Same output as the interface. */
 function formatMoney(amount, lang = DEFAULT_LANGUAGE, currency = 'DZD') {

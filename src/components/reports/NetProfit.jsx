@@ -30,14 +30,14 @@ function ChargeForm({ charge, employees, onClose, onSaved }) {
     const { t } = useT();
     const [form, setForm] = useState(() => ({
         name: charge?.name || '', kind: charge?.kind || 'rent', amount: charge?.amount ?? '',
-        every_months: charge?.every_months ?? 1, start_date: (charge?.start_date || thisMonth()).slice(0, 7), employee_id: charge?.employee_id || '',
+        every_months: charge?.every_months ?? KIND_EVERY[charge?.kind] ?? 1, start_date: (charge?.start_date || thisMonth()).slice(0, 7), employee_id: charge?.employee_id || '',
     }));
     const [saving, setSaving] = useState(false);
     const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
     const save = async () => {
         setSaving(true);
         try {
-            await window.electronAPI.charges.save({ ...form, id: charge?.id, amount: Number(form.amount), employee_id: form.kind === 'salary' ? form.employee_id || null : null });
+            await window.electronAPI.charges.save({ ...form, name: form.name.trim() || t(`charges.kind.${form.kind}`), id: charge?.id, amount: Number(form.amount), employee_id: form.kind === 'salary' ? form.employee_id || null : null });
             toast.success(t('charges.saved'));
             onSaved();
         } catch (error) {
@@ -47,10 +47,10 @@ function ChargeForm({ charge, employees, onClose, onSaved }) {
         }
     };
     return (
-        <Modal isOpen onClose={onClose} title={charge ? t('charges.edit') : t('charges.add')} size="md">
+        <Modal isOpen onClose={onClose} title={charge?.id ? t('charges.edit') : t('charges.add')} size="md">
             <ModalBody className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                    <Select label={t('charges.kind')} value={form.kind} onChange={(v) => setForm(f => ({ ...f, kind: v, every_months: charge ? f.every_months : KIND_EVERY[v] }))}
+                    <Select label={t('charges.kind')} value={form.kind} onChange={(v) => setForm(f => ({ ...f, kind: v, every_months: charge?.id ? f.every_months : KIND_EVERY[v] }))}
                         options={KINDS.map(k => ({ value: k, label: t(`charges.kind.${k}`) }))} />
                     <Input label={t('charges.name')} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder={t('charges.namePlaceholder')} data-testid="charge-name" />
                 </div>
@@ -191,15 +191,29 @@ export default function NetProfit() {
                     <h3 className="font-semibold">{t('charges.title')}</h3>
                     <Button onClick={() => setEditing({})} data-testid="charge-add"><Plus className="w-4 h-4" /> {t('charges.add')}</Button>
                 </div>
+                <p className="text-sm text-zinc-500 leading-relaxed">{t('charges.onlyWhatYouPay')}</p>
+                {/* Quick start: only what this shop pays (nothing is assumed) */}
+                <div className="flex flex-wrap gap-2" data-testid="charge-suggest">
+                    {['rent', 'electricity', 'water', 'salary', 'internet', 'tax'].filter(k => !list.some(c => c.kind === k)).map(k => (
+                        <button key={k} type="button" onClick={() => setEditing({ kind: k })}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-dark-border px-3 min-h-[40px] text-sm text-zinc-300 hover:border-indigo-400 hover:text-white">
+                            <Plus className="w-3.5 h-3.5" /> {t(`charges.kind.${k}`)}
+                        </button>
+                    ))}
+                </div>
                 {list.length === 0 ? (
-                    <p className="text-sm text-zinc-500 py-4">{t('charges.empty')}</p>
+                    <p className="text-sm text-zinc-500 py-2">{t('charges.empty')}</p>
                 ) : (
                     <ul className="divide-y divide-dark-border">
                         {list.map(c => (
                             <li key={c.id} className="flex flex-wrap items-center gap-3 py-2.5" data-testid="charge-row">
                                 <span className="flex-1 min-w-[12rem]">
                                     <span className="block font-medium">{c.name}{c.employee_name ? ` · ${c.employee_name}` : ''}</span>
-                                    <span className="block text-xs text-zinc-500">{t(`charges.kind.${c.kind}`)} · {money(c.amount)} {t(`charges.every.${c.every_months}`)}</span>
+                                    <span className="flex flex-wrap gap-x-1.5 text-xs text-zinc-500">
+                                        <span>{t(`charges.kind.${c.kind}`)}</span><span aria-hidden>·</span>
+                                        <bdi className="tabular-nums">{money(c.amount)}</bdi>
+                                        <bdi>{t(`charges.every.${c.every_months}`)}</bdi>
+                                    </span>
                                 </span>
                                 {c.every_months > 0 && <span className="text-sm tabular text-zinc-300 whitespace-nowrap">{t('charges.perMonth', { amount: money(c.amount / c.every_months) })}</span>}
                                 <span className="flex gap-1">
@@ -211,7 +225,7 @@ export default function NetProfit() {
                     </ul>
                 )}
             </Card>
-            {editing && <ChargeForm charge={editing.id ? editing : null} employees={employees} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load(); }} />}
+            {editing && <ChargeForm charge={editing.id || editing.kind ? editing : null} employees={employees} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load(); }} />}
         </div>
     );
 }

@@ -357,7 +357,7 @@ describe('Create Website on the shop\'s own GitHub and Cloudflare (simulated, th
         expect(cloud.cf.scripts.get('boutique-yasmine-api').uploads).toBe(1);
         expect(v.site.url).toBe(first.url);
         const page = await fetch(`${v.site.url}product-jean.html`).then(r => r.text());
-        expect(page.replace(/<bdi dir="ltr">|<\/bdi>/g, '')).toContain('3\u00a0200');
+        expect(page.replace(/<bdi dir="ltr">|<\/bdi>/g, '')).toContain('3\u202f200');
         // The changed pages went inside the one tree request; the picture was not sent again
         expect(cloud.requests.filter(r => r.path.endsWith('/git/blobs')).length - blobsBefore).toBe(0);
         expect(cloud.requests.filter(r => r.path.endsWith('/git/trees') && r.method === 'POST').length - treesBefore).toBe(1);

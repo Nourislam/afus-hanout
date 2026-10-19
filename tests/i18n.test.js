@@ -69,16 +69,16 @@ describe('translations', () => {
 
 describe('Algerian formatting', () => {
     it('formats dinars without decimals for whole amounts', () => {
-        const sp = (text) => text.replace(/\u00a0/g, ' ');
+        const sp = (text) => text.replace(/\u202f/g, ' ');
         expect(sp(formatMoney(2500, { lang: 'fr', currency: 'DZD' }))).toBe('2 500 DA');
         expect(sp(formatMoney(2500, { lang: 'ar', currency: 'DZD' }))).toBe('2 500 د.ج');
         expect(sp(formatMoney(1999.5, { lang: 'en', currency: 'DZD' }))).toBe('1 999,50 DA');
         // No-break spaces, so the bidi algorithm does not split the number in Arabic
-        expect(formatMoney(2500, { lang: 'ar', currency: 'DZD' })).toBe('2\u00a0500\u00a0د.ج');
+        expect(formatMoney(2500, { lang: 'ar', currency: 'DZD' })).toBe('2\u202f500\u202fد.ج');
     });
 
     it('uses Western digits', () => {
-        expect(formatNumber(1234567)).toBe('1\u00a0234\u00a0567');
+        expect(formatNumber(1234567)).toBe('1\u202f234\u202f567');
     });
 });
 

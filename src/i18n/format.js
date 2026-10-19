@@ -14,10 +14,10 @@ export function currencySymbolFor(lang, currency = 'DZD') {
     return currency;
 }
 
-// No-break space: keeps "2 500" in one piece when wrapping and, unlike a
-// normal space, is not a word break for the bidi algorithm, so the number is
-// not displayed as "500 2" inside Arabic text.
-export const NBSP = '\u00a0';
+// Narrow no-break space (what fr-FR grouping uses): keeps "2 500" in one piece
+// when wrapping and in Arabic text. With the plain no-break space (U+00A0)
+// Chromium draws "2 500 د.ج" as "500 2 د.ج".
+export const NBSP = '\u202f';
 
 export function formatNumber(value, { decimals } = {}) {
     const n = Number(value) || 0;

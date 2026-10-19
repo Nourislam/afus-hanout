@@ -183,7 +183,7 @@ describe('Website management (simulated GitHub and Cloudflare, the real Worker)'
         api.run("INSERT INTO sale_items (id, sale_id, product_id, product_name, quantity, unit_price, total) VALUES ('si1', 's1', 'belt', 'Ceinture', 1, 800, 800)");
 
         // The preview shows them now...
-        expect(price(service.previewTheme({ page: 'product', id: 'jean' }).html)).toContain('3 400');
+        expect(price(service.previewTheme({ page: 'product', id: 'jean' }).html)).toContain('3 400');
         expect(service.previewTheme({ page: 'product', id: 'jean' }).html).toContain('jean-2.jpg');
         const best = service.previewTheme({ page: 'best' });
         expect(best.bestSellers).toBe(1);
@@ -194,13 +194,13 @@ describe('Website management (simulated GitHub and Cloudflare, the real Worker)'
         // ...the website not yet
         expect(service.changes()).toEqual({ outdated: true });
         expect(catalogJson().products.map(p => p.id)).not.toContain('cap');
-        expect(price(text('product-jean.html'))).not.toContain('3 400');
+        expect(price(text('product-jean.html'))).not.toContain('3 400');
 
         const v = await publish(service);
         expect(v.deploy.status).toBe('done');
         expect(catalogJson().products.map(p => p.id).sort()).toEqual(['belt', 'cap', 'jean']);
         expect(catalogJson().products.find(p => p.id === 'jean')).toMatchObject({ price: 3400, images: ['jean-2.jpg'] });
-        expect(price(text('product-jean.html'))).toContain('3 400');
+        expect(price(text('product-jean.html'))).toContain('3 400');
         expect(files().get('images/jean-2.jpg')).toEqual(JPEG2);
         expect(files().has('images/jean-1.jpg')).toBe(false);
         expect(text('best.html')).toContain('product-belt.html');
