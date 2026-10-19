@@ -233,6 +233,7 @@ const RULES = {
     'shifts:zReportHtml': 'login',
     'email:sendReceipt': 'login',
     'email:sendGiftCard': 'login',
+    'email:sendQuotation': 'login',
 };
 
 /** Does this employee satisfy the rule? (pure; used by the tests too) */

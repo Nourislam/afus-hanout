@@ -643,7 +643,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
         },
         
         // Webhook events (pushed in by a sync transport, if one is configured)
-        webhookEvent: (event) => ipcRenderer.invoke('ecommerce:webhookEvent', event),
 
     },
 

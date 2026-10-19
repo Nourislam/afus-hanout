@@ -343,7 +343,7 @@ function runMigrations() {
             )
         `);
         console.log('Ensured purchase_return_items table exists');
-        db.run('CREATE INDEX IF NOT EXISTS idx_return_items_return ON purchase_return_items(return_id)');
+        db.run('CREATE INDEX IF NOT EXISTS idx_purchase_return_items_return ON purchase_return_items(return_id)');
     } catch (e) { console.log('purchase_return_items table check:', e.message); }
 
     // ==========================================

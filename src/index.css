@@ -378,7 +378,7 @@ textarea.ltr {
   }
 
   .segmented {
-    @apply inline-flex items-center gap-1 p-1 rounded-lg bg-dark-tertiary border border-dark-border;
+    @apply inline-flex flex-wrap max-w-full items-center gap-1 p-1 rounded-lg bg-dark-tertiary border border-dark-border;
   }
 
   .segmented > button {

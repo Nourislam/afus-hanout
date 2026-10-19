@@ -2,6 +2,7 @@
 export default {
     // One line under each section of the Settings menu
     'settings.tabHint.business': ["Name, logo, address, legal numbers", "Nom, logo, adresse, numéros légaux", "الاسم والشعار والعنوان والأرقام القانونية"],
+    'settings.tabHint.shops': ["Your other shops: link them and copy the catalogue", "Vos autres magasins : les lier et copier le catalogue", "محلاتك الأخرى: ربطها ونسخ الكتالوج"],
     'settings.tabHint.language': ["Language, currency and TVA", "Langue, monnaie et TVA", "اللغة والعملة والرسوم"],
     'settings.tabHint.appearance': ["Dark or light screen", "Écran sombre ou clair", "شاشة داكنة أو فاتحة"],
     'settings.tabHint.receipt': ["Ticket printer and text", "Imprimante et texte du ticket", "طابعة التذاكر ونصها"],

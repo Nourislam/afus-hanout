@@ -311,6 +311,28 @@ module.exports = function register(ctx) {
       return { success: true };
     });
 
+    // A quotation to the customer, its PDF attached (the Quote window's Send button)
+    const emailService = require('../services/emailService');
+    ipcMain.handle('email:sendQuotation', async (_, { to, quote: asked } = {}) => {
+      if (!to || !asked) return { success: false, message: 'Missing e-mail address or quotation' };
+      const settings = getStoreSettings();
+      const ready = emailService.initEmailService({
+        smtp_host: settings.email_host, smtp_port: settings.email_port,
+        smtp_user: settings.email_user, smtp_pass: settings.email_password, smtp_secure: settings.email_secure,
+      });
+      if (!ready) return { success: false, message: 'Email not configured. Please configure SMTP settings in Settings > Email.' };
+      // Amounts as numbers (the e-mail and the PDF format them)
+      const num = (v) => Number(v) || 0;
+      const quote = {
+        ...asked, subtotal: num(asked.subtotal), tax_amount: num(asked.tax_amount), discount_amount: num(asked.discount_amount), total: num(asked.total),
+        items: (asked.items || []).map(i => ({ ...i, unit_price: num(i.unit_price), total: num(i.total) })),
+      };
+      let pdfPath = null;
+      try { pdfPath = await receiptService.generateQuotationPdf(quote, settings); } catch (error) { console.error('Quotation PDF failed, sending without it:', error); }
+      await emailService.sendQuotationEmail({ to, quote, businessInfo: settings, pdfPath });
+      return { success: true };
+    });
+
     ipcMain.handle('email:sendGiftCard', async (_, { giftCard, email }) => {
       try {
         const receiptService = new ReceiptService();

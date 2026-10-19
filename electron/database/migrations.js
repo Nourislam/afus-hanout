@@ -564,6 +564,27 @@ const MIGRATIONS = [
             `);
         },
     },
+    {
+        version: '2026_10_link_indexes',
+        description: 'Indexes on the links read often (ticket lines of returns, kridi of a ticket, lines of a count, a pack, a purchase return...); the purchase return lines index had the name of the ticket returns one, so it was never made',
+        up(db) {
+            const LINKS = [
+                ['purchase_return_items', 'return_id'], ['purchase_return_items', 'product_id'],
+                ['return_items', 'sale_item_id'], ['return_items', 'product_id'],
+                ['credit_sales', 'sale_id'], ['exchanges', 'sale_id'], ['exchanges', 'sale_item_id'],
+                ['bundle_items', 'bundle_id'], ['bundle_items', 'product_id'],
+                ['stock_count_lines', 'variant_id'], ['stock_count_lines', 'product_id'],
+                ['receiving_items', 'product_id'], ['purchase_order_items', 'product_id'],
+                ['quotation_items', 'product_id'], ['gift_card_transactions', 'sale_id'],
+                ['reservations', 'customer_id'], ['held_transactions', 'employee_id'],
+                ['shifts', 'employee_id'], ['products', 'supplier_id'], ['receivings', 'supplier_id'],
+            ];
+            for (const [table, column] of LINKS) {
+                if (!tableExists(db, table) || !getColumns(db, table).includes(column)) continue;
+                db.run(`CREATE INDEX IF NOT EXISTS idx_link_${table}_${column} ON ${table}(${column})`);
+            }
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {
