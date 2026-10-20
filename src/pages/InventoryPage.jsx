@@ -20,6 +20,7 @@ import { MANUAL_REASONS, stockReasonLabel } from '../lib/stockReasons';
 import { readFilter, stockMatches, STOCK_FILTERS } from '../lib/listFilters';
 import { PERMISSIONS } from '../lib/permissions';
 import StockCountModal from '../components/inventory/StockCountModal';
+import { ExportButton } from '../components/ui/ExportButton';
 
 export default function InventoryPage() {
     const [products, setProducts] = useState([]);
@@ -53,9 +54,12 @@ export default function InventoryPage() {
 
     // Stock value at purchase price: the owner's, the same figure as on the home screen
     const [worth, setWorth] = useState(null);
+    // Value of each article = the sum of its sizes, each at its own purchase price (services/stockService.js)
+    const [valueOf, setValueOf] = useState({});
     useEffect(() => {
         if (currentEmployee?.role !== 'admin') return;
         window.electronAPI.insights.stockWorth({}).then(setWorth).catch(() => setWorth(null));
+        window.electronAPI.figures?.stock().then(r => setValueOf(r?.byArticle || {})).catch(() => setValueOf({}));
     }, [currentEmployee?.role]);
 
     const loadData = async () => {
@@ -122,10 +126,16 @@ export default function InventoryPage() {
                 icon={Boxes}
                 title={t('inventory.title')}
                 subtitle={t('inventory.subtitle')}
-                actions={canCount && (
-                    <Button variant="secondary" onClick={() => setShowCount(true)}>
-                        <ClipboardCheck className="w-4 h-4" /> {t('count.open')}
-                    </Button>
+                actions={(canCount || owner) && (
+                    <>
+                        {/* Stock size by size with its value: the purchase prices are the owner's */}
+                        {owner && <ExportButton kind="stock" label={t('export.stock')} />}
+                        {canCount && (
+                            <Button variant="secondary" onClick={() => setShowCount(true)}>
+                                <ClipboardCheck className="w-4 h-4" /> {t('count.open')}
+                            </Button>
+                        )}
+                    </>
                 )}
             >
                 <div className="flex flex-wrap items-center gap-3">
@@ -239,7 +249,7 @@ export default function InventoryPage() {
                                     </TableCell>
                                     <TableCell className="hidden xl:table-cell text-zinc-400">{product.min_stock_level}</TableCell>
                                     <TableCell><StatusBadge status={getStockStatus(product)} /></TableCell>
-                                    {owner && <TableCell className="hidden xl:table-cell whitespace-nowrap">{formatCurrency(product.stock_quantity * product.cost)}</TableCell>}
+                                    {owner && <TableCell className="hidden xl:table-cell whitespace-nowrap">{formatCurrency(valueOf[product.id]?.cost ?? Math.max(0, product.stock_quantity) * (product.cost || 0))}</TableCell>}
                                     <TableCell>
                                         <div className="flex items-center gap-1.5 flex-nowrap">
                                             {canCount && (

@@ -105,6 +105,39 @@ function scan(api, countId, code, quantity = 1) {
     return countLines(api, countId).find(l => l.id === id);
 }
 
+/**
+ * Quantities counted in an Excel file (the stock file of the shop, or any sheet
+ * with a code column and a quantity column): each code's line is set to the
+ * number in the file (not added). Read only from the rows: nothing reaches the
+ * stock before the count is confirmed.
+ * @param rows [{ row, code, quantity }]
+ * @returns {{ set: number, problems: { row, code, error, params }[] }}
+ */
+function importCounted(api, countId, rows) {
+    const count = openCountOrThrow(api, countId);
+    const problems = [];
+    let set = 0;
+    for (const { row, code, quantity } of rows) {
+        const problem = (error, params = {}) => problems.push({ row, code, error, params });
+        if (!code) { problem('COUNT_NO_CODE'); continue; }
+        const value = parseInt(quantity, 10);
+        if (!Number.isInteger(value) || value < 0) { problem('COUNT_QUANTITY'); continue; }
+        const found = catalog.lookupCode(api, code);
+        if (!found) { problem('COUNT_CODE_UNKNOWN', { code }); continue; }
+        if (found.needsVariant) { problem('COUNT_NEEDS_VARIANT', { product: found.product.name }); continue; }
+        if (count.category_id && found.product.category_id !== count.category_id) {
+            problem('COUNT_OUT_OF_SCOPE', { product: found.product.name, category: count.category_name || '' }); continue;
+        }
+        const productId = found.product.id;
+        const variantId = found.type === 'variant' ? found.variant.id : null;
+        const line = findLine(api, countId, productId, variantId);
+        if (line) api.run('UPDATE stock_count_lines SET counted = ?, updated_at = ? WHERE id = ?', [value, new Date().toISOString(), line.id]);
+        else api.run('INSERT INTO stock_count_lines (id, count_id, product_id, variant_id, counted, updated_at) VALUES (?, ?, ?, ?, ?, ?)', [api.uuid(), countId, productId, variantId, value, new Date().toISOString()]);
+        set += 1;
+    }
+    return { set, problems };
+}
+
 /** Type the number found for a line (0 is allowed: none on the shelf). */
 function setCounted(api, countId, lineId, counted) {
     openCountOrThrow(api, countId);
@@ -197,4 +230,4 @@ function listCounts(api, limit = -1) {
     `, [Number.isInteger(limit) && limit > 0 ? limit : -1]);
 }
 
-module.exports = { currentCount, startCount, scan, setCounted, removeLine, cancelCount, confirmCount, summary, countLines, listCounts, getCount };
+module.exports = { currentCount, startCount, scan, importCounted, setCounted, removeLine, cancelCount, confirmCount, summary, countLines, listCounts, getCount };

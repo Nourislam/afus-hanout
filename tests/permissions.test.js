@@ -19,9 +19,12 @@ function ticket(v, lines, { manual = 0, promotion = null, promoAmount = 0, coupo
     }));
     const subtotal = items.reduce((s, i) => s + i.total, 0);
     const discount = manual + promoAmount;
+    const due = total ?? subtotal - discount;
     return {
         id: 'sale', items, subtotal, discount_amount: discount, manual_discount: manual,
-        promotion_id: promotion, coupon, total: total ?? subtotal - discount, tax_amount: 0, service_charge: 0,
+        promotion_id: promotion, coupon, total: due, tax_amount: 0, service_charge: 0,
+        // A real ticket is always paid for its total (cash here)
+        payments: [{ method: 'cash', amount: due }],
     };
 }
 

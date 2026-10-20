@@ -17,6 +17,7 @@ import {
     AlertCircle,
     PackageCheck,
     Clock,
+    FileSpreadsheet,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { PageHeader } from '../components/ui/PageHeader';
@@ -27,6 +28,8 @@ import { toast } from '../components/ui/Toast';
 import SupplierHistoryModal from '../components/modals/SupplierHistoryModal';
 import { useSettingsStore } from '../stores/settingsStore';
 import { effectiveFeatures } from '../lib/features';
+import { ExportButton } from '../components/ui/ExportButton';
+import { ExcelImport } from '../components/ui/ExcelImport';
 
 const EMPTY_FORM = { name: '', contact_person: '', email: '', phone: '', address: '', website: '', notes: '' };
 
@@ -42,6 +45,24 @@ export default function SuppliersPage() {
     const [onlyToPay, setOnlyToPay] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [showImport, setShowImport] = useState(false);
+    // Suppliers from an Excel file (template in Settings language, titles in Arabic or French)
+    const importSuppliers = async (records) => {
+        let added = 0;
+        for (const record of records) {
+            try {
+                await window.electronAPI.suppliers.create({
+                    name: record.name, contact_person: record.contact_person || null, phone: record.phone || null,
+                    email: record.email || null, address: record.address || null, notes: record.notes || null,
+                });
+                added += 1;
+            } catch (error) {
+                console.error('Failed to import supplier:', record.name, error);
+            }
+        }
+        toast.success(t('excel.addedN', { n: added }));
+        fetchSuppliers();
+    };
     const [editingSupplier, setEditingSupplier] = useState(null);
     const [historySupplier, setHistorySupplier] = useState(null);
     const [formData, setFormData] = useState(EMPTY_FORM);
@@ -131,10 +152,16 @@ export default function SuppliersPage() {
                 title={t('suppliers.title')}
                 subtitle={t('partners.suppliersSubtitle')}
                 actions={(
-                    <Button onClick={() => setShowModal(true)}>
-                        <Plus className="w-4 h-4" />
-                        {t('suppliers.add')}
-                    </Button>
+                    <>
+                        <ExportButton kind="suppliers" label={t('export.suppliers')} />
+                        <Button variant="secondary" onClick={() => setShowImport(true)} data-testid="suppliers-import">
+                            <FileSpreadsheet className="w-4 h-4" /> {t('common.importExcel')}
+                        </Button>
+                        <Button onClick={() => setShowModal(true)}>
+                            <Plus className="w-4 h-4" />
+                            {t('suppliers.add')}
+                        </Button>
+                    </>
                 )}
             >
                 <div className="flex flex-wrap items-center gap-3">
@@ -318,6 +345,14 @@ export default function SuppliersPage() {
                     </ModalFooter>
                 </form>
             </Modal>
+
+            <ExcelImport
+                isOpen={showImport}
+                onClose={() => setShowImport(false)}
+                dataType="suppliers"
+                onImport={importSuppliers}
+                title={t('suppliers.import')}
+            />
 
             <SupplierHistoryModal
                 isOpen={showHistoryModal}

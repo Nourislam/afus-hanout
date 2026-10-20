@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ClipboardCheck, ScanLine, Trash2 } from 'lucide-react';
+import { ClipboardCheck, ScanLine, Trash2, FileUp } from 'lucide-react';
 import { Modal, ModalBody, ModalFooter } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -63,6 +63,28 @@ export default function StockCountModal({ isOpen, onClose, onConfirmed }) {
             toast.error(message);
         }
     }, [count, refresh]);
+
+    // Quantities counted in Excel (the stock file with its "Quantity" column filled in)
+    const fileRef = useRef(null);
+    const importExcel = async (file) => {
+        if (!file || !count) return;
+        setBusy(true);
+        try {
+            const result = await window.electronAPI.stockCount.importExcel(count.id, new Uint8Array(await file.arrayBuffer()));
+            await refresh(count.id);
+            if (result.problems.length) {
+                const lines = result.problems.slice(0, 5).map(p => `${t('count.importRow', { n: p.row })}${p.code ? ` (${p.code})` : ''}: ${translateError(`${p.error}|${JSON.stringify(p.params || {})}`)}`);
+                toast.warning(`${t('count.importDone', { n: result.set })}\n${lines.join('\n')}${result.problems.length > 5 ? `\n${t('count.importMore', { n: result.problems.length - 5 })}` : ''}`, 12000);
+            } else {
+                toast.success(t('count.importDone', { n: result.set }));
+            }
+        } catch (e) {
+            toast.error(translateError(e));
+        } finally {
+            setBusy(false);
+            if (fileRef.current) fileRef.current.value = '';
+        }
+    };
 
     // A USB scanner works anywhere in the window while the count is open
     useBarcodeScanner((scanned) => addCode(scanned), { isActive: () => isOpen && !!count && !report });
@@ -171,6 +193,11 @@ export default function StockCountModal({ isOpen, onClose, onConfirmed }) {
                                             onChange={(e) => setCode(e.target.value)}
                                             onKeyDown={(e) => { if (e.key === 'Enter') { addCode(code); setCode(''); } }} />
                                         <Button variant="secondary" onClick={() => { addCode(code); setCode(''); }}><ScanLine className="w-4 h-4" /></Button>
+                                        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" data-testid="count-excel-file"
+                                            onChange={(e) => importExcel(e.target.files?.[0])} />
+                                        <Button variant="secondary" onClick={() => fileRef.current?.click()} loading={busy} title={t('count.importHint')} data-testid="count-excel">
+                                            <FileUp className="w-4 h-4" /> {t('count.importExcel')}
+                                        </Button>
                                     </div>
                                 )}
                             </div>

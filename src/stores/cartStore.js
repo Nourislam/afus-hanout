@@ -255,20 +255,29 @@ export const useCartStore = create((set, get) => ({
     },
 
     // Tax is computed on what the customer really pays (after discounts)
-    getTaxAmount: () => {
+    getTaxAmount: () => round2(get().getLineTaxes().reduce((sum, tax) => sum + tax, 0)),
+
+    // The TVA of each line, on what the customer really pays for it (the
+    // ticket discount spread over the lines); rounded so the lines add up to
+    // the ticket's TVA exactly (the cent left over goes to the last taxed line)
+    getLineTaxes: () => {
         const { items, taxType, taxExempt, globalTaxRate, taxEnabled } = get();
         // TVA turned off in Settings: none is computed
-        if (taxExempt || taxEnabled === false) return 0;
+        if (taxExempt || taxEnabled === false) return items.map(() => 0);
         const subtotal = get().getSubtotal();
-        if (subtotal <= 0) return 0;
+        if (subtotal <= 0) return items.map(() => 0);
         const factor = (subtotal - get().getDiscountAmount()) / subtotal;
-        const tax = items.reduce((sum, item) => {
+        const exact = items.map(item => {
             const effectiveRate = (item.tax_rate && item.tax_rate > 0) ? item.tax_rate : globalTaxRate;
             const rate = (Number(effectiveRate) || 0) / 100;
             const paid = item.total * factor;
-            return sum + (taxType === 'inclusive' ? paid - paid / (1 + rate) : paid * rate);
-        }, 0);
-        return round2(tax);
+            return taxType === 'inclusive' ? paid - paid / (1 + rate) : paid * rate;
+        });
+        const total = round2(exact.reduce((sum, tax) => sum + tax, 0));
+        const lines = exact.map(round2);
+        const last = lines.map((tax, i) => (exact[i] > 0 ? i : -1)).filter(i => i >= 0).pop();
+        if (last !== undefined) lines[last] = round2(lines[last] + total - round2(lines.reduce((sum, tax) => sum + tax, 0)));
+        return lines;
     },
 
     getTotal: () => {
@@ -382,10 +391,8 @@ export const useCartStore = create((set, get) => ({
         const total = get().getTotal();
 
         const promo = get().getPromotion();
-        const saleItems = items.map(item => ({
-            ...item,
-            tax_amount: (taxExempt || get().taxEnabled === false) ? 0 : (item.total * (item.tax_rate / 100)), // Approximate for record
-        }));
+        const lineTaxes = get().getLineTaxes();
+        const saleItems = items.map((item, i) => ({ ...item, tax_amount: lineTaxes[i] || 0 }));
 
         const sale = {
             id: uuid(),

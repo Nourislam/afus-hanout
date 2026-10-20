@@ -12,6 +12,16 @@ const enoent = (p, op) => Object.assign(new Error(`ENOENT: no such file or direc
 const toBuffer = (data, enc) => (Buffer.isBuffer(data) ? Buffer.from(data) : data instanceof Uint8Array ? Buffer.from(data) : Buffer.from(String(data), typeof enc === 'string' ? enc : enc?.encoding || 'utf8'));
 const encOf = (o) => (typeof o === 'string' ? o : o?.encoding || null);
 
+// A file written in the downloads folder (an Excel file of the shop) is handed to the browser
+const DOWNLOADS = '/afus/downloads/';
+function download(abs, buffer) {
+    if (typeof document === 'undefined') return;
+    const url = URL.createObjectURL(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    const a = Object.assign(document.createElement('a'), { href: url, download: path.basename(abs) });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
 export function seed(p, data) {
     const abs = norm(p);
     parentsOf(abs).forEach(d => dirs.add(d));
@@ -36,7 +46,10 @@ const fs = {
         const enc = encOf(o);
         return enc ? b.toString(enc) : Buffer.from(b);
     },
-    writeFileSync(p, data, o) { const abs = norm(p); parentsOf(abs).forEach(d => dirs.add(d)); files.set(abs, toBuffer(data, o)); },
+    writeFileSync(p, data, o) {
+        const abs = norm(p); parentsOf(abs).forEach(d => dirs.add(d)); files.set(abs, toBuffer(data, o));
+        if (abs.startsWith(DOWNLOADS)) download(abs, files.get(abs));
+    },
     appendFileSync(p, data, o) { const abs = norm(p); const old = files.get(abs) || Buffer.alloc(0); fs.writeFileSync(abs, Buffer.concat([old, toBuffer(data, o)])); },
     mkdirSync(p) { const abs = norm(p); parentsOf(abs).forEach(d => dirs.add(d)); dirs.add(abs); return abs; },
     readdirSync(p, o) {

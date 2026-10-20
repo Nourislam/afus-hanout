@@ -198,7 +198,7 @@ export default function EmployeesPage() {
                 console.error('Failed to import employee:', record.name, error);
             }
         }
-        toast.success(`Imported ${successCount} employees`);
+        toast.success(t('excel.addedN', { n: successCount }));
         loadData();
     };
 

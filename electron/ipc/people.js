@@ -395,9 +395,12 @@ module.exports = function register(ctx) {
       return po;
     });
 
-    ipcMain.handle('db:purchaseOrders:create', (_, po) => runTransaction(() => {
+    ipcMain.handle('db:purchaseOrders:create', (_, input) => runTransaction(() => {
       // One transaction: the order and its lines are saved together, and an error
-      // reaches the interface instead of a "created" message for nothing
+      // reaches the interface instead of a "created" message for nothing.
+      // The money is computed here (services/purchaseMath.js), not taken from the window.
+      const money = require('../services/purchaseMath').poTotals(input);
+      const po = { ...input, ...money };
       const id = po.id || uuid();
       runInsert(`
     INSERT INTO purchase_orders (

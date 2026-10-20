@@ -4,9 +4,6 @@ module.exports = function register(ctx) {
         backupFolder,
         backupService,
         dbApi,
-        dialog,
-        excelService,
-        fs,
         getOne,
         getPrinterSettings,
         ipcMain,
@@ -18,7 +15,6 @@ module.exports = function register(ctx) {
         salesStatsService,
         session,
         shiftService,
-        shopT,
     } = ctx;
 
     const dashboard = require('../services/dashboardService');
@@ -212,25 +208,8 @@ module.exports = function register(ctx) {
 
     ipcMain.handle('db:reports:paymentMethods', (_, range) => salesStatsService.paymentMethods(dbApi, range || {}));
 
-    // Sales journal for the accountant (services/accountingService.js): read, or saved as Excel.
-    // columns: [{ key, label }] in the window's language.
+    // Sales journal for the accountant (services/accountingService.js); its Excel file is exports:save (journal)
     ipcMain.handle('reports:salesJournal', (_, range) => accountingService.salesJournal(dbApi, range || {}));
-    ipcMain.handle('reports:exportSalesJournal', async (_, { range, columns, labels = {}, fileName } = {}) => {
-      const journal = accountingService.salesJournal(dbApi, range || {});
-      const cols = Array.isArray(columns) && columns.length ? columns : Object.keys(journal.rows[0] || { date: 1 }).map(key => ({ key, label: key }));
-      const rows = journal.rows.map(row => cols.map(c => (c.key === 'type' ? (labels[row.type] || row.type) : row[c.key] ?? '')));
-      rows.push(cols.map((c, i) => (i === 0 ? (labels.total || 'Total') : (journal.totals[c.key] ?? ''))));
-      const { canceled, filePath } = await dialog.showSaveDialog({
-        title: shopT('dialog.saveJournal'),
-        defaultPath: fileName || 'sales-journal.xlsx',
-        filters: [{ name: shopT('dialog.excelFiles'), extensions: ['xlsx'] }],
-      });
-      if (canceled || !filePath) return null;
-      fs.writeFileSync(filePath, excelService.exportRows(cols.map(c => c.label), rows, labels.sheet || 'Journal'));
-      logSystemAction('export', 'Sales journal exported', { rows: journal.rows.length, range }, session.getEmployee()?.id || null);
-      return { filePath, rows: journal.rows.length, totals: journal.totals };
-    });
-
     // What to order again, per colour / size (services/reorderService.js)
     ipcMain.handle('reorder:suggestions', (_, params = {}) => require('../services/reorderService').reorderSuggestions(dbApi, params));
 

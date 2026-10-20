@@ -593,55 +593,11 @@ async function getSettings() {
 
 console.log('Registering credit sales IPC handlers...');
 
-// Generate invoice number
-function generateInvoiceNumber() {
-  const date = new Date();
-  const year = date.getFullYear().toString().slice(-2);
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-
-  // Get count of invoices today
-  const todayStart = `${date.getFullYear()}-${month}-${day}`;
-  const result = getOne(`SELECT COUNT(*) as count FROM credit_sales WHERE created_at >= ?`, [todayStart]);
-  const count = (result?.count || 0) + 1;
-
-  return `INV-${year}${month}${day}-${count.toString().padStart(4, '0')}`;
-}
-
-console.log('Registering db:creditSales:getAll handler explicitly...');
-
+// Kridi invoices (services/creditSaleService.js)
+const creditSales = require('./services/creditSaleService');
+const generateInvoiceNumber = () => creditSales.nextInvoiceNumber(dbApi);
 /** A customer's debt for one sale (inside the caller's transaction). */
-function createCreditSale(creditSale) {
-  const invoiceNumber = creditSale.invoice_number || generateInvoiceNumber();
-  const id = creditSale.id || uuid();
-
-  // Calculate due date (30 days from now by default)
-  const dueDate = creditSale.due_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-
-  runInsert(`
-    INSERT INTO credit_sales (id, sale_id, customer_id, invoice_number, amount_due, amount_paid, status, due_date, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    id,
-    creditSale.sale_id,
-    creditSale.customer_id,
-    invoiceNumber,
-    creditSale.amount_due,
-    creditSale.amount_paid || 0,
-    creditSale.status || 'pending',
-    dueDate,
-    creditSale.notes || null
-  ]);
-
-  // Update customer credit_balance
-  runInsert(`
-    UPDATE customers 
-    SET credit_balance = credit_balance + ?, updated_at = CURRENT_TIMESTAMP 
-    WHERE id = ?
-  `, [creditSale.amount_due, creditSale.customer_id]);
-
-  return { ...creditSale, id, invoice_number: invoiceNumber, due_date: dueDate };
-}
+const createCreditSale = (creditSale) => creditSales.createCreditSale(dbApi, creditSale);
 
 console.log('Electron main process started (Phase 5 - Credit Sales enabled)');
 
@@ -740,3 +696,5 @@ require('./ipc/app')(ipcContext);
 require('./ipc/shops')(ipcContext);
 require('./ipc/charges')(ipcContext);
 require('./ipc/commissions')(ipcContext);
+require('./ipc/figures')(ipcContext);
+require('./ipc/exports')(ipcContext);

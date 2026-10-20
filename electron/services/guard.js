@@ -121,6 +121,18 @@ function checkSale(api, actor, sale, approval) {
     if (Math.abs(lines - (Number(sale.subtotal) || 0)) > 0.01 || (Number(sale.total) || 0) < minimum - 0.01) {
         throw catalog.codedError('SALE_TOTAL_MISMATCH', {});
     }
+    // The total is the lines less the discounts (prices with TVA), or that plus
+    // the TVA (prices without TVA): nothing else can be added to a ticket
+    const tax = Number(sale.tax_amount) || 0;
+    const total = Number(sale.total) || 0;
+    if (tax < -0.001 || (Math.abs(total - Math.max(0, minimum)) > 0.01 && Math.abs(total - Math.max(0, minimum + tax)) > 0.01)) {
+        throw catalog.codedError('SALE_TOTAL_MISMATCH', {});
+    }
+    // What was paid (cash, card, kridi, gift card...) is the total, to the cent
+    const payments = sale.payments || [];
+    if (payments.some(p => !(Number(p.amount) >= 0))) throw catalog.codedError('SALE_PAYMENT_MISMATCH', {});
+    const paid = r2(payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0));
+    if (Math.abs(paid - total) > 0.01) throw catalog.codedError('SALE_PAYMENT_MISMATCH', { paid, total });
     // The ticket discount must be the promotion (computed again here) + what the cashier typed
     const promo = promotionAmount(api, sale);
     if (discount - promo - Math.max(0, Number(sale.manual_discount) || 0) > 0.01) throw catalog.codedError('SALE_TOTAL_MISMATCH', {});

@@ -83,6 +83,16 @@ const FIELD_MAPPINGS = {
             'remarks': 'notes',
         },
     },
+    suppliers: {
+        required: ['name'],
+        optional: ['contact_person', 'phone', 'email', 'address', 'notes'],
+        aliases: {
+            'nom': 'name', 'fournisseur': 'name', 'المورد': 'name', 'supplier': 'name', 'supplier name': 'name',
+            'contact': 'contact_person', 'responsable': 'contact_person', 'الشخص المسؤول': 'contact_person',
+            'téléphone': 'phone', 'tél': 'phone', 'tel': 'phone', 'mobile': 'phone',
+            'e-mail': 'email', 'adresse': 'address', 'remarques': 'notes',
+        },
+    },
     employees: {
         required: ['name', 'pin'],
         optional: ['email', 'role'],
@@ -100,6 +110,75 @@ const FIELD_MAPPINGS = {
             'job role': 'role',
         },
     },
+};
+
+// Column titles of the templates, in the shop's language [English, French, Arabic].
+// The same titles are read back on import, whatever the language of the file.
+const HEADERS = {
+    name: ['Name', 'Nom', 'الاسم'],
+    price: ['Selling price', 'Prix de vente', 'سعر البيع'],
+    color: ['Colour', 'Couleur', 'اللون'],
+    size: ['Size', 'Taille', 'المقاس'],
+    stock_quantity: ['Stock quantity', 'Quantité en stock', 'الكمية'],
+    cost: ['Purchase price', "Prix d'achat", 'سعر الشراء'],
+    sku: ['SKU / reference', 'Référence (SKU)', 'المرجع (SKU)'],
+    barcode: ['Barcode', 'Code-barres', 'الباركود'],
+    category: ['Category', 'Catégorie', 'الصنف'],
+    brand: ['Brand', 'Marque', 'الماركة'],
+    description: ['Description', 'Description', 'الوصف'],
+    min_stock_level: ['Minimum stock', 'Stock minimum', 'الحد الأدنى'],
+    tax_rate: ['TVA %', 'TVA %', 'الرسم %'],
+    email: ['E-mail', 'E-mail', 'البريد الإلكتروني'],
+    phone: ['Phone', 'Téléphone', 'الهاتف'],
+    address: ['Address', 'Adresse', 'العنوان'],
+    notes: ['Notes', 'Notes', 'ملاحظات'],
+    loyalty_points: ['Loyalty points', 'Points fidélité', 'نقاط الوفاء'],
+    pin: ['PIN (4 to 6 digits)', 'Code PIN (4 à 6 chiffres)', 'رمز PIN (4 إلى 6 أرقام)'],
+    role: ['Role (cashier, manager)', 'Rôle (cashier, manager)', 'الدور (cashier أو manager)'],
+    contact_person: ['Contact person', 'Personne à contacter', 'الشخص المسؤول'],
+};
+const LANG_AT = { en: 0, fr: 1, ar: 2 };
+for (const mapping of Object.values(FIELD_MAPPINGS)) {
+    for (const field of [...mapping.required, ...mapping.optional]) {
+        for (const title of HEADERS[field] || []) mapping.aliases[title.toLowerCase()] = mapping.aliases[title.toLowerCase()] || field;
+    }
+}
+
+// How to fill each column (second sheet of the templates) [English, French, Arabic]
+const HOW = {
+    title: ['How to fill this file', 'Comment remplir ce fichier', 'طريقة ملء هذا الملف'],
+    column: ['Column', 'Colonne', 'العمود'],
+    needed: ['Needed', 'Obligatoire', 'إجباري'],
+    what: ['What to write', 'Quoi écrire', 'ماذا تكتب'],
+    yes: ['Yes', 'Oui', 'نعم'],
+    no: ['No', 'Non', 'لا'],
+    rule1: ['Write from the 2nd line on, one line per article (one line per colour/size: the lines with the same name make one article).', "Écrivez à partir de la 2e ligne, une ligne par article (une ligne par couleur/taille : les lignes au même nom font un seul article).", 'اكتب ابتداءً من السطر الثاني، سطرًا لكل سلعة (سطر لكل لون/مقاس: الأسطر التي لها نفس الاسم تصبح سلعة واحدة).'],
+    rule2: ['Keep the titles of the first line. Prices in dinars, without "DA".', 'Gardez les titres de la première ligne. Prix en dinars, sans « DA ».', 'لا تغيّر عناوين السطر الأول. الأسعار بالدينار دون كتابة «د.ج».'],
+    rule3: ['The first sheet stays empty for your lines: an example is at the bottom of this sheet.', "La première feuille reste vide pour vos lignes : un exemple est en bas de cette feuille.", 'الورقة الأولى فارغة لبياناتك: تجد مثالًا في أسفل هذه الورقة.'],
+    example: ['Example (not imported)', 'Exemple (non importé)', 'مثال (لا يُستورد)'],
+};
+const HOW_FIELD = {
+    name: ['Name of the article / person', "Nom de l'article / de la personne", 'اسم السلعة / الشخص'],
+    price: ['Selling price in dinars, e.g. 3500', 'Prix de vente en dinars, ex. 3500', 'سعر البيع بالدينار، مثال 3500'],
+    color: ['Colour, e.g. Noir', 'Couleur, ex. Noir', 'اللون، مثال أسود'],
+    size: ['Size, e.g. 40 or M', 'Taille, ex. 40 ou M', 'المقاس، مثال 40 أو M'],
+    stock_quantity: ['Pieces in stock now', 'Pièces en stock maintenant', 'عدد القطع الموجودة الآن'],
+    cost: ['Purchase price of one piece', "Prix d'achat d'une pièce", 'سعر شراء القطعة الواحدة'],
+    sku: ['Empty: the program makes one', 'Vide : le programme en crée une', 'اتركه فارغًا: البرنامج يصنعه'],
+    barcode: ['Barcode printed on the article (optional)', "Code-barres imprimé sur l'article (facultatif)", 'الباركود المطبوع على السلعة (اختياري)'],
+    category: ['e.g. Jeans, Robes', 'ex. Jeans, Robes', 'مثال سراويل، فساتين'],
+    brand: ['Brand (optional)', 'Marque (facultatif)', 'الماركة (اختياري)'],
+    description: ['A short text (optional)', 'Un court texte (facultatif)', 'نص قصير (اختياري)'],
+    min_stock_level: ['Below this number the program warns', 'Sous ce nombre le programme prévient', 'تحت هذا العدد ينبّهك البرنامج'],
+    tax_rate: ['0 if your prices have no TVA', '0 si vos prix sont sans TVA', '0 إذا كانت أسعارك بدون رسم'],
+    email: ['E-mail (optional)', 'E-mail (facultatif)', 'البريد الإلكتروني (اختياري)'],
+    phone: ['e.g. 0555 12 34 56', 'ex. 0555 12 34 56', 'مثال 0555 12 34 56'],
+    address: ['Town / address (optional)', 'Ville / adresse (facultatif)', 'المدينة / العنوان (اختياري)'],
+    notes: ['Anything useful (optional)', 'Toute info utile (facultatif)', 'أي معلومة مفيدة (اختياري)'],
+    loyalty_points: ['Points already earned (optional)', 'Points déjà gagnés (facultatif)', 'النقاط المكتسبة (اختياري)'],
+    pin: ['The code to open the program', 'Le code pour ouvrir le programme', 'الرمز لفتح البرنامج'],
+    role: ['cashier or manager', 'cashier ou manager', 'cashier أو manager'],
+    contact_person: ['Who to call there (optional)', "Qui appeler (facultatif)", 'من تتصل به (اختياري)'],
 };
 
 class ExcelService {
@@ -358,59 +437,127 @@ class ExcelService {
     }
 
     /**
-     * Get sample data for templates
+     * The template in the shop's language, ready to fill: titles the import
+     * reads back, example lines, a second sheet saying what to write.
      */
-    getSampleData(dataType) {
+    async generateTemplateFile(dataType, lang = 'ar') {
+        const ExcelJS = require('exceljs');
+        const mapping = FIELD_MAPPINGS[dataType];
+        if (!mapping) throw new Error(`Unknown data type: ${dataType}`);
+        const at = LANG_AT[lang] ?? 2;
+        const rtl = at === 2;
+        const fields = [...mapping.required, ...mapping.optional];
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'Afus Boutique';
+        const ws = wb.addWorksheet(String((HEADERS.name && { products: ['Articles', 'Articles', 'السلع'], customers: ['Customers', 'Clients', 'الزبائن'], employees: ['Employees', 'Employés', 'العمال'], suppliers: ['Suppliers', 'Fournisseurs', 'الموردون'] }[dataType]?.[at]) || dataType), {
+            views: [{ rightToLeft: rtl, state: 'frozen', ySplit: 1 }],
+        });
+        const align = { readingOrder: rtl ? 'rtl' : 'ltr', vertical: 'middle' };
+        ws.addRow(fields.map(f => (HEADERS[f] || [f, f, f])[at]));
+        ws.getRow(1).height = 30;
+        ws.getRow(1).eachCell((cell, n) => {
+            const needed = mapping.required.includes(fields[n - 1]);
+            cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: needed ? 'FFB45309' : 'FF1F3A5F' } };
+            cell.alignment = { ...align, horizontal: 'center', wrapText: true };
+        });
+        // What to write, on the title itself (the lines under it stay empty: nothing to delete before importing)
+        ws.getRow(1).eachCell((cell, n) => { const what = (HOW_FIELD[fields[n - 1]] || [])[at]; if (what) cell.note = what; });
+        fields.forEach((f, i) => { ws.getColumn(i + 1).width = Math.max(12, ((HEADERS[f] || [f, f, f])[at]).length + 4); });
+        // What to write in each column
+        const how = wb.addWorksheet(HOW.title[at], { views: [{ rightToLeft: rtl }] });
+        how.addRow([HOW.title[at]]).font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FF1F3A5F' } };
+        for (const rule of ['rule1', 'rule2', 'rule3']) how.addRow([HOW[rule][at]]).font = { name: 'Arial', size: 10 };
+        how.addRow([]);
+        const head = how.addRow([HOW.column[at], HOW.needed[at], HOW.what[at]]);
+        head.eachCell(cell => { cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3A5F' } }; });
+        for (const f of fields) {
+            const row = how.addRow([(HEADERS[f] || [f, f, f])[at], mapping.required.includes(f) ? HOW.yes[at] : HOW.no[at], (HOW_FIELD[f] || ['', '', ''])[at]]);
+            row.eachCell(cell => { cell.font = { name: 'Arial', size: 10 }; cell.alignment = { readingOrder: rtl ? 'rtl' : 'ltr', wrapText: true }; });
+        }
+        // The example, in the shop's language, away from the sheet that is imported
+        how.addRow([]);
+        how.addRow([HOW.example[at]]).font = { name: 'Arial', size: 12, bold: true, color: { argb: 'FF1F3A5F' } };
+        const exampleHead = how.addRow(fields.map(f => (HEADERS[f] || [f, f, f])[at]));
+        exampleHead.eachCell(cell => { cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF1F3A5F' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8EEF6' } }; });
+        for (const sample of this.getSampleData(dataType, at)) {
+            const row = how.addRow(sample.map(v => (v === '' ? null : v)));
+            row.eachCell(cell => { cell.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF5B6575' } }; cell.alignment = { readingOrder: rtl ? 'rtl' : 'ltr' }; });
+        }
+        how.getColumn(1).width = 26; how.getColumn(2).width = 12; how.getColumn(3).width = 60;
+        return Buffer.from(await wb.xlsx.writeBuffer());
+    }
+
+    /**
+     * The example lines of a template, in its language (at: 0 English, 1 French, 2 Arabic).
+     * Same order as the headers.
+     */
+    getSampleData(dataType, at = 1) {
+        const say = (...texts) => texts[at] ?? texts[1];
         switch (dataType) {
-            case 'products':
+            case 'products': {
+                // name, price, colour, size, quantity, cost, sku, barcode, category, brand, description, min stock, tax.
+                // One row per size/colour; the rows with the same name make one article (SKU made by the program when empty)
+                const jean = say('Slim jeans', 'Jean slim', 'سروال جينز');
+                const jeans = say('Jeans', 'Jeans', 'سراويل');
                 return [
-                    // Same order as the headers: name, price, color, size, quantity, cost, sku, barcode, category, brand, description, min stock, tax.
-                    // One row per size/colour; the rows with the same name make one article (SKU made by the program when empty)
-                    ['Jean slim', 3000, 'Noir', '38', 4, 1800, '', '', 'Jeans', '', '', 2, 0],
-                    ['Jean slim', 3000, 'Noir', '40', 2, 1800, '', '', 'Jeans', '', '', 2, 0],
-                    ['Jean slim', 3500, 'Bleu', '44', 1, 1800, '', '', 'Jeans', '', '', 2, 0],
-                    ['Ceinture cuir', 800, '', '', 10, 300, 'CEIN-001', '', 'Accessoires', '', '', 3, 0],
+                    [jean, 3000, say('Black', 'Noir', 'أسود'), '38', 4, 1800, '', '', jeans, '', '', 2, 0],
+                    [jean, 3000, say('Black', 'Noir', 'أسود'), '40', 2, 1800, '', '', jeans, '', '', 2, 0],
+                    [jean, 3500, say('Blue', 'Bleu', 'أزرق'), '44', 1, 1800, '', '', jeans, '', '', 2, 0],
+                    [say('Leather belt', 'Ceinture cuir', 'حزام جلد'), 800, '', '', 10, 300, 'CEIN-001', '', say('Accessories', 'Accessoires', 'إكسسوارات'), '', '', 3, 0],
                 ];
+            }
             case 'customers':
-                return [
-                    ['Amina B.', '', '0555 12 34 56', 'Alger', '', 0],
-                ];
+                return [[say('Amina B.', 'Amina B.', 'أمينة ب.'), '', '0555 12 34 56', say('Algiers', 'Alger', 'الجزائر'), '', 0]];
             case 'employees':
-                return [
-                    ['Karim', '1234', '', 'cashier'],
-                ];
+                return [[say('Karim', 'Karim', 'كريم'), '1234', '', 'cashier']];
+            case 'suppliers':
+                return [[say('Textile Oran', 'Textile Oran', 'نسيج وهران'), say('Mohamed', 'Mohamed', 'محمد'), '0550 11 22 33', '', say('Oran', 'Oran', 'وهران'), '']];
             default:
                 return [];
         }
     }
-
-    /**
-     * A sheet from rows already in order: [headers, ...rows] (numbers stay numbers).
-     */
-    exportRows(headers, rows, sheetName = 'Sheet1') {
-        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, String(sheetName).slice(0, 31));
-        return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-    }
-
-    /**
-     * Export data to Excel buffer
-     */
-    exportData(data, dataType) {
-        const mapping = FIELD_MAPPINGS[dataType];
-        const headers = [...mapping.required, ...mapping.optional];
-
-        const rows = data.map(item =>
-            headers.map(header => item[header] ?? '')
-        );
-
-        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, dataType);
-
-        return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-    }
 }
 
 module.exports = new ExcelService();
+
+/**
+ * The code and quantity columns of a sheet, wherever its header row is (the
+ * shop's own stock file has the shop's lines above its table): first QR, else
+ * the reference, else the barcode. Headers in Arabic, French or English.
+ * @returns {{ rows: { row, code, quantity }[], found: boolean }}
+ */
+const CODE_HEADERS = [
+    ['رمز qr', 'code qr', 'qr code', 'qr', 'qr_code'],
+    ['المرجع (sku)', 'référence (sku)', 'reference (sku)', 'sku', 'المرجع', 'référence', 'reference', 'réf', 'ref'],
+    ['الباركود', 'code-barres', 'barcode', 'code barre', 'ean'],
+];
+const TOTAL_ROW = /^(المجموع|total|totaux)(\s|$)/i;
+const QUANTITY_HEADERS = ['الكمية', 'quantité', 'quantite', 'quantity', 'qty', 'qté', 'counted', 'compté', 'المعدود'];
+module.exports.readCountedSheet = function readCountedSheet(buffer) {
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    for (const name of workbook.SheetNames) {
+        // Raw values: a stock of 0 shows «-» in the shop's file, the cell holds 0
+        const data = XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, raw: true, defval: '' });
+        for (let h = 0; h < Math.min(40, data.length); h++) {
+            const headers = (data[h] || []).map(v => String(v).trim().toLowerCase());
+            const quantityAt = headers.findIndex(v => QUANTITY_HEADERS.includes(v));
+            const codeAt = CODE_HEADERS.map(names => headers.findIndex(v => names.includes(v))).filter(i => i >= 0);
+            if (quantityAt < 0 || !codeAt.length) continue;
+            const rows = [];
+            for (let r = h + 1; r < data.length; r++) {
+                const line = data[r] || [];
+                const code = codeAt.map(i => String(line[i] ?? '').trim()).find(Boolean) || '';
+                const quantity = String(line[quantityAt] ?? '').replace(/[\s\u00a0\u202f,]/g, '');
+                // Nothing written in the quantity: not counted (its stock is kept)
+                if (!quantity) continue;
+                // The totals row of the shop's own file: not a line
+                if (!code && line.some(v => TOTAL_ROW.test(String(v).trim()))) continue;
+                // A line without a code is kept: the import says which row could not be matched
+                rows.push({ row: r + 1, code, quantity });
+            }
+            return { rows, found: true, sheet: name };
+        }
+    }
+    return { rows: [], found: false };
+};

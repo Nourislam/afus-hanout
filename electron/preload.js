@@ -289,6 +289,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
         stop: (data) => ipcRenderer.invoke('charges:stop', data),
         netProfit: (data) => ipcRenderer.invoke('charges:netProfit', data),
     },
+    // The stock line by line with its money, and "Check the figures" (the owner's)
+    figures: {
+        stock: () => ipcRenderer.invoke('stock:lines'),
+        check: () => ipcRenderer.invoke('figures:check'),
+    },
+    // The shop's Excel files: { kind: 'stock' | 'products' | 'journal' | 'salesLines' | 'customers' | 'kridi' | 'suppliers', lang, range? }
+    exports: {
+        save: (data) => ipcRenderer.invoke('exports:save', data),
+    },
     // Employee commissions and the employee of the month (add-on)
     commissions: {
         board: (data) => ipcRenderer.invoke('commissions:board', data),
@@ -301,6 +310,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         start: (data) => ipcRenderer.invoke('stockCount:start', data),
         scan: (data) => ipcRenderer.invoke('stockCount:scan', data),
         setCounted: (data) => ipcRenderer.invoke('stockCount:setCounted', data),
+        importExcel: (countId, buffer) => ipcRenderer.invoke('stockCount:importExcel', { countId, data: Array.from(buffer) }),
         removeLine: (data) => ipcRenderer.invoke('stockCount:removeLine', data),
         summary: (countId) => ipcRenderer.invoke('stockCount:summary', countId),
         cancel: (countId) => ipcRenderer.invoke('stockCount:cancel', countId),
@@ -535,9 +545,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
         detectMappings: (headers, dataType) => ipcRenderer.invoke('excel:detectMappings', { headers, dataType }),
         validateAndTransform: (rows, mappings, dataType) => ipcRenderer.invoke('excel:validateAndTransform', { rows, mappings, dataType }),
         getFieldMappings: (dataType) => ipcRenderer.invoke('excel:getFieldMappings', dataType),
-        generateTemplate: (dataType) => ipcRenderer.invoke('excel:generateTemplate', dataType),
+        generateTemplate: (dataType, lang) => ipcRenderer.invoke('excel:generateTemplate', dataType, lang),
         importProducts: (rows) => ipcRenderer.invoke('excel:importProducts', rows),
-        export: (data, dataType) => ipcRenderer.invoke('excel:export', { data, dataType }),
     },
 
     // Dialog
@@ -548,7 +557,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Sales journal for the accountant
     accounting: {
         salesJournal: (range) => ipcRenderer.invoke('reports:salesJournal', range),
-        exportSalesJournal: (data) => ipcRenderer.invoke('reports:exportSalesJournal', data),
     },
 
     // Loyalty points turned into an avoir card

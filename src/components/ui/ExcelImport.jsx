@@ -1,4 +1,4 @@
-import { t } from '../../i18n';
+import { t, currentLanguage } from '../../i18n';
 /**
  * Excel Import Component
  * 
@@ -78,16 +78,18 @@ export function ExcelImport({
             setFieldMappings(mappings);
 
             setStep(2);
+            // The columns are matched at once (the shop's own template is always recognised)
+            await detectMappings(result.sheets, result.sheetNames[0]);
         } catch (error) {
             toast.error(t('excel.readFailed'));
             console.error(error);
         }
     };
 
-    const detectMappings = async () => {
-        if (!selectedSheet || !sheetData[selectedSheet]) return;
+    const detectMappings = async (sheets = sheetData, sheetName = selectedSheet) => {
+        if (!sheetName || !sheets?.[sheetName]) return;
 
-        const headers = sheetData[selectedSheet].headers;
+        const headers = sheets[sheetName].headers;
         const result = await window.electronAPI.excel.detectMappings(headers, dataType);
 
         // Convert mappings to strings for Select component
@@ -106,6 +108,7 @@ export function ExcelImport({
     const handleSheetChange = (sheetName) => {
         setSelectedSheet(sheetName);
         setColumnMappings({});
+        detectMappings(sheetData, sheetName);
     };
 
     const updateColumnMapping = (field, columnIndex) => {
@@ -164,13 +167,13 @@ export function ExcelImport({
 
     const downloadTemplate = async () => {
         try {
-            const bufferArray = await window.electronAPI.excel.generateTemplate(dataType);
+            const bufferArray = await window.electronAPI.excel.generateTemplate(dataType, currentLanguage());
             const buffer = new Uint8Array(bufferArray);
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${dataType}_template.xlsx`;
+            a.download = `${t('excel.templateFile', { what: t(`excel.what.${dataType}`) })}.xlsx`;
             a.click();
             URL.revokeObjectURL(url);
             toast.success(t('excel.templateDone'));
@@ -266,7 +269,7 @@ export function ExcelImport({
                                     className="mt-1"
                                 />
                             </div>
-                            <Button variant="secondary" size="sm" onClick={detectMappings}>
+                            <Button variant="secondary" size="sm" onClick={() => detectMappings()}>
                                 <RefreshCw className="w-4 h-4" />
                                 {t('excel.autoDetect')}
                             </Button>

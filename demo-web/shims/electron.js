@@ -57,7 +57,10 @@ export const app = {
 
 export const dialog = {
     showOpenDialog: async () => ({ canceled: true, filePaths: [] }),
-    showSaveDialog: async () => ({ canceled: true }),
+    // An Excel file of the shop: given to the browser's downloads (fs.js); nothing else is saved
+    showSaveDialog: async ({ defaultPath, filters } = {}) => (filters || []).some(f => (f.extensions || []).includes('xlsx'))
+        ? { canceled: false, filePath: `${paths.downloads}/${String(defaultPath || 'afus.xlsx').split('/').pop()}` }
+        : { canceled: true },
     showMessageBox: async () => ({ response: 0 }),
     showErrorBox: (t, m) => console.error(t, m),
     showMessageBoxSync: () => 0,

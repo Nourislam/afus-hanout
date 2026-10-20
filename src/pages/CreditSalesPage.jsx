@@ -18,6 +18,7 @@ import { CREDIT_FILTERS, isLateCredit, readFilter, creditAging } from '../lib/li
 import { localDate } from '../lib/dashboard';
 import { reminderMessage, whatsappLink } from '../lib/whatsapp';
 import { useSettingsStore } from '../stores/settingsStore';
+import { ExportButton } from '../components/ui/ExportButton';
 
 export default function CreditSalesPage() {
     const [creditSales, setCreditSales] = useState([]);
@@ -186,7 +187,8 @@ export default function CreditSalesPage() {
 
     return (
         <div className="page">
-            <PageHeader icon={CreditCard} title={t('credit.title')} subtitle={t('credit.subtitle')}>
+            <PageHeader icon={CreditCard} title={t('credit.title')} subtitle={t('credit.subtitle')}
+                actions={<ExportButton kind="kridi" label={t('export.kridi')} />}>
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="relative flex-1 min-w-[240px] max-w-md">
                         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />

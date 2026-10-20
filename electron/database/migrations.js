@@ -624,6 +624,13 @@ const MIGRATIONS = [
             `);
         },
     },
+    {
+        version: '2026_10_sale_items_bundle',
+        description: 'A pack sold is kept in its own column (sale_items.bundle_id): product_id points at articles only, as the database link check requires',
+        up(db) {
+            if (tableExists(db, 'sale_items')) addColumnIfMissing(db, 'sale_items', 'bundle_id', 'TEXT');
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {

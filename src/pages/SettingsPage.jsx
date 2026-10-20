@@ -18,6 +18,7 @@ import BRAND from '../config/brand';
 import { ScannerSettingsForm } from '../components/settings/ScannerSettingsForm';
 import { ModulesSettings } from '../components/settings/ModulesSettings';
 import { BackupSettings } from '../components/settings/BackupSettings';
+import { FiguresCheck } from '../components/settings/FiguresCheck';
 import { ShopsSettings } from '../components/settings/ShopsSettings';
 import { DEFAULT_SHOP, loadShopConfiguration, saveShopConfiguration } from '../lib/shopSettings';
 import { resolveFeatures } from '../lib/features';
@@ -638,7 +639,13 @@ export default function SettingsPage() {
 
                         {currentTab === 'shops' && <ShopsSettings />}
 
-                        {currentTab === 'backup' && <BackupSettings appInfo={appInfo} />}
+                        {currentTab === 'backup' && (
+                            <div className="space-y-4">
+                                <BackupSettings appInfo={appInfo} />
+                                {/* Every figure computed again from its lines (the owner's) */}
+                                {isAdmin() && <FiguresCheck />}
+                            </div>
+                        )}
 
                         {currentTab === 'logs' && (
                             <div className="space-y-6">

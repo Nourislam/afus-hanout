@@ -37,8 +37,10 @@ import website from './website';
 import smart from './smart';
 import shops from './shops';
 import addons from './addons';
+import figures from './figures';
+import exportsTexts from './exports';
 
-const MODULES = { common, round2, misc, ecommerce, excel, barcode, modals, purchases, gift, promos, reports, credit, customers, inventory, dashboard, pos, settings, setup, products, errors, catalog, login, printing, layout, settingsHub, catalogHub, partners, dash, operations, demo, trial, help, about, insights, website, smart, shops, addons };
+const MODULES = { common, round2, misc, ecommerce, excel, barcode, modals, purchases, gift, promos, reports, credit, customers, inventory, dashboard, pos, settings, setup, products, errors, catalog, login, printing, layout, settingsHub, catalogHub, partners, dash, operations, demo, trial, help, about, insights, website, smart, shops, addons, figures, exports: exportsTexts };
 
 function merge(modules) {
     const all = {};

@@ -401,10 +401,8 @@ module.exports = function register(ctx) {
       return excelService.getFieldMappings(dataType);
     });
 
-    ipcMain.handle('excel:generateTemplate', (_, dataType) => {
-      const buffer = excelService.generateTemplate(dataType);
-      return Array.from(buffer);
-    });
+    // The template in the window's language (titles the import reads back, a sheet saying what to write)
+    ipcMain.handle('excel:generateTemplate', async (_, dataType, lang) => Array.from(await excelService.generateTemplateFile(dataType, lang)));
 
     // Quick start: articles with their sizes/colours from a sheet (services/productImportService.js)
     const productImport = require('../services/productImportService');
@@ -415,10 +413,5 @@ module.exports = function register(ctx) {
       logSystemAction('products_imported', `Imported ${report.imported.length} articles, ${report.rejected.length} rejected`, null, session.getEmployee()?.id || null);
       SyncManager.triggerSync();
       return report;
-    });
-
-    ipcMain.handle('excel:export', (_, { data, dataType }) => {
-      const buffer = excelService.exportData(data, dataType);
-      return Array.from(buffer);
     });
 };

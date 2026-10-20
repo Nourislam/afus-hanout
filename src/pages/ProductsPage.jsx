@@ -21,6 +21,7 @@ import { translateError } from '../i18n/errors';
 import { useSettingsStore } from '../stores/settingsStore';
 import { ProductFormModal } from '../components/products/ProductFormModal';
 import { lacksCost, readFilter } from '../lib/listFilters';
+import { ExportButton } from '../components/ui/ExportButton';
 
 export default function ProductsPage() {
     const [products, setProducts] = useState([]);
@@ -169,6 +170,7 @@ export default function ProductsPage() {
                                 placeholder={t('products.search')}
                                 className="flex-1 min-w-[220px]"
                             />
+                            <ExportButton kind="products" label={t('export.products')} />
                             <PermissionGate permission={PERMISSIONS.PRODUCTS_CREATE}>
                                 <div className="flex items-center gap-2">
                                     <Button variant="secondary" onClick={() => setShowExcelImport(true)}>

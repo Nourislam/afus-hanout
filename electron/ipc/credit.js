@@ -15,7 +15,9 @@ module.exports = function register(ctx) {
         runQuery,
         runTransaction,
         uuid,
+        catalog,
     } = ctx;
+    const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
     ipcMain.handle('db:creditSales:getAll', (_, params = {}) => {
       console.log('db:creditSales:getAll called with:', params);
@@ -107,7 +109,8 @@ module.exports = function register(ctx) {
     });
 
     // Credit Payments
-    ipcMain.handle('db:creditPayments:create', (_, payment) => runTransaction(() => {
+    ipcMain.handle('db:creditPayments:create', (_, input) => runTransaction(() => {
+      let payment = input || {};
       const id = payment.id || uuid();
 
       // Get the credit sale
@@ -115,6 +118,11 @@ module.exports = function register(ctx) {
       if (!creditSale) {
         throw new Error('Credit sale not found');
       }
+      // More than 0 and never more than what is still owed (to the cent)
+      const left = r2((creditSale.amount_due || 0) - (creditSale.amount_paid || 0));
+      const amount = r2(payment.amount);
+      if (!(amount > 0) || amount > left + 0.004) throw catalog.codedError('CREDIT_PAYMENT_AMOUNT', { left });
+      payment = { ...payment, amount };
 
       // Record the payment
       runInsert(`
@@ -131,7 +139,7 @@ module.exports = function register(ctx) {
       ]);
 
       // Update credit sale
-      const newAmountPaid = (creditSale.amount_paid || 0) + payment.amount;
+      const newAmountPaid = r2((creditSale.amount_paid || 0) + payment.amount);
       let newStatus = 'partial';
 
       // Fix for floating point precision issues
@@ -152,7 +160,7 @@ module.exports = function register(ctx) {
       // Update customer credit_balance
       runInsert(`
     UPDATE customers 
-    SET credit_balance = credit_balance - ?, updated_at = CURRENT_TIMESTAMP, is_synced = 0
+    SET credit_balance = ROUND(MAX(0, COALESCE(credit_balance, 0) - ?), 2), updated_at = CURRENT_TIMESTAMP, is_synced = 0
     WHERE id = ?
   `, [payment.amount, creditSale.customer_id]);
 

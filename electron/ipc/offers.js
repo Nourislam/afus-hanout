@@ -14,6 +14,34 @@ module.exports = function register(ctx) {
         session,
         uuid,
     } = ctx;
+    const catalog = require('../services/catalogService');
+
+    // Packs hold articles without sizes or colours: the pack cannot tell which
+    // size to take out of the stock (refused here, not only hidden on the screen)
+    const checkPackArticles = (items) => {
+      for (const item of items || []) {
+        const product = getOne('SELECT name, has_variants FROM products WHERE id = ?', [item.product_id]);
+        if (product && product.has_variants) throw catalog.codedError('BUNDLE_VARIANT_PRODUCT', { product: product.name });
+      }
+    };
+    // Pieces of the pack's articles taken out (packs > 0) or put back (packs < 0),
+    // through the same stock movement as everything else (history kept)
+    const movePackArticles = (items, packs, type, reason) => {
+      for (const item of items) {
+        const pieces = (item.quantity || 1) * packs;
+        if (!pieces) continue;
+        catalog.adjustStock(dbApi, { productId: item.product_id, delta: -pieces, type, reason, employeeId: session.getEmployee()?.id || null });
+      }
+    };
+    const checkPackStock = (items, packs) => {
+      for (const item of items) {
+        const product = getOne('SELECT stock_quantity, name FROM products WHERE id = ?', [item.product_id]);
+        const required = (item.quantity || 1) * packs;
+        if (!product || (product.stock_quantity || 0) < required) {
+          throw catalog.codedError('STOCK_INSUFFICIENT', { product: product?.name || item.product_id, available: product?.stock_quantity || 0 });
+        }
+      }
+    };
 
     // Loyalty points turned into an avoir card (services/loyaltyService.js)
     ipcMain.handle('loyalty:redeem', (_, data = {}) => runTransaction(() => {
@@ -183,6 +211,7 @@ module.exports = function register(ctx) {
     });
 
     ipcMain.handle('db:bundles:create', (_, { bundle, items }) => runTransaction(() => {
+      checkPackArticles(items);
       // Calculate original price and savings
       let originalPrice = 0;
       for (const item of items) {
@@ -193,9 +222,10 @@ module.exports = function register(ctx) {
       }
       const savings = originalPrice - bundle.bundle_price;
 
+      // How its stock is kept (pieces of its articles, or packs made in advance) and its first stock
       runInsert(`
-    INSERT INTO bundles (id, name, description, bundle_price, original_price, savings, is_active, image_path)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO bundles (id, name, description, bundle_price, original_price, savings, is_active, image_path, deduct_component_stock, stock_quantity)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
         bundle.id,
         bundle.name,
@@ -204,7 +234,9 @@ module.exports = function register(ctx) {
         originalPrice,
         savings,
         bundle.is_active ? 1 : 0,
-        bundle.image_path || null
+        bundle.image_path || null,
+        bundle.deduct_component_stock ? 1 : 0,
+        bundle.deduct_component_stock ? 0 : Math.max(0, parseInt(bundle.stock_quantity, 10) || 0),
       ]);
 
       // Add bundle items
@@ -215,26 +247,17 @@ module.exports = function register(ctx) {
     `, [uuid(), bundle.id, item.product_id, item.quantity || 1]);
       }
 
-      // Bundle Assembly Logic: If pre-packed and has initial stock, deduct components
+      // Pre-packed with a first stock: the pieces of its articles leave the stock
       if (bundle.deduct_component_stock === 0 && (bundle.stock_quantity || 0) > 0) {
-        for (const item of items) {
-          const qtyNeeded = (item.quantity || 1) * bundle.stock_quantity;
-
-          runInsert('UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?', [qtyNeeded, item.product_id]);
-
-          // Log inventory movement
-          runInsert(`
-              INSERT INTO inventory_logs (id, product_id, type, quantity_change, quantity_before, quantity_after, reason, created_at)
-              SELECT ?, ?, 'assembly', ?, stock_quantity + ?, stock_quantity, ?, CURRENT_TIMESTAMP
-              FROM products WHERE id = ?
-          `, [uuid(), item.product_id, -qtyNeeded, qtyNeeded, `Bundle Assembly: ${bundle.name} (+${bundle.stock_quantity})`, item.product_id]);
-        }
+        checkPackStock(items, bundle.stock_quantity);
+        movePackArticles(items, bundle.stock_quantity, 'assembly', `Bundle Assembly: ${bundle.name} (+${bundle.stock_quantity})`);
       }
 
       return { ...bundle, original_price: originalPrice, savings, items };
     }));
 
     ipcMain.handle('db:bundles:update', (_, { bundle, items }) => runTransaction(() => {
+      checkPackArticles(items);
       // Calculate original price and savings
       let originalPrice = 0;
       for (const item of items) {
@@ -274,25 +297,12 @@ module.exports = function register(ctx) {
     `, [uuid(), bundle.id, item.product_id, item.quantity || 1]);
       }
 
-      // Bundle Assembly Logic (Update)
-      if (bundle.deduct_component_stock === 0) { // Pre-packed
-        const oldStock = oldBundle ? (oldBundle.stock_quantity || 0) : 0;
-        const newStock = bundle.stock_quantity || 0;
-        const stockDiff = newStock - oldStock;
-
+      // Pre-packed: more packs made = their pieces leave the stock
+      if (bundle.deduct_component_stock === 0) {
+        const stockDiff = (bundle.stock_quantity || 0) - (oldBundle ? (oldBundle.stock_quantity || 0) : 0);
         if (stockDiff > 0) {
-          for (const item of items) {
-            const qtyNeeded = (item.quantity || 1) * stockDiff;
-
-            runInsert('UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?', [qtyNeeded, item.product_id]);
-
-            // Log inventory movement
-            runInsert(`
-                  INSERT INTO inventory_logs (id, product_id, type, quantity_change, quantity_before, quantity_after, reason, created_at)
-                  SELECT ?, ?, 'assembly', ?, stock_quantity + ?, stock_quantity, ?, CURRENT_TIMESTAMP
-                  FROM products WHERE id = ?
-              `, [uuid(), item.product_id, -qtyNeeded, qtyNeeded, `Bundle Assembly: ${bundle.name} (+${stockDiff})`, item.product_id]);
-          }
+          checkPackStock(items, stockDiff);
+          movePackArticles(items, stockDiff, 'assembly', `Bundle Assembly: ${bundle.name} (+${stockDiff})`);
         }
       }
 
@@ -303,21 +313,10 @@ module.exports = function register(ctx) {
       const bundle = getOne('SELECT * FROM bundles WHERE id = ?', [id]);
       if (!bundle) return true;
 
-      // Restore component stock if it's a pre-assembled bundle
+      // A pre-packed pack deleted: its pieces go back to the stock
       if (bundle.deduct_component_stock === 0 && (bundle.stock_quantity || 0) > 0) {
         const items = runQuery('SELECT * FROM bundle_items WHERE bundle_id = ?', [id]);
-
-        for (const item of items) {
-          const qtyToRestore = (item.quantity || 1) * bundle.stock_quantity;
-
-          runInsert('UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?', [qtyToRestore, item.product_id]);
-
-          runInsert(`
-        INSERT INTO inventory_logs (id, product_id, type, quantity_change, quantity_before, quantity_after, reason, created_at)
-        SELECT ?, ?, 'disassembly', ?, stock_quantity - ?, stock_quantity, ?, CURRENT_TIMESTAMP
-        FROM products WHERE id = ?
-      `, [uuid(), item.product_id, qtyToRestore, qtyToRestore, `Bundle Deleted: ${bundle.name}`, item.product_id]);
-        }
+        movePackArticles(items, -bundle.stock_quantity, 'disassembly', `Bundle Deleted: ${bundle.name}`);
       }
 
       runInsert('DELETE FROM bundles WHERE id = ?', [id]);
@@ -334,27 +333,8 @@ module.exports = function register(ctx) {
       // Check valid quantity
       if (quantity <= 0) throw new Error('Invalid quantity');
 
-      // Verify component stock
-      for (const item of items) {
-        const product = getOne('SELECT stock_quantity, name FROM products WHERE id = ?', [item.product_id]);
-        const required = (item.quantity || 1) * quantity;
-        if (product.stock_quantity < required) {
-          throw new Error(`Insufficient stock for ${product.name}. Need ${required}, have ${product.stock_quantity}`);
-        }
-      }
-
-      // Deduct components and Log
-      for (const item of items) {
-        const required = (item.quantity || 1) * quantity;
-
-        runInsert('UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?', [required, item.product_id]);
-
-        runInsert(`
-      INSERT INTO inventory_logs (id, product_id, type, quantity_change, quantity_before, quantity_after, reason, created_at)
-      SELECT ?, ?, 'assembly', ?, stock_quantity + ?, stock_quantity, ?, CURRENT_TIMESTAMP
-      FROM products WHERE id = ?
-    `, [uuid(), item.product_id, -required, required, `Bundle Assembly: ${bundle.name} (+${quantity})`, item.product_id]);
-      }
+      checkPackStock(items, quantity);
+      movePackArticles(items, quantity, 'assembly', `Bundle Assembly: ${bundle.name} (+${quantity})`);
 
       // Increase Bundle Stock
       runInsert('UPDATE bundles SET stock_quantity = COALESCE(stock_quantity, 0) + ? WHERE id = ?', [quantity, id]);
@@ -376,18 +356,8 @@ module.exports = function register(ctx) {
       // Decrease Bundle Stock
       runInsert('UPDATE bundles SET stock_quantity = COALESCE(stock_quantity, 0) - ? WHERE id = ?', [quantity, id]);
 
-      // Restore Components
-      for (const item of items) {
-        const toRestore = (item.quantity || 1) * quantity;
-
-        runInsert('UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?', [toRestore, item.product_id]);
-
-        runInsert(`
-      INSERT INTO inventory_logs (id, product_id, type, quantity_change, quantity_before, quantity_after, reason, created_at)
-      SELECT ?, ?, 'disassembly', ?, stock_quantity - ?, stock_quantity, ?, CURRENT_TIMESTAMP
-      FROM products WHERE id = ?
-    `, [uuid(), item.product_id, toRestore, toRestore, `Bundle Disassembly: ${bundle.name} (-${quantity})`, item.product_id]);
-      }
+      // The pieces go back to the stock
+      movePackArticles(items, -quantity, 'disassembly', `Bundle Disassembly: ${bundle.name} (-${quantity})`);
 
       return true;
     }));

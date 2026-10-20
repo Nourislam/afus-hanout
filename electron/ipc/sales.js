@@ -53,6 +53,8 @@ module.exports = function register(ctx) {
 
         for (const item of sale.items) {
           const product = getOne('SELECT id, name, cost, has_variants, stock_quantity FROM products WHERE id = ?', [item.product_id]);
+          // Not an article: a pack (its own column, product_id only ever points at an article)
+          const bundle = product ? null : getOne('SELECT * FROM bundles WHERE id = ?', [item.product_id]);
           const variant = item.variant_id
             ? getOne('SELECT * FROM product_variants WHERE id = ?', [item.variant_id])
             : null;
@@ -82,9 +84,9 @@ module.exports = function register(ctx) {
           else if (product) unitCost = product.cost || 0;
 
           runInsert(`
-        INSERT INTO sale_items (id, sale_id, product_id, variant_id, variant_label, sku, product_name, quantity, unit_price, discount, tax_amount, total, unit_cost)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [item.id, sale.id, item.product_id, variant ? variant.id : null,
+        INSERT INTO sale_items (id, sale_id, product_id, bundle_id, variant_id, variant_label, sku, product_name, quantity, unit_price, discount, tax_amount, total, unit_cost)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [item.id, sale.id, product ? item.product_id : null, bundle ? bundle.id : null, variant ? variant.id : null,
           variant ? catalog.variantLabel(variant) : (item.variant_label || null),
           variant ? variant.sku : (item.sku || null),
           item.product_name, item.quantity, item.unit_price, item.discount || 0, item.tax_amount || 0, item.total, unitCost]);
@@ -102,10 +104,16 @@ module.exports = function register(ctx) {
             continue;
           }
 
-          // Not a product: check if it's a bundle
-          const bundle = getOne('SELECT * FROM bundles WHERE id = ?', [item.product_id]);
+          // Not a product: a pack
           if (bundle && bundle.deduct_component_stock === 1) {
             const bundleItems = runQuery('SELECT * FROM bundle_items WHERE bundle_id = ?', [bundle.id]);
+            // The pieces of the pack must be in stock, like any article sold
+            for (const bItem of bundleItems) {
+              const part = getOne('SELECT name, stock_quantity FROM products WHERE id = ?', [bItem.product_id]);
+              if (part && bItem.quantity * item.quantity > (part.stock_quantity || 0)) {
+                throw catalog.codedError('STOCK_INSUFFICIENT', { product: part.name, available: part.stock_quantity || 0 });
+              }
+            }
             for (const bItem of bundleItems) {
               catalog.adjustStock(dbApi, {
                 productId: bItem.product_id,
@@ -117,6 +125,9 @@ module.exports = function register(ctx) {
             }
           } else if (bundle) {
             // Deduct stock from bundle itself (Pre-packed)
+            if (Number(item.quantity) > (bundle.stock_quantity || 0)) {
+              throw catalog.codedError('STOCK_INSUFFICIENT', { product: bundle.name, available: bundle.stock_quantity || 0 });
+            }
             runInsert('UPDATE bundles SET stock_quantity = stock_quantity - ? WHERE id = ?', [item.quantity, bundle.id]);
           }
         }

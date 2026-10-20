@@ -19,6 +19,7 @@ function addMissingColumns(api) {
     add('purchase_orders', 'amount_paid', 'REAL DEFAULT 0');
     add('purchase_orders', 'payment_status', "TEXT DEFAULT 'unpaid'");
     add('suppliers', 'balance', 'REAL DEFAULT 0');
+    add('purchase_order_items', 'received_quantity', 'INTEGER DEFAULT 0');
 }
 
 describe('customers at a glance', () => {
@@ -91,6 +92,8 @@ describe('suppliers at a glance', () => {
             ('o3', 'PO-3', 'f1', 'sent', 7000, 0, '2026-03-01', '2026-03-01'),
             ('o4', 'PO-4', 'f1', 'cancelled', 9000, 0, '2026-03-02', '2026-03-02'),
             ('o5', 'PO-5', 'f2', 'draft', 4000, 0, '2026-03-03', '2026-03-03')`);
+        // PO-2 was received in part: 4 of its 10 pieces (at 1 000 DA) came in
+        api.run("INSERT INTO purchase_order_items (id, purchase_order_id, product_name, quantity, unit_cost, total_cost, received_quantity) VALUES ('oi2', 'o2', 'Robe', 10, 1000, 10000, 4)");
         api.run("INSERT INTO receivings (id, receive_number, supplier_id, received_date) VALUES ('rc1', 'RC-1', 'f1', '2026-02-04 08:00:00')");
         api.run("INSERT INTO supplier_payments (id, supplier_id, amount, payment_method, paid_at) VALUES ('sp1', 'f1', 20000, 'cash', '2026-01-06 10:00:00')");
     });
@@ -98,8 +101,9 @@ describe('suppliers at a glance', () => {
     it('computes what the shop still owes from the goods received, not the stored balance', () => {
         const rows = partners.suppliersOverview(api);
         const oran = rows.find(r => r.id === 'f1');
+        // PO-1 in full (50 000) + the 4 pieces of PO-2 that arrived (4 000), not its whole 10 000
         expect(oran).toMatchObject({
-            received_total: 60000, received_paid: 20000, owed: 40000,
+            received_total: 54000, received_paid: 20000, owed: 34000,
             waiting_orders: 1, orders_count: 3, // the cancelled order is left out
             last_received_at: '2026-02-04 08:00:00', last_payment_at: '2026-01-06 10:00:00',
         });
@@ -108,7 +112,7 @@ describe('suppliers at a glance', () => {
 
     it('takes the goods sent back off what is owed, never below zero', () => {
         api.run("INSERT INTO purchase_returns (id, return_number, supplier_id, total_amount, status) VALUES ('rt1', 'RET-1', 'f1', 5000, 'completed')");
-        expect(partners.suppliersOverview(api).find(r => r.id === 'f1')).toMatchObject({ owed: 35000, returned_total: 5000 });
+        expect(partners.suppliersOverview(api).find(r => r.id === 'f1')).toMatchObject({ owed: 29000, returned_total: 5000 });
         api.run("UPDATE purchase_returns SET total_amount = 90000 WHERE id = 'rt1'");
         expect(partners.suppliersOverview(api).find(r => r.id === 'f1').owed).toBe(0);
     });

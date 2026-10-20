@@ -19,6 +19,12 @@ module.exports = function register(ctx) {
       return stockCounts.summary(dbApi, count.id);
     }));
     ipcMain.handle('stockCount:scan', (_, { countId, code, quantity = 1 }) => runTransaction(() => stockCounts.scan(dbApi, countId, code, quantity)));
+    // Quantities counted in an Excel file (the stock file, quantities edited): set on the count, not on the stock
+    ipcMain.handle('stockCount:importExcel', (_, { countId, data }) => runTransaction(() => {
+      const sheet = require('../services/excelService').readCountedSheet(Buffer.from(data));
+      if (!sheet.found) throw require('../services/catalogService').codedError('COUNT_EXCEL_COLUMNS', {});
+      return { ...stockCounts.importCounted(dbApi, countId, sheet.rows), rows: sheet.rows.length };
+    }));
     ipcMain.handle('stockCount:setCounted', (_, { countId, lineId, counted }) => runTransaction(() => stockCounts.setCounted(dbApi, countId, lineId, counted)));
     ipcMain.handle('stockCount:removeLine', (_, { countId, lineId }) => runTransaction(() => stockCounts.removeLine(dbApi, countId, lineId)));
     ipcMain.handle('stockCount:summary', (_, countId) => stockCounts.summary(dbApi, countId));

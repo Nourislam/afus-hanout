@@ -70,7 +70,8 @@ export default function BundlesPage() {
     const loadProducts = async () => {
         try {
             const data = await window.electronAPI.products.getAll();
-            setProducts(data.filter(p => p.is_active));
+            // A pack takes articles without sizes or colours (it cannot choose a size)
+            setProducts(data.filter(p => p.is_active && !p.has_variants));
         } catch (error) {
             console.error('Failed to load products:', error);
         }

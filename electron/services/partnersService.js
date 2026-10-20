@@ -94,14 +94,29 @@ function suppliersOverview(api) {
             pay.last_payment_at
         FROM suppliers s
         LEFT JOIN (
+            -- What is owed is what arrived: an order received in part counts
+            -- for the share of its value that came in (its lines at their price)
             SELECT supplier_id,
                 COUNT(*) AS orders_count,
-                SUM(CASE WHEN status IN ('received', 'partial') THEN total ELSE 0 END) AS received_total,
+                SUM(received_value) AS received_total,
                 SUM(CASE WHEN status IN ('received', 'partial') THEN COALESCE(amount_paid, 0) ELSE 0 END) AS received_paid,
-                SUM(CASE WHEN status IN ('received', 'partial') THEN MAX(total - COALESCE(amount_paid, 0), 0) ELSE 0 END) AS owed,
+                SUM(MAX(received_value - COALESCE(amount_paid, 0), 0)) AS owed,
                 SUM(CASE WHEN status IN ('draft', 'sent') THEN 1 ELSE 0 END) AS waiting_count,
                 MAX(CASE WHEN status IN ('received', 'partial') THEN COALESCE(updated_at, created_at) END) AS last_received_po
-            FROM purchase_orders WHERE COALESCE(status, '') <> 'cancelled'
+            FROM (
+                SELECT o.*, CASE
+                    WHEN o.status = 'received' THEN o.total
+                    WHEN o.status = 'partial' THEN o.total * COALESCE(l.arrived / NULLIF(l.ordered, 0), 0)
+                    ELSE 0 END AS received_value
+                FROM purchase_orders o
+                LEFT JOIN (
+                    SELECT purchase_order_id,
+                        SUM(quantity * COALESCE(unit_cost, 0)) AS ordered,
+                        SUM(MIN(COALESCE(received_quantity, 0), quantity) * COALESCE(unit_cost, 0)) AS arrived
+                    FROM purchase_order_items GROUP BY purchase_order_id
+                ) l ON l.purchase_order_id = o.id
+                WHERE COALESCE(o.status, '') <> 'cancelled'
+            )
             GROUP BY supplier_id
         ) po ON po.supplier_id = s.id
         LEFT JOIN (SELECT supplier_id, MAX(received_date) AS last_received_at FROM receivings GROUP BY supplier_id) r ON r.supplier_id = s.id

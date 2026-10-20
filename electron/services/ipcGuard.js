@@ -96,9 +96,26 @@ const RULES = {
     'commissions:board': 'admin',
     'commissions:saveRule': 'admin',
     'commissions:mine': 'login',
+    // Stock value at purchase price and "Check the figures": the owner's
+    'stock:lines': 'admin',
+    'figures:check': 'admin',
+    // Excel files: each one needs the right of its page (the purchase prices inside are the owner's)
+    'exports:save': (args) => ({
+      stock: 'admin',
+      products: P.PRODUCTS_VIEW,
+      journal: P.REPORTS_VIEW,
+      salesLines: P.REPORTS_VIEW,
+      customers: P.CUSTOMERS_VIEW,
+      kridi: P.CUSTOMERS_VIEW,
+      suppliers: P.INVENTORY_ADJUST,
+    })[args?.kind] || 'admin',
+    'insights:stockWorth': 'admin',
+    // The sales journal for the accountant
+    'reports:salesJournal': P.REPORTS_VIEW,
     'stockCount:start': P.INVENTORY_ADJUST,
     'stockCount:scan': P.INVENTORY_ADJUST,
     'stockCount:setCounted': P.INVENTORY_ADJUST,
+    'stockCount:importExcel': P.INVENTORY_ADJUST,
     'stockCount:removeLine': P.INVENTORY_ADJUST,
     'stockCount:cancel': P.INVENTORY_ADJUST,
     'stockCount:confirm': P.INVENTORY_ADJUST,
