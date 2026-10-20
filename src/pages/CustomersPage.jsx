@@ -1,4 +1,5 @@
 import { t, LANGUAGES } from '../i18n';
+import { CustomerStatement } from '../components/customers/CustomerStatement';
 import { translateError } from '../i18n/errors';
 import { formatDate as formatLocalDate } from '../i18n/format';
 import { formatMoney } from '../i18n/format';
@@ -322,6 +323,8 @@ export default function CustomersPage() {
                                     {showCredit && <p className="text-xs text-zinc-500 mt-1">{t('partners.lastPayment', { date: when(selectedCustomer.last_payment_at) })}</p>}
                                 </div>
                             </div>
+
+                            {showCredit && history?.credits?.length > 0 && <CustomerStatement customer={selectedCustomer} />}
 
                             <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-4 py-3" data-testid="customer-loyalty">
                                 <Star className="w-5 h-5 text-amber-300 flex-none" />

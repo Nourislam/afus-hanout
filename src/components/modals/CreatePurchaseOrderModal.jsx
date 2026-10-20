@@ -1,12 +1,12 @@
 import { t, currentLanguage } from '../../i18n';
 import { formatMoney, currencySymbolFor } from '../../i18n/format';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Modal, ModalBody, ModalFooter } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { DatePicker } from '../ui/DatePicker';
 import { Select } from '../ui/Select';
-import { Search, Trash2 } from 'lucide-react';
+import { Search, Trash2, FileUp } from 'lucide-react';
 import { toast } from '../ui/Toast';
 import { translateError } from '../../i18n/errors';
 import { variantLabel } from '../../lib/clothing';
@@ -30,6 +30,40 @@ export default function CreatePurchaseOrderModal({ isOpen, onClose, onComplete, 
     const [searchQuery, setSearchQuery] = useState('');
     const [variantResults, setVariantResults] = useState([]);
     const [loading, setLoading] = useState(false);
+    const fileRef = useRef(null);
+    const [reading, setReading] = useState(false);
+
+    // The supplier's own Excel file (invoice / order form): its lines matched to the shop's sizes
+    const readSupplierFile = async (file) => {
+        if (!file) return;
+        setReading(true);
+        try {
+            const result = await window.electronAPI.purchaseOrders.readExcel(new Uint8Array(await file.arrayBuffer()));
+            if (!result.found) { toast.error(t('poFile.notFound')); return; }
+            setFormData(prev => {
+                const items = [...prev.items];
+                for (const line of result.lines) {
+                    const at = items.findIndex(i => i.key === line.key);
+                    if (at < 0) { items.push(line); continue; }
+                    const quantity = items[at].quantity + line.quantity;
+                    items[at] = { ...items[at], quantity, unit_cost: line.unit_cost, total_cost: quantity * line.unit_cost };
+                }
+                return { ...prev, items };
+            });
+            const done = t('poFile.added', { n: result.lines.length });
+            if (result.problems.length) {
+                const lines = result.problems.slice(0, 5).map(p => `${t('count.importRow', { n: p.row })} (${p.text}): ${translateError(`${p.error}|{}`)}`);
+                toast.warning(`${done}\n${lines.join('\n')}${result.problems.length > 5 ? `\n${t('count.importMore', { n: result.problems.length - 5 })}` : ''}`, 15000);
+            } else {
+                toast.success(done);
+            }
+        } catch (error) {
+            toast.error(translateError(error));
+        } finally {
+            setReading(false);
+            if (fileRef.current) fileRef.current.value = '';
+        }
+    };
 
     // Clothing products are ordered per colour/size so received stock goes to the right variant
     useEffect(() => {
@@ -218,7 +252,14 @@ export default function CreatePurchaseOrderModal({ isOpen, onClose, onComplete, 
 
                     {/* Product Search */}
                     <div className="relative">
-                        <label className="block text-sm text-zinc-400 mb-1">{t('po.addProducts')}</label>
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                            <label className="block text-sm text-zinc-400">{t('po.addProducts')}</label>
+                            <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" data-testid="po-excel-file"
+                                onChange={(e) => readSupplierFile(e.target.files?.[0])} />
+                            <Button variant="secondary" size="sm" onClick={() => fileRef.current?.click()} loading={reading} title={t('poFile.hint')} data-testid="po-excel">
+                                <FileUp className="w-4 h-4" /> {t('poFile.button')}
+                            </Button>
+                        </div>
                         <div className="relative">
                             <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                             <Input

@@ -1,6 +1,6 @@
 // Settings › Backups: "Check the figures" (the owner's). Every amount and
 // quantity computed again from its lines (electron/services/integrityService.js).
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShieldCheck, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -31,11 +31,15 @@ export function FiguresCheck() {
     const [report, setReport] = useState(null);
     const [at, setAt] = useState(null);
     const [running, setRunning] = useState(false);
+    // The last automatic check (once a week, on its own)
+    const [weekly, setWeekly] = useState(null);
+    useEffect(() => { window.electronAPI?.figures?.last?.().then(setWeekly).catch(() => setWeekly(null)); }, []);
     const run = async () => {
         setRunning(true);
         try {
             setReport(await window.electronAPI.figures.check());
             setAt(new Date());
+            window.dispatchEvent(new Event('afus:figures-checked'));
         } catch (error) {
             toast.error(translateError(error));
         } finally {
@@ -53,6 +57,11 @@ export function FiguresCheck() {
                 </div>
                 <Button onClick={run} loading={running} data-testid="figures-run">{t('figures.run')}</Button>
             </div>
+            {!report && weekly && (
+                <p className={`text-sm ${weekly.ok ? 'text-zinc-400' : 'text-amber-300'}`} data-testid="figures-weekly">
+                    {t(weekly.ok ? 'figures.weeklyOk' : 'figures.weeklyBad', { date: formatDate(weekly.at), n: weekly.failed?.length || 0 })}
+                </p>
+            )}
             {report && (
                 <div className="space-y-3">
                     <p className={`flex items-center gap-2 font-semibold ${report.ok ? 'text-emerald-300' : 'text-amber-300'}`} data-testid="figures-result">

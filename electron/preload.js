@@ -291,12 +291,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
     // The stock line by line with its money, and "Check the figures" (the owner's)
     figures: {
+        last: () => ipcRenderer.invoke('figures:last'),
+        withoutCode: () => ipcRenderer.invoke('stock:withoutCode'),
+        createCodes: () => ipcRenderer.invoke('stock:createCodes'),
         stock: () => ipcRenderer.invoke('stock:lines'),
         check: () => ipcRenderer.invoke('figures:check'),
     },
     // The shop's Excel files: { kind: 'stock' | 'products' | 'journal' | 'salesLines' | 'customers' | 'kridi' | 'suppliers', lang, range? }
     exports: {
         save: (data) => ipcRenderer.invoke('exports:save', data),
+        showFile: (filePath) => ipcRenderer.invoke('exports:showFile', filePath),
     },
     // Employee commissions and the employee of the month (add-on)
     commissions: {
@@ -430,6 +434,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         previewHtml: (overrides) => ipcRenderer.invoke('purchaseOrders:previewHtml', overrides),
         getById: (id) => ipcRenderer.invoke('db:purchaseOrders:getById', id),
         create: (po) => ipcRenderer.invoke('db:purchaseOrders:create', po),
+        readExcel: (bytes) => ipcRenderer.invoke('purchaseOrders:readExcel', bytes),
         delete: (id) => ipcRenderer.invoke('db:purchaseOrders:delete', id),
         receiveStock: (data) => ipcRenderer.invoke('db:purchaseOrders:receiveStock', data),
         createGRN: (data) => ipcRenderer.invoke('db:receivings:create', data),

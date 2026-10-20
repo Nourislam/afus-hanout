@@ -22,4 +22,9 @@ export default {
     'figures.check.returns': ["A return never gives back more than was sold", "Un retour ne rend jamais plus que vendu", "الإرجاع لا يتجاوز ما بيع"],
     'figures.check.purchase_orders': ["Each purchase order = its lines (quantity × purchase price)", "Chaque bon de commande = ses lignes (quantité × prix d'achat)", "كل طلب شراء = أسطره (الكمية × سعر الشراء)"],
     'figures.check.stock_value': ["The stock value is the same everywhere", "La valeur du stock est la même partout", "قيمة المخزون نفسها في كل مكان"],
+    // Once a week on its own
+    'figures.weeklyAlert': ["The weekly check of the figures found {n} thing(s) that do not add up — have a look", "La vérification hebdomadaire des calculs a trouvé {n} point(s) qui ne collent pas — à regarder", "الفحص الأسبوعي للحسابات وجد {n} أمر لا يتطابق — ألقِ نظرة"],
+    'figures.weeklyOpen': ["See", "Voir", "اعرض"],
+    'figures.weeklyOk': ["Checked on its own every week — last time {date}: all right", "Vérifié tout seul chaque semaine — dernière fois le {date} : tout est juste", "يُفحص وحده كل أسبوع — آخر مرة {date}: كل الحسابات صحيحة"],
+    'figures.weeklyBad': ["Last weekly check ({date}): {n} thing(s) do not add up — press Check now to see them", "Dernière vérification hebdomadaire ({date}) : {n} point(s) ne collent pas — appuyez sur Vérifier maintenant", "آخر فحص أسبوعي ({date}): {n} أمر لا يتطابق — اضغط «افحص الآن» لتراه"],
 };

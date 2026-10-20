@@ -12,6 +12,7 @@ import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth,
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { paymentLabel } from '../lib/payments';
 import { useVizColors, methodColor } from '../lib/vizColors';
+import { AccountantFile } from '../components/reports/AccountantFile';
 import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { effectiveFeatures } from '../lib/features';
@@ -186,6 +187,7 @@ export default function ReportsPage() {
                 subtitle={t('reports.subtitle')}
                 actions={(
                     <>
+                        {role === 'admin' && <AccountantFile />}
                         {/* The period chosen here: the journal for the accountant, and every line sold */}
                         <ExportButton kind="journal" args={() => ({ range: getDateRange() })} label={t('export.journal')} testId="reports-journal" />
                         <ExportButton kind="salesLines" args={() => ({ range: getDateRange() })} label={t('export.salesLines')} />

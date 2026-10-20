@@ -2,6 +2,7 @@ import { TitleBar } from './TitleBar';
 import { Sidebar } from './Sidebar';
 import DemoBanner from '../demo/DemoBanner';
 import BackupReminder from '../backup/BackupReminder';
+import FiguresAlert from '../settings/FiguresAlert';
 
 export default function MainLayout({ children }) {
     return (
@@ -9,6 +10,7 @@ export default function MainLayout({ children }) {
             <TitleBar />
             <DemoBanner />
             <BackupReminder />
+            <FiguresAlert />
             <div className="flex-1 flex overflow-hidden">
                 <Sidebar />
                 <main className="flex-1 overflow-hidden bg-dark-primary relative">

@@ -233,6 +233,9 @@ if (!gotTheLock) {
     // Daily backup copy (on unless turned off in Settings › Backup)
     runDailyBackup();
     setInterval(runDailyBackup, 60 * 60 * 1000);
+    // "Check the figures" once a week, on the shop's own data (services/figuresWatch.js)
+    runWeeklyFiguresCheck();
+    setInterval(runWeeklyFiguresCheck, 60 * 60 * 1000);
 
     // Initialize the (optional, currently disabled) sync boundary
     await SyncManager.init();
@@ -365,6 +368,15 @@ function runDailyBackup() {
     console.error('Daily backup failed:', error);
   }
 }
+function runWeeklyFiguresCheck() {
+  if (isDemo()) return;
+  try {
+    require('./services/figuresWatch').runIfDue(dbApi, { getSetting: getSettingValue, saveSetting: saveSettingValue });
+  } catch (error) {
+    console.error('Weekly figures check failed:', error);
+  }
+}
+
 // Installer profile of the reseller (scripts/use-profile.mjs), licence, updates
 const PROFILE = (() => { try { return require('./shared/profile.json'); } catch { return {}; } })();
 // How long the demo shop (3 months) is offered, from the install date

@@ -395,6 +395,9 @@ module.exports = function register(ctx) {
       return po;
     });
 
+    // The supplier's own Excel file -> lines for the purchase order form (nothing saved here)
+    ipcMain.handle('purchaseOrders:readExcel', (_, bytes) => require('../services/purchaseImport').readSupplierFile(dbApi, Buffer.from(bytes)));
+
     ipcMain.handle('db:purchaseOrders:create', (_, input) => runTransaction(() => {
       // One transaction: the order and its lines are saved together, and an error
       // reaches the interface instead of a "created" message for nothing.

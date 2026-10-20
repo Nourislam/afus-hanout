@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { MissingCodes } from './MissingCodes';
 import { ClipboardCheck, ScanLine, Trash2, FileUp } from 'lucide-react';
 import { Modal, ModalBody, ModalFooter } from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -160,6 +161,7 @@ export default function StockCountModal({ isOpen, onClose, onConfirmed }) {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                             <div className="space-y-3">
                                 <p className="text-sm text-zinc-400">{t('count.intro')}</p>
+                                <MissingCodes />
                                 <Select label={t('count.scope')} value={scope} onChange={setScope}
                                     options={[{ value: 'all', label: t('count.wholeShop') }, ...categories.map(c => ({ value: c.id, label: c.name }))]} />
                                 <Button onClick={start} loading={busy}><ClipboardCheck className="w-4 h-4" /> {t('count.start')}</Button>

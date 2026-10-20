@@ -2,7 +2,9 @@
 // hold, services/excelReport.js for their look). One channel, one rule per file
 // (services/ipcGuard.js): purchase prices stay the owner's.
 module.exports = function register(ctx) {
-    const { dbApi, ipcMain, dialog, fs, session, logSystemAction, getShopSettingsForPrint } = ctx;
+    const { dbApi, ipcMain, dialog, fs, shell, session, logSystemAction, getShopSettingsForPrint } = ctx;
+    // Files saved in this run: the only ones "Show in folder" opens
+    const savedFiles = new Set();
     const { EXPORTS } = require('../services/exportService');
     const { buildWorkbook } = require('../services/excelReport');
     const { translator } = require('../i18n');
@@ -24,7 +26,7 @@ module.exports = function register(ctx) {
       const withCost = employee?.role === 'admin';
       const sheets = def.sheets(dbApi, T, { ...args, withCost });
       const buffer = await buildWorkbook({ shop, T, by: employee?.name || null, sheets, logoDataUri: shop.shopLogoDataUri });
-      const fileName = `${safeName(T(def.file))} - ${safeName(shop.businessName || 'Afus Boutique')} - ${today()}.xlsx`;
+      const fileName = `${safeName(T(def.file, def.fileArgs ? def.fileArgs(dbApi, T, args) : undefined))} - ${safeName(shop.businessName || 'Afus Boutique')} - ${today()}.xlsx`;
       return { buffer, fileName, rows: sheets[0]?.rows.length || 0 };
     }
 
@@ -38,8 +40,16 @@ module.exports = function register(ctx) {
       });
       if (canceled || !filePath) return null;
       fs.writeFileSync(filePath, file.buffer);
+      savedFiles.add(filePath);
       logSystemAction('export', `Excel file saved: ${kind}`, { kind, rows: file.rows }, session.getEmployee()?.id || null);
       return { filePath, rows: file.rows };
+    });
+
+    // The folder of a file just saved, to drag it into WhatsApp or an e-mail
+    ipcMain.handle('exports:showFile', (_, filePath) => {
+      if (!savedFiles.has(filePath)) return false;
+      shell?.showItemInFolder(filePath);
+      return true;
     });
 
     return { build };

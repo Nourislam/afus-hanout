@@ -20,6 +20,7 @@ import { MANUAL_REASONS, stockReasonLabel } from '../lib/stockReasons';
 import { readFilter, stockMatches, STOCK_FILTERS } from '../lib/listFilters';
 import { PERMISSIONS } from '../lib/permissions';
 import StockCountModal from '../components/inventory/StockCountModal';
+import { MissingCodes } from '../components/inventory/MissingCodes';
 import { ExportButton } from '../components/ui/ExportButton';
 
 export default function InventoryPage() {
@@ -163,6 +164,9 @@ export default function InventoryPage() {
                     <StatTile icon={Boxes} label={t('inventory.totalStock')} value={formatNumber(totalStock)} />
                     {owner && worth && <StatTile icon={Coins} label={t('inventory.stockValue')} value={formatCurrency(worth.cost)} tone="text-emerald-300" iconTone="bg-emerald-500/15 text-emerald-300" />}
                 </div>
+
+                {/* Lines the scanner cannot find: a code for each before counting */}
+                {canCount && <MissingCodes className="mb-5" onChange={loadData} />}
 
                 {/* Colours / sizes sold out first, then running low */}
                 {alertRows.length > 0 && (

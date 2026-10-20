@@ -108,7 +108,13 @@ const RULES = {
       customers: P.CUSTOMERS_VIEW,
       kridi: P.CUSTOMERS_VIEW,
       suppliers: P.INVENTORY_ADJUST,
+      customerStatement: P.CUSTOMERS_VIEW,
+      // accountant: the owner's (stock at purchase price)
     })[args?.kind] || 'admin',
+    'exports:showFile': 'login',
+    'figures:last': 'admin',
+    'stock:withoutCode': P.INVENTORY_ADJUST,
+    'stock:createCodes': P.PRODUCTS_EDIT,
     'insights:stockWorth': 'admin',
     // The sales journal for the accountant
     'reports:salesJournal': P.REPORTS_VIEW,
@@ -125,6 +131,7 @@ const RULES = {
     'db:supplierPayments:create': P.INVENTORY_ADJUST,
     'db:purchaseReturns:create': P.INVENTORY_ADJUST,
     'db:purchaseOrders:create': P.INVENTORY_ADJUST,
+    'purchaseOrders:readExcel': P.INVENTORY_ADJUST,
     'db:purchaseOrders:delete': P.INVENTORY_ADJUST,
     'db:purchaseOrders:receiveStock': P.INVENTORY_ADJUST,
     'db:receivings:create': P.INVENTORY_ADJUST,

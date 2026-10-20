@@ -12,7 +12,7 @@ const partners = require('./partnersService');
 const { countedSale } = require('./saleStatus');
 const { colorName, sizeLabel, formatDate } = require('../i18n');
 
-const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100 + 0;
 const day = (value, T) => (value ? formatDate(value, T.lang, false) : '');
 const period = (range, T) => (range?.startDate && range?.endDate ? `${day(range.startDate, T)} — ${day(range.endDate, T)}` : '');
 
@@ -239,6 +239,149 @@ function supplierSheets(api, T) {
     }];
 }
 
+
+/** A month 'YYYY-MM' on the shop's clock: its first and last instant, and its name ("octobre 2026"). */
+function monthRange(month, lang = 'ar', now = new Date()) {
+    const [y, m] = String(month || '').split('-').map(Number);
+    const first = Number.isInteger(y) && m >= 1 && m <= 12 ? new Date(y, m - 1, 1) : new Date(now.getFullYear(), now.getMonth(), 1);
+    const next = new Date(first.getFullYear(), first.getMonth() + 1, 1);
+    const name = new Intl.DateTimeFormat(lang === 'ar' ? 'ar-DZ' : lang === 'fr' ? 'fr-DZ' : 'en-GB', { month: 'long', year: 'numeric' }).format(first);
+    return { startDate: first.toISOString(), endDate: new Date(next.getTime() - 1).toISOString(), name };
+}
+
+/** The kridi paid in during a period (cash that is not in the sales journal: the sale was counted as kridi). */
+function kridiPaidIn(api, range) {
+    return api.all(`
+        SELECT cp.created_at AS date, cs.invoice_number, c.name AS customer, LOWER(cp.payment_method) AS method, cp.amount, e.name AS employee
+        FROM credit_payments cp
+        JOIN credit_sales cs ON cs.id = cp.credit_sale_id
+        LEFT JOIN customers c ON c.id = cs.customer_id
+        LEFT JOIN employees e ON e.id = cp.received_by
+        WHERE datetime(cp.created_at) BETWEEN datetime(?) AND datetime(?)
+        ORDER BY datetime(cp.created_at)`, [range.startDate, range.endDate]).map(p => ({ ...p, amount: r2(p.amount) }));
+}
+
+/**
+ * One file for the accountant, for one month: the month in short (sales, returns,
+ * TVA, each way of paying, kridi paid in, stock value), the sales journal, the
+ * kridi paid in, and the stock today. Every figure is the one of its own sheet.
+ */
+function accountantSheets(api, T, { month } = {}) {
+    const range = monthRange(month, T.lang);
+    const journal = salesJournal(api, range);
+    const sales = journal.rows.filter(r => r.type === 'sale');
+    const returns = journal.rows.filter(r => r.type === 'return');
+    const sum = (rows, key) => r2(rows.reduce((t, r) => t + (Number(r[key]) || 0), 0));
+    const paidIn = kridiPaidIn(api, range);
+    const stockTotals = stock.stockTotals(stock.stockLines(api));
+    const line = (key, value) => ({ item: T(`xl.acc.${key}`), amount: r2(value) });
+    const summaryRows = [
+        line('sales', sum(sales, 'amount_ttc')),
+        line('returns', sum(returns, 'amount_ttc')),
+        line('net', journal.totals.amount_ttc),
+        line('ht', journal.totals.amount_ht),
+        line('tva', journal.totals.tva),
+        ...['cash', 'card', 'transfer', 'credit', 'gift_card', 'other'].map(m => line(`by.${m}`, sum(journal.rows, m))),
+        line('kridiPaidIn', sum(paidIn, 'amount')),
+        line('stockCost', stockTotals.cost),
+        line('stockRetail', stockTotals.retail),
+    ];
+    const asOf = T('xl.asOf', { date: day(new Date(), T) });
+    const [journalSheet] = journalSheets(api, T, range);
+    const [stockSheet, byCategory] = stockSheets(api, T);
+    return [
+        {
+            name: T('xl.acc.sheet'), title: T('xl.acc.title', { month: range.name }), period: period(range, T),
+            summary: [
+                { label: T('xl.acc.kTickets'), value: sales.length, type: 'int' },
+                { label: T('xl.acc.kReturns'), value: returns.length, type: 'int' },
+                { label: T('xl.acc.net'), value: journal.totals.amount_ttc },
+            ],
+            columns: [
+                { key: 'item', label: T('xl.acc.item'), type: 'text', width: 44 },
+                { key: 'amount', label: T('xl.acc.amount'), type: 'money', width: 20 },
+            ],
+            rows: summaryRows,
+            notes: [T('xl.acc.note1'), T('xl.acc.note2', { date: asOf })],
+        },
+        { ...journalSheet, title: `${journalSheet.title} — ${range.name}` },
+        {
+            name: T('xl.acc.kridiSheet'), title: T('xl.acc.kridiTitle', { month: range.name }), period: period(range, T),
+            columns: [
+                { key: 'date', label: T('xl.col.date'), type: 'date' },
+                { key: 'invoice_number', label: T('xl.col.invoice'), type: 'code' },
+                { key: 'customer', label: T('xl.col.customer'), type: 'text' },
+                { key: 'method', label: T('xl.col.type'), type: 'text' },
+                { key: 'employee', label: T('xl.col.employee'), type: 'text' },
+                { key: 'amount', label: T('xl.col.paid'), type: 'money', total: 'sum' },
+            ],
+            rows: paidIn.map(p => ({ ...p, method: T(`xl.acc.by.${['cash', 'card', 'transfer'].includes(p.method) ? p.method : 'other'}`) })),
+        },
+        { ...stockSheet, period: asOf },
+        byCategory,
+    ];
+}
+
+/**
+ * A customer's account, line by line: each kridi (its first amount), each
+ * return that lowered it, each payment, and what is left after each line.
+ * The last balance is what the customer owes now (as on the screens).
+ */
+function customerStatementSheets(api, T, { customerId } = {}) {
+    const customer = api.get('SELECT id, name, phone, address FROM customers WHERE id = ?', [customerId]);
+    if (!customer) throw new Error('CUSTOMER_NOT_FOUND|{}');
+    const lines = [];
+    for (const k of api.all(`
+        SELECT cs.id, cs.sale_id, cs.invoice_number, cs.created_at, cs.due_date, cs.amount_due, s.receipt_number,
+               COALESCE((SELECT SUM(COALESCE(r.credit_reduced, 0)) FROM returns r WHERE r.sale_id = cs.sale_id), 0) AS lowered
+        FROM credit_sales cs LEFT JOIN sales s ON s.id = cs.sale_id
+        WHERE cs.customer_id = ?`, [customerId])) {
+        const ticket = k.receipt_number ? ` (${T('xl.col.ticket')} ${k.receipt_number})` : '';
+        lines.push({ date: k.created_at, what: `${T('xl.st.kridi')} ${k.invoice_number}${ticket}`, due: k.due_date, debit: r2(k.amount_due + k.lowered), credit: 0 });
+    }
+    for (const r of api.all(`
+        SELECT r.created_at, r.return_number, r.credit_reduced, cs.invoice_number
+        FROM returns r JOIN credit_sales cs ON cs.sale_id = r.sale_id
+        WHERE cs.customer_id = ? AND COALESCE(r.credit_reduced, 0) > 0`, [customerId])) {
+        lines.push({ date: r.created_at, what: `${T('xl.st.return')} ${r.return_number} — ${r.invoice_number}`, debit: 0, credit: r2(r.credit_reduced) });
+    }
+    for (const p of api.all(`
+        SELECT cp.created_at, cp.amount, LOWER(cp.payment_method) AS method, cs.invoice_number
+        FROM credit_payments cp JOIN credit_sales cs ON cs.id = cp.credit_sale_id
+        WHERE cs.customer_id = ?`, [customerId])) {
+        const way = T(`xl.acc.by.${['cash', 'card', 'transfer'].includes(p.method) ? p.method : 'other'}`);
+        lines.push({ date: p.created_at, what: `${T('xl.st.payment')} (${way}) — ${p.invoice_number}`, debit: 0, credit: r2(p.amount) });
+    }
+    const at = (v) => new Date(String(v).includes('T') ? v : `${String(v).replace(' ', 'T')}Z`).getTime();
+    lines.sort((a, b) => at(a.date) - at(b.date) || b.debit - a.debit);
+    let balance = 0;
+    const rows = lines.map((l, i) => { balance = r2(balance + l.debit - l.credit); return { n: i + 1, ...l, balance }; });
+    const taken = r2(lines.reduce((t, l) => t + l.debit, 0));
+    const given = r2(lines.reduce((t, l) => t + l.credit, 0));
+    return [{
+        name: T('xl.st.sheet'), title: T('xl.st.title', { name: customer.name }), period: T('xl.asOf', { date: day(new Date(), T) }),
+        summary: [
+            { label: T('xl.col.customer'), value: customer.name, type: 'text' },
+            ...(customer.phone ? [{ label: T('xl.col.phone'), value: customer.phone, type: 'text' }] : []),
+            { label: T('xl.st.kTaken'), value: taken },
+            { label: T('xl.st.kGiven'), value: given },
+            { label: T('xl.st.kLeft'), value: balance },
+        ],
+        columns: [
+            { key: 'n', label: T('xl.col.n'), type: 'int', width: 6 },
+            { key: 'date', label: T('xl.col.date'), type: 'date' },
+            { key: 'what', label: T('xl.st.what'), type: 'text', width: 42 },
+            { key: 'due', label: T('xl.col.dueDate'), type: 'date' },
+            { key: 'debit', label: T('xl.st.debit'), type: 'money', total: 'sum' },
+            { key: 'credit', label: T('xl.st.credit'), type: 'money', total: 'sum' },
+            { key: 'balance', label: T('xl.st.balance'), type: 'money' },
+        ],
+        rows,
+        notes: [T('xl.st.note')],
+        customer, balance,
+    }];
+}
+
 const EXPORTS = {
     stock: { sheets: (api, T) => stockSheets(api, T), file: 'xl.stock.sheet' },
     products: { sheets: (api, T, args) => productSheets(api, T, args), file: 'xl.products.sheet' },
@@ -247,6 +390,8 @@ const EXPORTS = {
     customers: { sheets: (api, T) => customerSheets(api, T), file: 'xl.customers.sheet' },
     kridi: { sheets: (api, T, args) => kridiSheets(api, T, args), file: 'xl.kridi.sheet' },
     suppliers: { sheets: (api, T) => supplierSheets(api, T), file: 'xl.suppliers.sheet' },
+    accountant: { sheets: (api, T, args) => accountantSheets(api, T, args), file: 'xl.acc.file', fileArgs: (api, T, args) => ({ month: monthRange(args.month, T.lang).name }) },
+    customerStatement: { sheets: (api, T, args) => customerStatementSheets(api, T, args), file: 'xl.st.file', fileArgs: (api, T, args) => ({ name: api.get('SELECT name FROM customers WHERE id = ?', [args.customerId])?.name || '' }) },
 };
 
-module.exports = { EXPORTS, stockSheets, productSheets, journalSheets, salesLineSheets, customerSheets, kridiSheets, supplierSheets };
+module.exports = { EXPORTS, monthRange, kridiPaidIn, accountantSheets, customerStatementSheets, stockSheets, productSheets, journalSheets, salesLineSheets, customerSheets, kridiSheets, supplierSheets };

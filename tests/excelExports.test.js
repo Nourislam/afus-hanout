@@ -172,6 +172,71 @@ describe('the other files', () => {
     });
 });
 
+describe('the accountant file and the customer statement', () => {
+    const exportsOf = require('../electron/services/exportService');
+    const month = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
+
+    it('the month in one file: summary, journal, kridi paid in, stock — each summary line is the total of its sheet', async () => {
+        const { wb, file } = await open('accountant', { month: month() });
+        expect(file.fileName).toMatch(/^ملف المحاسب - .+ \d{4} - /);
+        expect(wb.worksheets.map(w => w.name)).toEqual(['ملخص الشهر', 'السجل', 'دفعات الكريدي', 'المخزون', 'حسب الصنف']);
+        const range = exportsOf.monthRange(month(), 'ar');
+        const { salesJournal } = require('../electron/services/accountingService');
+        const journal = salesJournal(api, range);
+        expect(journal.rows.length).toBeGreaterThan(0);
+        const sum = (rows, k) => Math.round(rows.reduce((t, r) => t + (Number(r[k]) || 0), 0) * 100) / 100;
+        const ws = wb.getWorksheet('ملخص الشهر');
+        const { header, cell } = table(ws, 'البند');
+        const value = (label) => { for (let r = header + 1; r < header + 20; r++) if (cell(r, 'البند').value === label) return cell(r, 'المبلغ').value; return undefined; };
+        const sales = journal.rows.filter(r => r.type === 'sale');
+        expect(value('المبيعات (بالرسم)')).toBeCloseTo(sum(sales, 'amount_ttc'), 2);
+        expect(value('صافي المبيعات (بالرسم)')).toBeCloseTo(journal.totals.amount_ttc, 2);
+        expect(value('المبيعات (بالرسم)') + value('المرتجعات (بالرسم)')).toBeCloseTo(value('صافي المبيعات (بالرسم)'), 2);
+        expect(value('صافي المبيعات دون رسم (HT)') + value('الرسم (TVA)')).toBeCloseTo(value('صافي المبيعات (بالرسم)'), 2);
+        // Every way of paying adds up to the net sales
+        const ways = ['مدفوع نقدًا', 'مدفوع بالبطاقة', 'مدفوع بالتحويل', 'مبيع بالكريدي (دَين على الزبائن)', 'مدفوع ببطاقة هدية / رصيد', 'أخرى'];
+        expect(ways.reduce((t, w) => t + (value(w) || 0), 0)).toBeCloseTo(journal.totals.amount_ttc, 1);
+        // Kridi paid in = its sheet = the database
+        const paidIn = api.get('SELECT ROUND(COALESCE(SUM(amount), 0), 2) AS n FROM credit_payments WHERE datetime(created_at) BETWEEN datetime(?) AND datetime(?)', [range.startDate, range.endDate]).n;
+        expect(value('دفعات الكريدي المقبوضة هذا الشهر') ?? 0).toBeCloseTo(paidIn, 2);
+        const stock = require('../electron/services/stockService');
+        expect(value('المخزون بسعر الشراء (اليوم)')).toBeCloseTo(stock.stockTotals(stock.stockLines(api)).cost, 2);
+        // The journal sheet holds the month's tickets only
+        const j = table(wb.getWorksheet('السجل'), 'التاريخ');
+        let lines = 0; wb.getWorksheet('السجل').eachRow((row, n) => { if (n > j.header && row.getCell(2).value && !String(row.getCell(1).value || '').startsWith('المجموع')) lines += 1; });
+        expect(lines).toBe(journal.rows.length);
+    });
+
+    it('a month with nothing sold gives an empty but well made file', async () => {
+        const { wb } = await open('accountant', { month: '2001-02' });
+        expect(wb.worksheets.length).toBe(5);
+        const sheets = exportsOf.accountantSheets(api, require('../electron/i18n').translator('ar'), { month: '2001-02' });
+        expect(sheets[0].rows.find(r => r.item === 'صافي المبيعات (بالرسم)').amount).toBe(0);
+        expect(sheets[2].rows).toEqual([]);
+    });
+
+    it('a customer statement: each kridi, return and payment, the last balance = what the customer owes on the screens', async () => {
+        const partners = require('../electron/services/partnersService');
+        const T = require('../electron/i18n').translator('ar');
+        const withKridi = api.all('SELECT DISTINCT customer_id AS id FROM credit_sales WHERE customer_id IS NOT NULL');
+        expect(withKridi.length).toBeGreaterThan(0);
+        for (const { id } of withKridi) {
+            const [sheet] = exportsOf.customerStatementSheets(api, T, { customerId: id });
+            const history = partners.customerHistory(api, id);
+            expect(sheet.balance, sheet.customer.name).toBeCloseTo(history.owed, 2);
+            const debit = sheet.rows.reduce((t, r) => t + r.debit, 0);
+            const credit = sheet.rows.reduce((t, r) => t + r.credit, 0);
+            expect(debit - credit).toBeCloseTo(sheet.balance, 2);
+            // One line per kridi and per payment
+            expect(sheet.rows.filter(r => r.debit > 0).length).toBe(history.credits.length);
+            expect(sheet.rows.filter(r => r.what.startsWith('دفعة')).length).toBe(history.payments.length);
+        }
+        const { wb, file } = await open('customerStatement', { customerId: withKridi[0].id });
+        expect(file.fileName).toMatch(/^كشف حساب /);
+        expect(wb.worksheets[0].name).toBe('كشف الحساب');
+    });
+});
+
 describe('importing back', () => {
     const excel = require('../electron/services/excelService');
 
