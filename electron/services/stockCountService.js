@@ -117,24 +117,27 @@ function importCounted(api, countId, rows) {
     const count = openCountOrThrow(api, countId);
     const problems = [];
     let set = 0;
-    for (const { row, code, quantity } of rows) {
-        const problem = (error, params = {}) => problems.push({ row, code, error, params });
-        if (!code) { problem('COUNT_NO_CODE'); continue; }
-        const value = parseInt(quantity, 10);
-        if (!Number.isInteger(value) || value < 0) { problem('COUNT_QUANTITY'); continue; }
-        const found = catalog.lookupCode(api, code);
-        if (!found) { problem('COUNT_CODE_UNKNOWN', { code }); continue; }
-        if (found.needsVariant) { problem('COUNT_NEEDS_VARIANT', { product: found.product.name }); continue; }
-        if (count.category_id && found.product.category_id !== count.category_id) {
-            problem('COUNT_OUT_OF_SCOPE', { product: found.product.name, category: count.category_name || '' }); continue;
+    // One transaction: the file is written to disk once, not once per line
+    api.transaction(() => {
+        for (const { row, code, quantity } of rows) {
+            const problem = (error, params = {}) => problems.push({ row, code, error, params });
+            if (!code) { problem('COUNT_NO_CODE'); continue; }
+            const value = parseInt(quantity, 10);
+            if (!Number.isInteger(value) || value < 0) { problem('COUNT_QUANTITY'); continue; }
+            const found = catalog.lookupCode(api, code);
+            if (!found) { problem('COUNT_CODE_UNKNOWN', { code }); continue; }
+            if (found.needsVariant) { problem('COUNT_NEEDS_VARIANT', { product: found.product.name }); continue; }
+            if (count.category_id && found.product.category_id !== count.category_id) {
+                problem('COUNT_OUT_OF_SCOPE', { product: found.product.name, category: count.category_name || '' }); continue;
+            }
+            const productId = found.product.id;
+            const variantId = found.type === 'variant' ? found.variant.id : null;
+            const line = findLine(api, countId, productId, variantId);
+            if (line) api.run('UPDATE stock_count_lines SET counted = ?, updated_at = ? WHERE id = ?', [value, new Date().toISOString(), line.id]);
+            else api.run('INSERT INTO stock_count_lines (id, count_id, product_id, variant_id, counted, updated_at) VALUES (?, ?, ?, ?, ?, ?)', [api.uuid(), countId, productId, variantId, value, new Date().toISOString()]);
+            set += 1;
         }
-        const productId = found.product.id;
-        const variantId = found.type === 'variant' ? found.variant.id : null;
-        const line = findLine(api, countId, productId, variantId);
-        if (line) api.run('UPDATE stock_count_lines SET counted = ?, updated_at = ? WHERE id = ?', [value, new Date().toISOString(), line.id]);
-        else api.run('INSERT INTO stock_count_lines (id, count_id, product_id, variant_id, counted, updated_at) VALUES (?, ?, ?, ?, ?, ?)', [api.uuid(), countId, productId, variantId, value, new Date().toISOString()]);
-        set += 1;
-    }
+    });
     return { set, problems };
 }
 

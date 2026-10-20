@@ -1004,8 +1004,8 @@ function createWebsiteService({ api, getSetting, saveSetting, codedError, github
      */
     async function orders({ status = null } = {}) {
         mustExist(read());
-        if (blockedMode()) throw codedError('WEBSITE_ACCOUNTS_BLOCKED');
-        const r = await syncOrders();
+        // The demo shop: its own sample orders, nothing fetched from the internet
+        const r = blockedMode() ? { ok: false, reason: 'demo' } : await syncOrders();
         const list = orderBook.listOrders(api, { status }).map(orderView);
         const stats = Object.fromEntries(orderBook.customerStats(api, { phones: list.map(o => o.phoneKey) }).map(c => [c.phone, customerView(c)]));
         for (const o of list) o.customer = stats[o.phoneKey] || null;
@@ -1028,7 +1028,6 @@ function createWebsiteService({ api, getSetting, saveSetting, codedError, github
      */
     function confirmOrder({ id, details } = {}) {
         mustExist(read());
-        if (blockedMode()) throw codedError('WEBSITE_ACCOUNTS_BLOCKED');
         one(id);
         const r = orderBook.confirmOrder(api, { id, details, employeeId: currentEmployee()?.id || null, codedError });
         return { order: orderView(r.order) };
@@ -1037,7 +1036,6 @@ function createWebsiteService({ api, getSetting, saveSetting, codedError, github
     /** Change what the customer confirmed (before the order is on its way). */
     function updateOrder({ id, details } = {}) {
         mustExist(read());
-        if (blockedMode()) throw codedError('WEBSITE_ACCOUNTS_BLOCKED');
         one(id);
         return { order: orderView(orderBook.updateDetails(api, { id, details, employeeId: currentEmployee()?.id || null, codedError })) };
     }
@@ -1068,7 +1066,6 @@ function createWebsiteService({ api, getSetting, saveSetting, codedError, github
     /** What the shipping label shows (the order with its prices and total). */
     function labelData({ id } = {}) {
         mustExist(read());
-        if (blockedMode()) throw codedError('WEBSITE_ACCOUNTS_BLOCKED');
         return orderView(one(id));
     }
 
@@ -1082,7 +1079,6 @@ function createWebsiteService({ api, getSetting, saveSetting, codedError, github
     /** The returned parcel is in the shop: its pieces checked (sellable back in stock, damaged kept out). */
     function checkReturn({ id, lines } = {}) {
         mustExist(read());
-        if (blockedMode()) throw codedError('WEBSITE_ACCOUNTS_BLOCKED');
         one(id);
         return { order: orderView(orderBook.checkReturn(api, { id, lines, employeeId: currentEmployee()?.id || null, codedError })) };
     }
@@ -1090,14 +1086,12 @@ function createWebsiteService({ api, getSetting, saveSetting, codedError, github
     /** The website's customers (one per phone), most recent first; search by name or phone. AFUS only. */
     function customers({ search = '' } = {}) {
         mustExist(read());
-        if (blockedMode()) throw codedError('WEBSITE_ACCOUNTS_BLOCKED');
         return orderBook.customerStats(api, { search: String(search).slice(0, 60) }).map(customerView);
     }
 
     /** One customer's history: figures and every order with its statuses. */
     function customerHistory({ phone } = {}) {
         mustExist(read());
-        if (blockedMode()) throw codedError('WEBSITE_ACCOUNTS_BLOCKED');
         const h = orderBook.customerHistory(api, phone);
         if (!h) throw codedError('WEBSITE_CUSTOMER_NOT_FOUND', {});
         return { ...customerView(h), list: h.list.map(o => ({ ...orderView(o), events: o.events })) };
@@ -1109,7 +1103,6 @@ function createWebsiteService({ api, getSetting, saveSetting, codedError, github
      */
     function setOrderStatus({ id, status } = {}) {
         mustExist(read());
-        if (blockedMode()) throw codedError('WEBSITE_ACCOUNTS_BLOCKED');
         const r = orderBook.setStatus(api, { id, status, employeeId: currentEmployee()?.id || null, codedError });
         return { order: orderView(r.order), sale: r.sale ? { receipt: r.sale.receipt, total: r.sale.total } : null };
     }

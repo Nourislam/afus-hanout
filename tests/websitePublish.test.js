@@ -276,9 +276,13 @@ describe('Create Website on the shop\'s own GitHub and Cloudflare (simulated, th
         expect(o).toMatchObject({ ok: true, synced: false, reason: 'network' });
         expect(o.orders.map(x => x.status)).toEqual(['money_received']);
         cloud = await startFakeCloud({ login: 'yasmine-shop', accounts: [{ id: ACCOUNT, name: 'Boutique' }], subdomain: 'yasmine', d1Factory: async () => new SQL.Database() });
-        // Demo shop / training: not changed there
+        // Demo shop: its order book is its own database (the demo file), worked like a real one, nothing online
         mode = 'demo';
-        expect(await codeOf(() => service.setOrderStatus({ id, status: 'new' }))).toBe('WEBSITE_ACCOUNTS_BLOCKED');
+        expect(await codeOf(() => service.setOrderStatus({ id, status: 'new' }))).toBe('WEBSITE_ORDER_FINAL');
+        const demoList = await service.orders();
+        expect(demoList).toMatchObject({ ok: true, synced: false, reason: 'demo' });
+        expect(demoList.orders.map(x => x.status)).toEqual(['money_received']);
+        expect(await codeOf(() => service.publishSite())).toBe('WEBSITE_ACCOUNTS_BLOCKED');
         mode = null;
         // Owner only
         expect(ipcGuard.RULES['website:setOrderStatus']).toBe('admin');
@@ -595,7 +599,8 @@ describe('Create Website on the shop\'s own GitHub and Cloudflare (simulated, th
         const { service } = makeService();
         mode = 'demo';
         expect(await codeOf(() => service.publishSite())).toBe('WEBSITE_ACCOUNTS_BLOCKED');
-        expect(await codeOf(() => service.orders())).toBe('WEBSITE_ACCOUNTS_BLOCKED');
+        // The orders: the demo's own list, never fetched online
+        expect(await service.orders()).toMatchObject({ synced: false, reason: 'demo' });
         mode = null;
         settings.website.deploy = { status: 'running', steps: [{ id: 'repository', status: 'done' }, { id: 'pages', status: 'running' }] };
         const v = service.view();

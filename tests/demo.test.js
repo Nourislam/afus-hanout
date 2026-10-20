@@ -65,13 +65,13 @@ describe('demo shop: its own database, never the shop\'s', () => {
             customers: count('customers'), suppliers: count('suppliers'), orders: count('purchase_orders'), receivings: count('receivings'),
             closed: count('shifts', 'WHERE end_time IS NOT NULL'), open: count('shifts', 'WHERE end_time IS NULL'), expenses: count('cash_expenses'),
         };
-        expect(demoCounts.products).toBe(60);
+        expect(demoCounts.products).toBe(63);
         expect(demoCounts.variants).toBeGreaterThan(300);
         expect(demoCounts.sales).toBeGreaterThan(400);
         expect(demoCounts.returns).toBeGreaterThan(10);
         expect(demoCounts.credit).toBeGreaterThan(10);
         expect(demoCounts.creditPayments).toBeGreaterThan(3);
-        expect(demoCounts.employees).toBe(2);
+        expect(demoCounts.employees).toBe(3);
         expect(demoCounts.customers).toBe(10);
         expect(demoCounts.suppliers).toBe(4);
         expect(demoCounts.receivings).toBe(3);
@@ -120,11 +120,49 @@ describe('demo shop: its own database, never the shop\'s', () => {
             expect(d).toBeGreaterThanOrEqual(-100);
             expect(d, JSON.stringify(st)).toBeLessThanOrEqual(50);
         }
-        // Demo staff: an owner and a cashier with the PINs shown on the login screen
-        const staff = api.all('SELECT id, role, pin FROM employees ORDER BY role');
-        expect(staff.map(s => s.role)).toEqual(['admin', 'cashier']);
-        expect(pinService.verifyPin(staff.find(s => s.role === 'admin').pin, '1111')).toBe(true);
-        expect(pinService.verifyPin(staff.find(s => s.role === 'cashier').pin, '2222')).toBe(true);
+        // Demo staff: an owner and two sellers with the PINs shown on the login screen
+        const staff = api.all('SELECT id, role, pin FROM employees ORDER BY role, id');
+        expect(staff.map(s => s.role)).toEqual(['admin', 'cashier', 'cashier']);
+        expect(pinService.verifyPin(staff.find(s => s.id === 'demo-admin').pin, '1111')).toBe(true);
+        expect(pinService.verifyPin(staff.find(s => s.id === 'demo-cashier').pin, '2222')).toBe(true);
+        expect(pinService.verifyPin(staff.find(s => s.id === 'demo-seller').pin, '3333')).toBe(true);
+    });
+
+    it('every screen has something to show: add-ons, gift cards and avoirs, packs, reservations, exchanges, count, markdowns, website orders, loyalty', () => {
+        const features = JSON.parse(api.get("SELECT value FROM settings WHERE key = 'features'").value);
+        expect(features).toMatchObject({ giftCards: true, charges: true, commissions: true, website: true, bundles: true });
+        // Both sellers sold (the employee of the month compares them), each with a rule and a goal
+        const bySeller = api.all("SELECT employee_id, COUNT(*) AS n FROM sales WHERE employee_id IN ('demo-cashier', 'demo-seller') GROUP BY employee_id");
+        expect(bySeller.length).toBe(2);
+        expect(bySeller.every(r => r.n > 50)).toBe(true);
+        expect(count('employee_commissions')).toBe(2);
+        expect(count('shop_charges', 'WHERE is_active = 1')).toBe(6);
+        // Gift cards: one used little by little, one spent, one untouched; and the avoirs of two returns
+        expect(count('gift_cards', "WHERE COALESCE(kind, 'gift') = 'gift'")).toBe(3);
+        expect(count('gift_card_transactions', "WHERE type = 'redeem'")).toBeGreaterThanOrEqual(2);
+        expect(count('gift_cards', "WHERE kind = 'store_credit'")).toBe(2);
+        for (const g of api.all('SELECT id, initial_balance, current_balance FROM gift_cards')) {
+            const spent = api.get("SELECT COALESCE(SUM(amount), 0) AS n FROM gift_card_transactions WHERE gift_card_id = ? AND type = 'redeem'", [g.id]).n;
+            expect(Math.round(g.initial_balance - spent)).toBe(Math.round(g.current_balance));
+        }
+        expect(count('payments', "WHERE method = 'gift_card'")).toBeGreaterThanOrEqual(2);
+        expect(count('bundles')).toBe(3);
+        expect(count('reservations', "WHERE status = 'open'")).toBe(2);
+        expect(count('exchanges')).toBe(2);
+        expect(count('stock_counts', "WHERE status = 'confirmed'")).toBe(1);
+        expect(count('markdowns')).toBe(2);
+        // The website: created, nine orders at every step, two paid (two sales), one parcel back
+        expect(JSON.parse(api.get("SELECT value FROM settings WHERE key = 'website'").value).created).toBe(true);
+        expect(count('website_orders')).toBe(9);
+        expect(count('website_orders', "WHERE status = 'money_received' AND sale_id IS NOT NULL")).toBe(2);
+        expect(count('sales', "WHERE notes LIKE 'website:%'")).toBe(2);
+        expect(count('website_orders', "WHERE status = 'returned'")).toBe(1);
+        expect(count('website_orders', "WHERE status = 'new'")).toBe(2);
+        // Loyalty: the customers' points are those of their tickets, less what came back
+        expect(api.get('SELECT SUM(loyalty_points) AS n FROM customers').n).toBeGreaterThan(100);
+        // And "Check the figures" finds nothing wrong in all of it
+        const report = require('../electron/services/integrityService').check(api);
+        expect(report.ok, JSON.stringify(report.checks.filter(c => !c.ok))).toBe(true);
     });
 
     it('selling, kridi and stock changes in the demo stay in the demo file', () => {
@@ -143,7 +181,7 @@ describe('demo shop: its own database, never the shop\'s', () => {
         expect(init.isDemo()).toBe(true);
         expect(api.get("SELECT id FROM customers WHERE id = 'demo-test-customer'")).toBe(null);
         expect(api.get("SELECT id FROM sales WHERE id = 'demo-test-sale'")).toBe(null);
-        expect(count('products')).toBe(60);
+        expect(count('products')).toBe(63);
         expect(count('sales')).toBeGreaterThan(400);
         expect(realHash()).toBe(realBefore.hash);
     });
@@ -174,7 +212,7 @@ describe('demo shop: its own database, never the shop\'s', () => {
         const again = await demo.enter({ lang: 'fr' });
         expect(again.created).toBe(false);
         expect(api.get("SELECT id FROM sales WHERE id = 'real-sale-2'")).toBe(null);
-        expect(count('products')).toBe(60);
+        expect(count('products')).toBe(63);
         expect(realHash()).toBe(afterReal);
         await demo.exit();
         expect(api.get("SELECT id FROM sales WHERE id = 'real-sale-2'")).not.toBe(null);

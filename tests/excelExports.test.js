@@ -307,8 +307,8 @@ describe('importing back', () => {
         // A line without a code is named, not dropped in silence
         expect(result.problems.filter(p => p.error === 'COUNT_NO_CODE').length).toBe(withoutCode);
         expect(result.problems.filter(p => p.error !== 'COUNT_NO_CODE')).toEqual([{ row: 999, code: 'NO-SUCH-CODE', error: 'COUNT_CODE_UNKNOWN', params: { code: 'NO-SUCH-CODE' } }]);
-        const counted = counts.countLines(api, open.id).find(l => l.counted === before + 3);
-        expect([counted?.qr_code, counted?.sku, counted?.barcode]).toContain(qr);
+        const counted = counts.countLines(api, open.id).find(l => [l.qr_code, l.sku, l.barcode].includes(qr));
+        expect(counted?.counted).toBe(before + 3);
         const changed = counts.countLines(api, open.id).filter(l => l.counted !== l.expected);
         expect(changed.length).toBe(1);
         expect(changed[0].counted - changed[0].expected).toBe(3);

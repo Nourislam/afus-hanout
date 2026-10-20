@@ -12,6 +12,14 @@ const fs = require('fs');
 const path = require('path');
 const catalog = require('./catalogService');
 const returnService = require('./returnService');
+const exchangeService = require('./exchangeService');
+const reservationService = require('./reservationService');
+const stockCounts = require('./stockCountService');
+const markdowns = require('./markdownService');
+const charges = require('./chargesService');
+const commissions = require('./commissionService');
+const loyalty = require('./loyaltyService');
+const orderBook = require('../website/orders/orderBook');
 const { hashPin } = require('./pinService');
 const { nextReceiptNumber } = require('./receiptNumber');
 const CLOTHING = require('../shared/clothing.json');
@@ -23,6 +31,8 @@ const DAYS = 90;
 const DEMO_STAFF = [
     { id: 'demo-admin', role: 'admin', pin: '1111', name: { ar: 'إسلام نوري', fr: 'Islam Nouri', en: 'Islam Nouri' } },
     { id: 'demo-cashier', role: 'cashier', pin: '2222', name: { ar: 'سوفي يسعد', fr: 'Soufi Yessad', en: 'Soufi Yessad' } },
+    // Works on the busy days (Thursday, Saturday): the commissions and the employee of the month have two sellers to compare
+    { id: 'demo-seller', role: 'cashier', pin: '3333', name: { ar: 'أمينة بلقاسم', fr: 'Amina Belkacem', en: 'Amina Belkacem' } },
 ];
 
 const SHOP = {
@@ -130,6 +140,47 @@ const SUPPLIERS = [
     ['Atelier Oran Mode', 'ورشة وهران للموضة', 'Fethi', '0213 41 22 33 44', 'Oran'],
     ['Istanbul Wholesale', 'جملة إسطنبول', 'Emre', '0090 212 555 0101', 'Istanbul'],
     ['Chaussures du Sahel', 'أحذية الساحل', 'Bilal', '0213 25 66 77 88', 'Blida'],
+];
+
+// Articles without colours or sizes (the packs are made of these): [key, category, picture, price, cost, stock, ar, fr, en]
+const SIMPLE_ARTICLES = [
+    ['SOK', 'accessories', 'socks', 300, 120, 40, 'زوج جوارب قطن', 'Paire de chaussettes coton', 'Pair of cotton socks'],
+    ['TOT', 'bags', 'bag', 900, 400, 18, 'حقيبة قماش', 'Tote bag en toile', 'Canvas tote bag'],
+    ['PRF', 'accessories', 'scarf', 1200, 550, 14, 'عطر ملابس', 'Parfum textile', 'Fabric perfume'],
+];
+
+// What the shop pays every month (the net profit add-on): [kind, every N months, amount, ar, fr, en, staff index]
+const CHARGES = [
+    ['rent', 1, 60000, 'إيجار المحل', 'Loyer du magasin', 'Shop rent', null],
+    ['salary', 1, 35000, 'أجرة سوفي', 'Salaire Soufi', 'Soufi salary', 1],
+    ['salary', 1, 20000, 'أجرة أمينة', 'Salaire Amina', 'Amina salary', 2],
+    ['electricity', 3, 12000, 'سونلغاز (كهرباء وغاز)', 'Sonelgaz (électricité et gaz)', 'Sonelgaz (power and gas)', null],
+    ['internet', 1, 2500, 'إنترنت', 'Internet', 'Internet', null],
+    ['phone', 1, 1000, 'الهاتف', 'Téléphone', 'Phone', null],
+];
+
+// Orders from the shop's website, step by step ([status, days ago]); paid ones become sales
+const WEB_CUSTOMERS = [
+    ['Yasmine Brahimi', 'ياسمين براهيمي', '0551 20 30 40', '31 - Oran', 'Bir El Djir', 'home'],
+    ['Khaled Mansouri', 'خالد منصوري', '0662 41 52 63', '25 - Constantine', 'El Khroub', 'office'],
+    ['Meriem Aït Saïd', 'مريم آيت سعيد', '0770 14 25 36', '15 - Tizi Ouzou', 'Azazga', 'home'],
+    ['Farid Belaïd', 'فريد بلعيد', '0699 32 43 54', '09 - Blida', 'Boufarik', 'home'],
+    ['Sara Hamdi', 'سارة حمدي', '0556 61 72 83', '06 - Béjaïa', 'Akbou', 'office'],
+    ['Nabil Touati', 'نبيل تواتي', '0773 85 96 07', '19 - Sétif', 'El Eulma', 'home'],
+    ['Hanane Bouchama', 'حنان بوشامة', '0664 18 29 30', '16 - Alger', 'Dely Ibrahim', 'home'],
+    ['Ryad Kaci', 'رياض قاسي', '0558 47 58 69', '35 - Boumerdès', 'Thénia', 'office'],
+    ['Lina Zerrouki', 'لينا زروقي', '0697 70 81 92', '13 - Tlemcen', 'Maghnia', 'home'],
+];
+const WEB_FLOWS = [
+    { received: 9, steps: [['confirmed', 8], ['shipped', 7], ['delivered', 5], ['money_received', 4]] },
+    { received: 6, steps: [['confirmed', 6], ['shipped', 5], ['money_received', 3]] },
+    { received: 5, steps: [['confirmed', 4], ['shipped', 3], ['returned', 1]] },
+    { received: 4, steps: [['contacted', 4], ['cancelled', 3]] },
+    { received: 3, steps: [['confirmed', 2], ['shipped', 1]] },
+    { received: 2, steps: [['confirmed', 1]] },
+    { received: 1, steps: [['contacted', 1]] },
+    { received: 0, steps: [] },
+    { received: 0, steps: [] },
 ];
 
 const EXPENSES = {
@@ -312,7 +363,12 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
         currency: 'DZD', currencySymbol: 'DA', taxRate: 0, taxName: 'TVA', taxType: 'inclusive', receiptShowBrand: true,
     });
     setSetting('ui_mode', 'full');
-    setSetting('features', { credit: true, customers: true, promotions: true, bundles: true, giftCards: false, suppliers: true, purchaseOrders: true, email: false, ecommerce: false });
+    // Every module a clothing shop uses, the two add-ons included (email / online stores need the internet)
+    setSetting('features', { credit: true, customers: true, promotions: true, bundles: true, giftCards: true, suppliers: true, purchaseOrders: true, email: false, ecommerce: false, website: true, charges: true, commissions: true });
+    // 1 point for 100 DA, worth 1 DA (the customers' points can become an avoir)
+    setSetting('loyalty', { pointValue: 1 });
+    // The shop's website, made a month ago (its orders are below)
+    setSetting('website', { created: true, name: 'afus-boutique', createdAt: at(30, 11).toISOString() });
     setSetting('setup_completed', 'true');
     setSetting('demo_shop', true);
 
@@ -323,6 +379,20 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
     }
     const cashier = DEMO_STAFF[1].id;
     const admin = DEMO_STAFF[0].id;
+    const weekendSeller = DEMO_STAFF[2].id;
+    // Thursday and Saturday (the busy days): Amina; the other days: Soufi
+    const sellerOf = (daysAgo) => ([4, 6].includes(new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysAgo).getDay()) ? weekendSeller : cashier);
+
+    // Commissions and monthly goals (add-on): a share of the sales, or an amount per piece
+    commissions.saveRule(api, { employee_id: cashier, kind: 'percent', rate: 2, monthly_goal: 1800000 });
+    commissions.saveRule(api, { employee_id: weekendSeller, kind: 'piece', rate: 60, monthly_goal: 800000 });
+    // The shop's charges from the first whole month of its history (net profit add-on)
+    const opened = new Date(now.getFullYear(), now.getMonth(), now.getDate() - DAYS);
+    const firstMonth = new Date(opened.getFullYear(), opened.getMonth() + 1, 1);
+    const chargeStart = `${firstMonth.getFullYear()}-${pad(firstMonth.getMonth() + 1)}-01`;
+    for (const [kind, every, amount, ar, fr, en, staffIndex] of CHARGES) {
+        charges.save(api, { name: { ar, fr, en }[lang] || fr, kind, amount, every_months: every, start_date: chargeStart, employee_id: staffIndex === null ? null : DEMO_STAFF[staffIndex].id });
+    }
 
     // Categories
     const categoryIds = {};
@@ -398,7 +468,7 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
     }
 
     // ---- Articles with their stock: what is left today + what was sold
-    const barcodes = demoBarcodes(variantsPlan.length, random);
+    const barcodes = demoBarcodes(variantsPlan.length + SIMPLE_ARTICLES.length, random);
     let barcodeIndex = 0;
     for (const article of articles) {
         const image = articlePhoto(article.key, writeImage) || writeImage(`demo-${article.key.toLowerCase()}.svg`, garmentSvg(article.shape, colorOf(article.colors[0]).hex));
@@ -434,6 +504,69 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
             }
         }
     }
+
+    // ---- Articles without sizes, arrived twelve days ago, and the packs made of them
+    const simple = {};
+    for (const [key, cat, shape, price, cost, stock, ar, fr, en] of SIMPLE_ARTICLES) {
+        const id = `demo-prd-${key.toLowerCase()}`;
+        const logsBefore = lastLogRow(api);
+        catalog.saveProduct(api, {
+            id, name: { ar, fr, en }[lang] || fr, category_id: categoryIds[cat], supplier_id: supplierIds[0], price, cost, min_stock_level: 3,
+            sku: `DM-${key}`, barcode: barcodes[barcodeIndex++], stock_quantity: stock, image_path: writeImage(`demo-${key.toLowerCase()}.svg`, garmentSvg(shape, '#a78bfa')),
+        }, [], { employeeId: admin, isNew: true });
+        api.run('UPDATE inventory_logs SET created_at = ? WHERE rowid > ?', [sqlTime(at(12, 10)), logsBefore]);
+        api.run('UPDATE products SET created_at = ? WHERE id = ?', [sqlTime(at(12, 10)), id]);
+        simple[key] = { id, price };
+    }
+    const packs = [
+        { id: 'demo-pack-socks', name: { ar: 'عرض 4 أزواج جوارب', fr: 'Lot 4 paires de chaussettes', en: '4 pairs of socks' }, items: [['SOK', 4]], price: 1000, deduct: 1, stock: 0 },
+        { id: 'demo-pack-gift', name: { ar: 'هدية: حقيبة قماش + عطر', fr: 'Coffret : tote bag + parfum', en: 'Gift set: tote bag + perfume' }, items: [['TOT', 1], ['PRF', 1]], price: 1800, deduct: 1, stock: 0 },
+        { id: 'demo-pack-eid', name: { ar: 'علبة العيد (جاهزة)', fr: "Coffret de l'Aïd (prêt)", en: 'Eid box (ready made)' }, items: [['SOK', 2], ['PRF', 1]], price: 1500, deduct: 0, stock: 6 },
+    ];
+    for (const pack of packs) {
+        const original = pack.items.reduce((t, [key, qty]) => t + simple[key].price * qty, 0);
+        api.run(`INSERT INTO bundles (id, name, description, bundle_price, original_price, savings, is_active, deduct_component_stock, stock_quantity, created_at)
+                 VALUES (?, ?, '', ?, ?, ?, 1, ?, ?, ?)`, [pack.id, pack.name[lang] || pack.name.fr, pack.price, original, original - pack.price, pack.deduct, pack.stock, sqlTime(at(11, 10))]);
+        for (const [key, qty] of pack.items) api.run('INSERT INTO bundle_items (id, bundle_id, product_id, quantity) VALUES (?, ?, ?, ?)', [api.uuid(), pack.id, simple[key].id, qty]);
+    }
+
+    // ---- Gift cards sold: one used little by little at the till, one spent, one untouched
+    const giftCards = [
+        { id: 'demo-gift-1', code: 'GIFT-5000-AFUS', amount: 5000, soldDaysAgo: 52, customer: customers[6].id, uses: [41, 18] },
+        { id: 'demo-gift-2', code: 'GIFT-3000-AFUS', amount: 3000, soldDaysAgo: 75, customer: null, uses: [70] },
+        { id: 'demo-gift-3', code: 'GIFT-10000-AFUS', amount: 10000, soldDaysAgo: 9, customer: customers[8].id, uses: [] },
+    ].map(card => {
+        api.run(`INSERT INTO gift_cards (id, code, initial_balance, current_balance, customer_id, is_active, expires_at, created_by, created_at)
+                 VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?)`, [card.id, card.code, card.amount, card.amount, card.customer, new Date(now.getTime() + 300 * 86400000).toISOString(), admin, sqlTime(at(card.soldDaysAgo, 11))]);
+        return { ...card, balance: card.amount };
+    });
+
+    // ---- Website orders: customers and pieces (sizes still in stock after the tickets)
+    const inStock = variantsPlan.filter(v => v.left >= 3 && v.size);
+    const articleOfVariant = new Map(articles.flatMap(a => a.variants.map(v => [v, a])));
+    const webOrders = WEB_FLOWS.map((flow, i) => {
+        const [latin, ar, phone, wilaya, commune, delivery] = WEB_CUSTOMERS[i];
+        const lines = [pick(random, inStock)];
+        if (random() < 0.4) lines.push(pick(random, inStock.filter(v => v !== lines[0])));
+        return { id: `demo-web-${i + 1}`, flow, name: lang === 'ar' ? ar : latin, phone, wilaya, commune, delivery, lines: lines.map(v => ({ v, a: articleOfVariant.get(v) })) };
+    });
+    const codedError = catalog.codedError;
+    // An order arrives (no stock moves); then each step on its day, after closing (19:45)
+    const webArrive = (order, when) => {
+        const [first, ...rest] = order.name.split(' ');
+        orderBook.importOrders(api, [{
+            id: order.id, created_at: when.toISOString(), customer_name: order.name, first_name: first, last_name: rest.join(' '),
+            phone: order.phone, wilaya: order.wilaya, commune: order.commune, address: order.delivery === 'home' ? (lang === 'ar' ? 'حي 200 مسكن، عمارة 4' : 'Cité 200 logements, bât. 4') : '',
+            delivery: order.delivery, courier_company: order.delivery === 'office' ? 'Yalidine' : '', delivery_fee: order.delivery === 'office' ? 400 : 600,
+            items: order.lines.map(({ v, a }) => ({ product_id: a.id, product_name: a.name, size: v.size || '', color: v.color, quantity: 1, unit_price: a.price })),
+        }]);
+    };
+    const webStep = (order, status, daysAgo) => {
+        const when = at(daysAgo, 19, 45);
+        const logsBefore = lastLogRow(api);
+        orderBook.setStatus(api, { id: order.id, status, employeeId: admin, now: when, codedError });
+        api.run('UPDATE inventory_logs SET created_at = ? WHERE rowid > ?', [sqlTime(when), logsBefore]);
+    };
 
     // ---- Deliveries from the suppliers (two received, one paid in part, one waiting)
     const orders = [
@@ -484,10 +617,11 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
         // (same rule as shiftService.getShiftStats: cash sales + kridi paid in
         // cash - refunds of tickets not on kridi - expenses; checked in the tests)
         let drawer = opening;
+        const seller = sellerOf(day.daysAgo);
         const shiftStart = at(day.daysAgo, 9, 20);
         const shiftId = `demo-shift-${day.daysAgo}`;
         api.run('INSERT INTO shifts (id, employee_id, start_time, opening_cash, notes) VALUES (?, ?, ?, ?, ?)',
-            [shiftId, cashier, shiftStart.toISOString(), opening, '']);
+            [shiftId, seller, shiftStart.toISOString(), opening, '']);
 
         for (const ticket of day.tickets) {
             const saleId = api.uuid();
@@ -509,7 +643,7 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
             const created = sqlTime(ticket.time);
             const logsBefore = lastLogRow(api);
             api.run(`INSERT INTO sales (id, receipt_number, employee_id, customer_id, subtotal, tax_amount, discount_amount, total, status, created_at)
-                     VALUES (?, ?, ?, ?, ?, 0, ?, ?, 'completed', ?)`, [saleId, receipt, cashier, customer ? customer.id : null, subtotal, discount, total, created]);
+                     VALUES (?, ?, ?, ?, ?, 0, ?, ?, 'completed', ?)`, [saleId, receipt, seller, customer ? customer.id : null, subtotal, discount, total, created]);
             for (const line of ticket.lines) {
                 const lineId = api.uuid();
                 const v = line.variant;
@@ -517,14 +651,32 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
                     [lineId, saleId, line.article.id, v.id, catalog.variantLabel(v), `DM-${v.key}`,
                         line.article.name, line.quantity, line.article.price, line.quantity * line.article.price, line.article.cost]);
-                catalog.adjustStock(api, { productId: line.article.id, variantId: v.id, delta: -line.quantity, type: 'sale', reason: `Sale #${receipt}`, employeeId: cashier });
+                catalog.adjustStock(api, { productId: line.article.id, variantId: v.id, delta: -line.quantity, type: 'sale', reason: `Sale #${receipt}`, employeeId: seller });
                 soldLines.push({ saleId, lineId, line, time: ticket.time, receipt, credit, method });
             }
             // The ticket's stock movements: the rows written since logsBefore
             api.run('UPDATE inventory_logs SET created_at = ? WHERE rowid > ?', [created, logsBefore]);
-            api.run('INSERT INTO payments (id, sale_id, method, amount, created_at) VALUES (?, ?, ?, ?, ?)', [api.uuid(), saleId, method, total, created]);
-            if (method === 'cash') drawer += total;
-            if (customer) api.run('UPDATE customers SET total_spent = total_spent + ? WHERE id = ?', [total, customer.id]);
+            // A gift card used on this day: it pays what it holds, the rest the usual way
+            const card = !credit && giftCards.find(g => g.balance > 0 && g.uses.includes(day.daysAgo) && !g.usedOn?.includes(day.daysAgo));
+            // Spread over its days (a card used little by little), the last use takes what is left
+            const lastUse = card && card.uses.filter(d => !card.usedOn?.includes(d)).length === 1;
+            const byCard = card ? Math.min(card.balance, total, lastUse ? card.balance : Math.ceil(card.amount / card.uses.length)) : 0;
+            if (byCard > 0) {
+                api.run('INSERT INTO payments (id, sale_id, method, amount, reference, created_at) VALUES (?, ?, ?, ?, ?, ?)', [api.uuid(), saleId, 'gift_card', byCard, card.code, created]);
+                api.run(`INSERT INTO gift_card_transactions (id, gift_card_id, sale_id, amount, type, balance_before, balance_after, employee_id, created_at)
+                         VALUES (?, ?, ?, ?, 'redeem', ?, ?, ?, ?)`, [api.uuid(), card.id, saleId, byCard, card.balance, card.balance - byCard, seller, created]);
+                card.balance -= byCard;
+                card.usedOn = [...(card.usedOn || []), day.daysAgo];
+                api.run('UPDATE gift_cards SET current_balance = ? WHERE id = ?', [card.balance, card.id]);
+            }
+            const rest = total - byCard;
+            if (rest > 0) api.run('INSERT INTO payments (id, sale_id, method, amount, created_at) VALUES (?, ?, ?, ?, ?)', [api.uuid(), saleId, method, rest, created]);
+            if (method === 'cash') drawer += rest;
+            if (customer) {
+                // Loyalty points of the ticket (1 for 100 DA), as the till gives them
+                api.run('UPDATE sales SET loyalty_base = ? WHERE id = ?', [total, saleId]);
+                api.run('UPDATE customers SET total_spent = total_spent + ?, loyalty_points = COALESCE(loyalty_points, 0) + ? WHERE id = ?', [total, loyalty.pointsOf(total), customer.id]);
+            }
             if (credit) {
                 creditCount++;
                 const creditId = api.uuid();
@@ -547,7 +699,7 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
             if (amount <= 0) continue;
             const when = sqlTime(at(day.daysAgo, 16, Math.floor(random() * 50)));
             api.run('INSERT INTO credit_payments (id, credit_sale_id, amount, payment_method, received_by, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-                [api.uuid(), debt.id, amount, 'cash', cashier, when]);
+                [api.uuid(), debt.id, amount, 'cash', seller, when]);
             debt.paid += amount;
             drawer += amount;
             api.run('UPDATE credit_sales SET amount_paid = ?, status = ? WHERE id = ?', [debt.paid, debt.paid >= debt.total ? 'paid' : 'partial', debt.id]);
@@ -566,16 +718,20 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
                 returnCount++;
                 const returnId = api.uuid();
                 const sellable = random() < 0.8;
+                // Two of them given back as an avoir (a card spent later), not in cash
+                const avoir = returnCount === 4 || returnCount === 9;
                 const logsBefore = lastLogRow(api);
                 const saved = returnService.createReturn(api, {
                     id: returnId, sale_id: s.saleId, return_number: `RET-DEMO-${String(returnCount).padStart(3, '0')}`,
-                    total_refund: s.line.article.price, reason: sellable ? 'size' : 'defect', employee_id: cashier,
+                    total_refund: s.line.article.price, reason: sellable ? 'size' : 'defect', employee_id: seller,
+                    refund_method: avoir ? 'store_credit' : undefined,
                     items: [{ sale_item_id: s.lineId, quantity: 1, refund_amount: s.line.article.price, condition: sellable ? 'sellable' : 'damaged' }],
                 });
                 const when = sqlTime(at(day.daysAgo, 15, Math.floor(random() * 50)));
                 api.run('UPDATE returns SET created_at = ? WHERE id = ?', [when, returnId]);
-                // What was really given back (the ticket's discount taken off)
-                drawer -= saved.total_refund;
+                // What was really given back (the ticket's discount taken off); an avoir stays out of the drawer
+                if (!avoir) drawer -= saved.total_refund;
+                else api.run('UPDATE gift_cards SET created_at = ? WHERE return_id = ?', [when, returnId]);
                 api.run('UPDATE inventory_logs SET created_at = ? WHERE rowid > ?', [when, logsBefore]);
             }
         }
@@ -587,7 +743,7 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
             const when = sqlTime(at(day.daysAgo, 13, Math.floor(random() * 50)));
             if (amount > 0) {
                 api.run('INSERT INTO cash_expenses (id, shift_id, employee_id, amount, reason, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-                    [api.uuid(), shiftId, cashier, amount, reason, when]);
+                    [api.uuid(), shiftId, seller, amount, reason, when]);
                 drawer -= amount;
             }
         }
@@ -607,6 +763,14 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
             for (const value of [2000, 1000, 500, 200, 100, 50, 20, 10, 5]) { const n = Math.floor(rest / value); if (n) notes[value] = n; rest -= n * value; }
             api.run('UPDATE shifts SET closing_cash = ?, closing_count = ? WHERE id = ?', [counted, JSON.stringify(notes), shiftId]);
         }
+
+        // The website's orders of the day: new ones in the afternoon, the others move on after closing
+        if (day.daysAgo > 0) {
+            for (const order of webOrders) {
+                if (order.flow.received === day.daysAgo) webArrive(order, at(day.daysAgo, 15, 10));
+                for (const [status, daysAgo] of order.flow.steps) if (daysAgo === day.daysAgo) webStep(order, status, daysAgo);
+            }
+        }
     }
 
     // One old kridi left unpaid, so the overdue list is not empty
@@ -616,6 +780,82 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
         const debt = unpaid;
         api.run('UPDATE credit_sales SET due_date = ? WHERE id = ?', [new Date(now.getTime() - 10 * 86400000).toISOString(), debt.id]);
     }
+
+    // ---- Today, after the last ticket: everything is dated `now`, after every movement written so far
+    const today = sqlTime(now);
+    const usedVariants = new Set(webOrders.flatMap(o => o.lines.map(l => l.v)));
+    const free = (n) => variantsPlan.filter(v => v.left >= n && !usedVariants.has(v));
+    // Two orders just arrived on the website (to call the customers back)
+    webOrders.filter(o => o.flow.received === 0).forEach((order, i) => webArrive(order, new Date(now.getTime() - (i ? 40 : 125) * 60000)));
+
+    // Two pieces put aside with a deposit (the customer comes back to pay the rest)
+    let reservations = 0;
+    for (const [i, cust] of [[0, customers[1]], [1, customers[4]]]) {
+        const v = free(5)[i * 7];
+        if (!v) continue;
+        usedVariants.add(v);
+        const a = articleOfVariant.get(v);
+        const logsBefore = lastLogRow(api);
+        const r = reservationService.createReservation(api, {
+            customer_id: cust.id, employee_id: admin, deposit: Math.round(a.price * 0.3 / 100) * 100, deposit_method: 'cash',
+            expires_at: new Date(now.getTime() + 5 * 86400000).toISOString(),
+            items: [{ product_id: a.id, variant_id: v.id, product_name: a.name, quantity: 1, unit_price: a.price }],
+        });
+        api.run('UPDATE reservations SET created_at = ? WHERE id = ?', [today, r.id]);
+        api.run('UPDATE inventory_logs SET created_at = ? WHERE rowid > ?', [today, logsBefore]);
+        reservations++;
+    }
+
+    // Two pieces exchanged for another size of the same article (nothing to pay)
+    let exchanges = 0;
+    const exchangeable = soldLines.filter(sl => !sl.credit && !sl.returned && (now - sl.time) / 86400000 < 12 && sl.line.quantity === 1);
+    for (const sl of exchangeable) {
+        if (exchanges >= 2) break;
+        const other = sl.line.article.variants.find(v => v !== sl.line.variant && v.color === sl.line.variant.color && v.left >= 3 && !usedVariants.has(v));
+        if (!other) continue;
+        usedVariants.add(other);
+        const logsBefore = lastLogRow(api);
+        const done = exchangeService.createExchange(api, {
+            sale_id: sl.saleId, sale_item_id: sl.lineId, quantity: 1, new_variant_id: other.id, condition: 'sellable',
+            payment_method: 'cash', employee_id: admin, reason: 'size',
+        });
+        sl.returned = true;
+        api.run('UPDATE returns SET created_at = ? WHERE id = ?', [today, done.return_id]);
+        api.run('UPDATE sales SET created_at = ? WHERE id = ?', [today, done.sale_id]);
+        api.run('UPDATE payments SET created_at = ? WHERE sale_id = ?', [today, done.sale_id]);
+        api.run('UPDATE exchanges SET created_at = ? WHERE id = ?', [today, done.id]);
+        api.run('UPDATE inventory_logs SET created_at = ? WHERE rowid > ?', [today, logsBefore]);
+        exchanges++;
+    }
+
+    // This morning's count of the scarves and hijabs: one piece missing
+    const section = categoryIds.scarves;
+    if (section) {
+        const count = stockCounts.startCount(api, { categoryId: section, employeeId: admin, note: '' });
+        const rows = api.all(`SELECT v.sku, v.stock_quantity FROM product_variants v JOIN products p ON p.id = v.product_id
+                              WHERE p.category_id = ? AND COALESCE(v.is_active, 1) = 1 ORDER BY v.sku`, [section])
+            .map((v, i) => ({ row: i + 2, code: v.sku, quantity: String(i === 3 && v.stock_quantity > 0 ? v.stock_quantity - 1 : v.stock_quantity) }));
+        stockCounts.importCounted(api, count.id, rows);
+        const logsBefore = lastLogRow(api);
+        stockCounts.confirmCount(api, count.id, { reason: lang === 'ar' ? 'جرد الشهر' : lang === 'fr' ? 'Inventaire du mois' : 'Monthly count', employeeId: admin });
+        api.run('UPDATE stock_counts SET created_at = ?, confirmed_at = ? WHERE id = ?', [new Date(now.getTime() - 90 * 60000).toISOString(), now.toISOString(), count.id]);
+        api.run('UPDATE stock_count_lines SET updated_at = ? WHERE count_id = ?', [now.toISOString(), count.id]);
+        api.run('UPDATE inventory_logs SET created_at = ? WHERE rowid > ?', [today, logsBefore]);
+    }
+
+    // Markdowns: the slow article suggested first approved today, another one refused twelve days ago
+    const proposed = markdowns.suggestions(api, { now: now.getTime() });
+    if (proposed[1]) markdowns.decide(api, { productId: proposed[1].product_id, percent: proposed[1].step, approve: false, employeeId: admin, now: now.getTime() - 12 * 86400000 });
+    if (proposed[0]) markdowns.decide(api, { productId: proposed[0].product_id, percent: proposed[0].step, approve: true, employeeId: admin, now: now.getTime() });
+
+    // Coming soon: the Eid sale on the children's clothes; long ago: last season's sale
+    const day = (offset) => new Date(now.getTime() + offset * 86400000).toISOString().slice(0, 10);
+    api.run(`INSERT INTO promotions (id, name, description, type, value, start_date, end_date, is_active, applies_to, applies_to_ids, auto_apply)
+             VALUES (?, ?, '', 'percentage', 15, ?, ?, 1, 'category', ?, 1)`,
+        ['demo-promo-eid', lang === 'ar' ? 'تخفيضات العيد للأطفال' : lang === 'fr' ? "Promo de l'Aïd enfants" : 'Eid kids sale', day(5), day(15), JSON.stringify([categoryIds.kids])]);
+    api.run(`INSERT INTO promotions (id, name, description, type, value, start_date, end_date, is_active, applies_to, applies_to_ids, auto_apply)
+             VALUES (?, ?, '', 'percentage', 30, ?, ?, 1, 'category', ?, 1)`,
+        ['demo-promo-past', lang === 'ar' ? 'تصفية الصيف الماضي' : lang === 'fr' ? "Déstockage de l'été dernier" : "Last summer's clearance", day(-130), day(-110), JSON.stringify([categoryIds.tshirts])]);
 
     // A season discount ending soon (shows in the offers and on the dashboard)
     const ends = new Date(now.getTime() + 2 * 86400000).toISOString().slice(0, 10);
@@ -630,6 +870,7 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
         sales: days.reduce((s, d) => s + d.tickets.length, 0),
         returns: returnCount,
         credits: creditCount,
+        reservations, exchanges, websiteOrders: webOrders.length,
         staff: DEMO_STAFF.map(s => ({ id: s.id, role: s.role, pin: s.pin, name: tr(s.name) })),
     };
 }
