@@ -6,6 +6,7 @@ import { useSearchParams } from 'react-router-dom';
 import { BarChart3, TrendingUp, Banknote, ShoppingCart, Shirt, RotateCcw, Percent } from 'lucide-react';
 import { Select } from '../components/ui/Select';
 import { Card } from '../components/ui/Card';
+import { Tabs } from '../components/ui/Tabs';
 import { PageHeader } from '../components/ui/PageHeader';
 import { toast } from '../components/ui/Toast';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subMonths } from 'date-fns';
@@ -21,7 +22,7 @@ import SeasonReport from '../components/reports/SeasonReport';
 import MarkdownManager from '../components/reports/MarkdownManager';
 import ShopIntelligence from '../components/reports/ShopIntelligence';
 import NetProfit from '../components/reports/NetProfit';
-import { ExportButton } from '../components/ui/ExportButton';
+import { ExportMenu } from '../components/ui/ExportButton';
 
 // Built on each render so the labels follow the interface language
 const dateRanges = () => [
@@ -189,16 +190,17 @@ export default function ReportsPage() {
                     <>
                         {role === 'admin' && <AccountantFile />}
                         {/* The period chosen here: the journal for the accountant, and every line sold */}
-                        <ExportButton kind="journal" args={() => ({ range: getDateRange() })} label={t('export.journal')} testId="reports-journal" />
-                        <ExportButton kind="salesLines" args={() => ({ range: getDateRange() })} label={t('export.salesLines')} />
+                        <ExportMenu files={[
+                            { kind: 'journal', args: () => ({ range: getDateRange() }), label: t('export.journal'), testId: 'reports-journal' },
+                            { kind: 'salesLines', args: () => ({ range: getDateRange() }), label: t('export.salesLines') },
+                        ]} />
                         {byPeriod && <Select value={dateRange} onChange={setDateRange} options={dateRanges()} className="w-48" />}
                     </>
                 )}
             >
-                <div className="segmented">
-                    {tabs.map(([id, label]) => (
-                        <button key={id} type="button" className={activeTab === id ? 'active' : ''} onClick={() => setActiveTab(id)} data-testid={`reports-tab-${id}`}>{label}</button>
-                    ))}
+                {/* At least 26rem for the tabs: on a narrow window the buttons go to the next line */}
+                <div className="min-w-[26rem]">
+                    <Tabs tabs={tabs.map(([id, label]) => ({ id, label }))} value={activeTab} onChange={setActiveTab} testId="reports-tab" />
                 </div>
             </PageHeader>
 
@@ -362,13 +364,15 @@ export default function ReportsPage() {
                             <thead>
                                 <tr>
                                     <th>{t('tx.employee')}</th>
-                                    <th>{t('reports.start')}</th>
-                                    <th>{t('reports.end')}</th>
+                                    {/* Below 1280px the end, the other payments and the counted cash go on a
+                                        second line of their cell: every figure stays, no sideways scrolling */}
+                                    <th>{t('reports.start')}<span className="xl:hidden"> · {t('reports.end')}</span></th>
+                                    <th className="hidden xl:table-cell">{t('reports.end')}</th>
                                     <th>{t('reports.totalSales')}</th>
-                                    <th>{t('pay.cash')}</th>
-                                    <th>{t('reports.otherPayments')}</th>
-                                    <th>{t('reports.expectedCash')}</th>
-                                    <th>{t('reports.closingCash')}</th>
+                                    <th>{t('pay.cash')}<span className="xl:hidden"> · {t('reports.otherPayments')}</span></th>
+                                    <th className="hidden xl:table-cell">{t('reports.otherPayments')}</th>
+                                    <th>{t('reports.expectedCash')}<span className="xl:hidden"> · {t('reports.closingCash')}</span></th>
+                                    <th className="hidden xl:table-cell">{t('reports.closingCash')}</th>
                                     <th>{t('reports.diff')}</th>
                                     <th>{t('customers.notes')}</th>
                                 </tr>
@@ -378,20 +382,31 @@ export default function ReportsPage() {
                                     const st = shift.stats || {};
                                     const other = (st.total_card_sales || 0) + (st.total_transfer_sales || 0) + (st.total_credit_sales || 0) + (st.total_gift_card_sales || 0);
                                     const diff = st.cash_difference;
+                                    const end = shift.end_time ? formatLocalDate(shift.end_time, 'datetime') : <span className="badge bg-emerald-500/15 text-emerald-300">{t('shift.open')}</span>;
+                                    const counted = shift.end_time ? formatCurrency(shift.closing_cash || 0) : '—';
                                     return (
                                         <tr key={shift.id}>
                                             <td className="font-medium">{shift.employee_name}</td>
-                                            <td className="whitespace-nowrap">{formatLocalDate(shift.start_time, 'datetime')}</td>
-                                            <td className="whitespace-nowrap">{shift.end_time ? formatLocalDate(shift.end_time, 'datetime') : <span className="badge bg-emerald-500/15 text-emerald-300">{t('shift.open')}</span>}</td>
+                                            <td className="whitespace-nowrap">
+                                                {formatLocalDate(shift.start_time, 'datetime')}
+                                                <div className="xl:hidden mt-0.5 text-xs text-zinc-500">{end}</div>
+                                            </td>
+                                            <td className="hidden xl:table-cell whitespace-nowrap">{end}</td>
                                             <td className="tabular">{formatCurrency(st.total_sales)}</td>
-                                            <td className="tabular text-emerald-400">{formatCurrency(st.total_cash_sales)}</td>
-                                            <td className="tabular">{formatCurrency(other)}</td>
-                                            <td className="tabular">{formatCurrency(st.expected_cash)}</td>
-                                            <td className="tabular">{shift.end_time ? formatCurrency(shift.closing_cash || 0) : '—'}</td>
+                                            <td className="tabular">
+                                                <span className="text-emerald-400">{formatCurrency(st.total_cash_sales)}</span>
+                                                <div className="xl:hidden mt-0.5 text-xs text-zinc-500">{formatCurrency(other)}</div>
+                                            </td>
+                                            <td className="hidden xl:table-cell tabular">{formatCurrency(other)}</td>
+                                            <td className="tabular">
+                                                {formatCurrency(st.expected_cash)}
+                                                <div className="xl:hidden mt-0.5 text-xs text-zinc-500">{counted}</div>
+                                            </td>
+                                            <td className="hidden xl:table-cell tabular">{counted}</td>
                                             <td className={`tabular font-medium ${diff === null || diff === undefined ? '' : Math.abs(diff) < 0.01 ? 'text-emerald-400' : diff > 0 ? 'text-amber-300' : 'text-rose-400'}`}>
                                                 {diff === null || diff === undefined ? '—' : formatCurrency(diff)}
                                             </td>
-                                            <td className="max-w-[200px] truncate" title={shift.notes}>{shift.notes || '—'}</td>
+                                            <td className="max-w-[8rem] xl:max-w-[200px] truncate" title={shift.notes}>{shift.notes || '—'}</td>
                                         </tr>
                                     );
                                 }) : (

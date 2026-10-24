@@ -7,9 +7,9 @@ module.exports = {
     version: 1,
     name: { ar: 'رياضي', fr: 'Sport', en: 'Sport' },
     description: {
-        ar: 'عناوين عريضة جدًا، أزرار مستديرة، صور مربعة على خلفية رمادية فاتحة ولون بارز. للأحذية والملابس الرياضية.',
-        fr: 'Titres très gras en capitales, boutons ronds, photos carrées sur gris clair et une couleur vive. Chaussures et sportswear.',
-        en: 'Heavy capital titles, round buttons, square photos on light grey and one bright colour. Shoes and sportswear.',
+        ar: 'عناوين عريضة وأزرار مستديرة ولون بارز. للأحذية والرياضة.',
+        fr: 'Titres très gras, boutons ronds, une couleur vive. Chaussures et sport.',
+        en: 'Heavy titles, round buttons, one bright colour. Shoes and sportswear.',
     },
     tags: ['sport', 'men', 'shoes'],
     tokens: {

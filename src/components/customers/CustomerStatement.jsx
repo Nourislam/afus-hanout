@@ -3,8 +3,9 @@
 // it, opens its folder and the customer's chat with a ready message. WhatsApp
 // lets no program attach a file: the cashier drags it into the chat, then Send.
 import { useState } from 'react';
-import { FileDown, MessageCircle } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { ExcelIcon } from '../ui/ExportButton';
 import { toast } from '../ui/Toast';
 import { useT } from '../../i18n';
 import { formatMoney } from '../../i18n/format';
@@ -56,8 +57,8 @@ export function CustomerStatement({ customer }) {
                 <p className="font-semibold">{t('statement.title')}</p>
                 <p className="text-xs text-zinc-400">{t('statement.hint')}</p>
             </div>
-            <Button variant="secondary" size="sm" onClick={save} loading={busy === 'file'} data-testid="statement-file">
-                <FileDown className="w-4 h-4" /> {t('statement.file')}
+            <Button variant="secondary" size="iconSm" onClick={save} loading={busy === 'file'} data-testid="statement-file" title={t('statement.file')} aria-label={t('statement.file')}>
+                {busy !== 'file' && <ExcelIcon />}
             </Button>
             <Button size="sm" onClick={sendOnWhatsApp} loading={busy === 'whatsapp'} disabled={!customer.phone} title={customer.phone ? '' : t('whatsapp.noPhone')} data-testid="statement-whatsapp">
                 <MessageCircle className="w-4 h-4" /> {t('statement.whatsapp')}

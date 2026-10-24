@@ -727,7 +727,15 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
                     refund_method: avoir ? 'store_credit' : undefined,
                     items: [{ sale_item_id: s.lineId, quantity: 1, refund_amount: s.line.article.price, condition: sellable ? 'sellable' : 'damaged' }],
                 });
-                const when = sqlTime(at(day.daysAgo, 15, Math.floor(random() * 50)));
+                // Never before a movement already written for that piece (it may have sold again
+                // later the same day): the stock history stays in order
+                let back = at(day.daysAgo, 15, Math.floor(random() * 50));
+                const lastMove = api.get('SELECT MAX(created_at) AS t FROM inventory_logs WHERE variant_id = ? AND rowid <= ?', [s.line.variant.id, logsBefore])?.t;
+                if (lastMove) {
+                    const after = new Date(`${String(lastMove).replace(' ', 'T')}Z`).getTime() + 60000;
+                    if (after > back.getTime()) back = new Date(after);
+                }
+                const when = sqlTime(back);
                 api.run('UPDATE returns SET created_at = ? WHERE id = ?', [when, returnId]);
                 // What was really given back (the ticket's discount taken off); an avoir stays out of the drawer
                 if (!avoir) drawer -= saved.total_refund;

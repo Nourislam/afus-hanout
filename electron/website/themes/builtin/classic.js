@@ -7,7 +7,7 @@ module.exports = {
     name: { ar: 'كلاسيكي', fr: 'Classique', en: 'Classic' },
     description: {
         ar: 'أزرق داكن وخط كلاسيكي وبطاقات بإطار تظهر فيها المقاسات. للمحلات العائلية والرجالية.',
-        fr: 'Bleu marine, titres à empattements, cartes encadrées avec les tailles. Pour les boutiques familiales.',
+        fr: 'Bleu marine, titres classiques, tailles visibles. Boutiques familiales.',
         en: 'Navy, serif titles, framed cards showing the sizes. For family and menswear shops.',
     },
     tags: ['men', 'family', 'formal'],

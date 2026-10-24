@@ -250,7 +250,7 @@ export default function GiftCardsPage() {
                         <p>{t('gift.none')}</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid fit-grid-lg gap-4">
                         {filteredCards.map(card => (
                             <div
                                 key={card.id}
@@ -312,6 +312,8 @@ export default function GiftCardsPage() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => handleViewHistory(card)}
+                                        title={t('common.history')}
+                                        aria-label={t('common.history')}
                                     >
                                         <History className="w-4 h-4" />
                                     </Button>

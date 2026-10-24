@@ -7,9 +7,9 @@ module.exports = {
     version: 1,
     name: { ar: 'أتيلييه', fr: 'Atelier', en: 'Atelier' },
     description: {
-        ar: 'أبيض وأسود، عناوين رفيعة بحروف كبيرة، صور طويلة من حافة إلى حافة وشبكة متقاربة. بأسلوب دور الأزياء العالمية.',
-        fr: 'Noir sur blanc, titres fins en capitales, grandes photos bord à bord, grille serrée. Le style des grandes maisons de mode.',
-        en: 'Black on white, thin capital titles, tall edge-to-edge photos, a tight grid. The look of the big fashion houses.',
+        ar: 'أبيض وأسود، عناوين رفيعة وصور كبيرة. بأسلوب دور الأزياء.',
+        fr: 'Noir et blanc, titres fins, grandes photos. Style maison de mode.',
+        en: 'Black and white, thin titles, big photos. Fashion-house style.',
     },
     tags: ['women', 'men', 'premium'],
     tokens: {

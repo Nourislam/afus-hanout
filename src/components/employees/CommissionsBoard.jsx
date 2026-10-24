@@ -127,9 +127,9 @@ export default function CommissionsBoard() {
                 <h3 className="font-semibold px-4 pt-4 pb-2">{t('goals.ranking')}</h3>
                 <ul className="divide-y divide-dark-border">
                     {rows.map((r, i) => (
-                        <li key={r.id} className="px-4 py-3 grid gap-3 items-center md:grid-cols-[2.5rem_minmax(8rem,1.3fr)_repeat(3,minmax(5rem,0.7fr))_minmax(9rem,1.2fr)_minmax(7rem,0.9fr)_auto]" data-testid="goal-row">
+                        <li key={r.id} className="px-4 py-3 grid gap-3 items-center md:grid-cols-[2.25rem_minmax(6rem,1.3fr)_repeat(3,minmax(4.5rem,0.7fr))_minmax(7.5rem,1.2fr)_minmax(6rem,0.9fr)_auto]" data-testid="goal-row">
                             <span className={`w-9 h-9 rounded-full flex items-center justify-center font-bold ${i === 0 && r.id === data?.best ? 'bg-amber-400/20 text-amber-300' : 'bg-zinc-800 text-zinc-400'}`}>{i + 1}</span>
-                            <span className="font-medium truncate">{r.name}</span>
+                            <span className="font-medium truncate" title={r.name}>{r.name}</span>
                             <span className="text-sm"><span className="block text-xs text-zinc-500">{t('goals.net')}</span><bdi className="tabular font-semibold">{money(r.net)}</bdi></span>
                             <span className="text-sm"><span className="block text-xs text-zinc-500">{t('goals.pieces')} · {t('goals.tickets')}</span><span className="tabular">{r.pieces} · {r.tickets}</span></span>
                             <span className="text-sm"><span className="block text-xs text-zinc-500">{t('goals.returns')}</span><span className={`tabular ${r.returnRate > 15 ? 'text-amber-300' : ''}`}>{r.returnRate}%</span></span>
@@ -138,7 +138,7 @@ export default function CommissionsBoard() {
                                 {r.goal > 0 ? <><GoalBar percent={r.goalPercent} /><bdi className="text-xs text-zinc-500 tabular">{money(r.goal)}</bdi></> : <span className="text-zinc-500">{t('goals.noGoal')}</span>}
                             </span>
                             <span className="text-sm"><span className="block text-xs text-zinc-500">{t('goals.commission')} · <bdi>{ruleText(r)}</bdi></span><bdi className="tabular font-semibold text-emerald-300">{money(r.commission)}</bdi></span>
-                            <Button variant="ghost" size="sm" onClick={() => setEditing(r)} data-testid="goal-edit"><Settings2 className="w-4 h-4" /> {t('goals.set')}</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setEditing(r)} data-testid="goal-edit" title={t('goals.set')} aria-label={t('goals.set')}><Settings2 className="w-4 h-4" /> <span className="hidden xl:inline">{t('goals.set')}</span></Button>
                         </li>
                     ))}
                 </ul>

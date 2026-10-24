@@ -93,7 +93,7 @@ export default function CashTab({ features, ranges, onCloseShift }) {
                     <ul className="divide-y divide-dark-border">
                         {data.employees.map(emp => (
                             <Row key={emp.id} aside={<span className="font-semibold"><Money value={emp.sales_total} /></span>}>
-                                <p className="font-medium truncate">{emp.name}</p>
+                                <p className="font-medium truncate" title={emp.name}>{emp.name}</p>
                                 <p className="text-xs text-zinc-500">
                                     {t('dash.ticket.count', { n: emp.sales_count })}
                                     {emp.minutes_worked > 0 && <> · {formatDuration(emp.minutes_worked)}</>}
@@ -124,7 +124,7 @@ export default function CashTab({ features, ranges, onCloseShift }) {
                     <ul className="divide-y divide-dark-border">
                         {data.closures.map(c => (
                             <Row key={c.id} aside={<span className="text-sm font-medium whitespace-nowrap">{diffText(c.cash_difference)}</span>}>
-                                <p className="text-sm font-medium truncate">{c.employee_name}</p>
+                                <p className="text-sm font-medium truncate" title={c.employee_name}>{c.employee_name}</p>
                                 <p className="text-xs text-zinc-500"><bdi className="tabular">{formatDate(c.end_time, 'datetime', { lang })}</bdi></p>
                             </Row>
                         ))}

@@ -139,7 +139,7 @@ function CategoryPicture({ category, value, photos, onChange }) {
                 {src ? <img src={src} alt="" className="w-full h-full object-cover" /> : <Shirt className="w-6 h-6 text-zinc-500" />}
             </span>
             <span className="flex-1 min-w-0">
-                <span className="block font-medium truncate">{category.name}</span>
+                <span className="block font-medium truncate" title={category.name}>{category.name}</span>
                 <span className="block text-xs text-zinc-500">{value.image ? t('website.pictures.own') : value.photo ? t('website.pictures.readyMadeOne') : t('website.pictures.auto')}</span>
             </span>
             <select className="input py-1.5 text-sm w-40" value={value.image ? '' : value.photo || ''} onChange={(e) => onChange({ image: '', photo: e.target.value })} aria-label={t('website.pictures.readyMade')}>

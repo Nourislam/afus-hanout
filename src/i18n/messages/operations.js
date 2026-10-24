@@ -127,7 +127,7 @@ export default {
     'employees.view.rights': ["Cashiers' rights", "Droits des vendeurs", "صلاحيات البائعين"],
     'rights.title': ["What a cashier may do without a manager", "Ce qu'un vendeur peut faire sans responsable", "ما يمكن للبائع فعله دون المدير"],
     'rights.text': ["Otherwise a manager types their PIN on the cashier's screen.", "Sinon, un responsable tape son code PIN sur l'écran du vendeur.", "وإلا يكتب المدير رمز PIN في شاشة البائع."],
-    'rights.discountWhere': ["The discount by hand (shown or not, and its limit) is set in Settings › Sales screen.", "La remise manuelle (affichée ou non, et sa limite) se règle dans Réglages › Écran de vente.", "التخفيض اليدوي (ظاهر أم لا، وحدّه) يُضبط من الإعدادات › شاشة البيع."],
+    'rights.discountWhere': ["Hand discount: Settings › Sales screen.", "Remise manuelle : Réglages › Écran de vente.", "التخفيض اليدوي: الإعدادات › شاشة البيع."],
     'rights.returns': ["Cashiers make returns and exchanges alone", "Les vendeurs font seuls retours et échanges", "البائعون يقومون بالإرجاع والتبديل وحدهم"],
     'rights.returnsHint': ["Off: a manager's PIN is asked for each return or exchange.", "Désactivé : le code PIN d'un responsable est demandé à chaque retour ou échange.", "عند الإيقاف: يُطلب رمز المدير لكل إرجاع أو تبديل."],
     'rights.saved': ["Rights saved", "Droits enregistrés", "تم حفظ الصلاحيات"],

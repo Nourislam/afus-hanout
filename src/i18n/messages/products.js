@@ -74,7 +74,7 @@ export default {
     'variants.otherColor': ["Other colour…", "Autre couleur…", "لون آخر…"],
     'variants.sizes': ["Sizes", "Tailles", "المقاسات"],
     'variants.typeSize': ["Type a size and press Enter", "Saisir une taille puis Entrée", "اكتب مقاساً ثم Enter"],
-    'variants.sizesHint': ["Click a size set to add it, or type your own sizes. Accessories (bags, belts…) can have no size.", "Cliquez sur une grille de tailles ou saisissez vos tailles. Les accessoires (sacs, ceintures…) peuvent ne pas avoir de taille.", "اضغط على مجموعة مقاسات أو اكتب مقاساتك. الإكسسوارات (حقائب، أحزمة…) يمكن أن تكون بدون مقاس."],
+    'variants.sizesHint': ["Pick a size set or type your sizes. Accessories may have none.", "Choisissez une grille ou saisissez vos tailles. Accessoires : sans taille.", "اختر مجموعة مقاسات أو اكتبها. الإكسسوارات بلا مقاس."],
     'variants.generate': ["Generate variants", "Générer les variantes", "إنشاء الألوان والمقاسات"],
     'variants.fillSkus': ["Fill empty SKUs", "Compléter les SKU", "إكمال رموز SKU"],
     'variants.stock': ["Stock", "Stock", "المخزون"],

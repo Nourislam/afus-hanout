@@ -249,7 +249,7 @@ export default function QrLabelsPage() {
                                 {queue.map(item => (
                                     <tr key={item.key} className="border-t border-dark-border">
                                         <td className="py-2 pe-2">
-                                            <div className="font-medium truncate max-w-[220px]">{item.name}</div>
+                                            <div className="font-medium truncate max-w-[220px]" title={item.name}>{item.name}</div>
                                             {item.label && <div className="text-xs text-accent-primary">{item.label}</div>}
                                         </td>
                                         <td className="py-2 pe-2">

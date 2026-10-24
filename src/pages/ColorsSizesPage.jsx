@@ -154,7 +154,7 @@ export function SizesPage() {
             <li key={set.code} className={`flex flex-col md:flex-row md:items-center gap-3 px-4 py-3 ${off ? 'opacity-55' : ''}`}>
                 <div className="md:w-56 flex-none flex items-center gap-2.5 min-w-0">
                     <Ruler className="w-4 h-4 text-indigo-300 flex-none" />
-                    <span className="font-medium truncate">{label}</span>
+                    <span className="font-medium truncate" title={label}>{label}</span>
                     <span className="badge bg-dark-tertiary text-zinc-400 flex-none tabular">{set.sizes.length}</span>
                 </div>
                 <div className="flex-1 min-w-0 flex flex-wrap gap-1.5">

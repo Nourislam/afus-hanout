@@ -156,7 +156,7 @@ export function SlowMovers({ rows, title }) {
                                     <Percent className="w-4 h-4" /> {t('dash.do.discount')}
                                 </Button>
                             )}>
-                                <p className="font-medium truncate">{row.name}</p>
+                                <p className="font-medium truncate" title={row.name}>{row.name}</p>
                                 <p className="text-xs text-zinc-500">
                                     {t('dash.slow.pieces', { n: row.stock })}
                                     {' · '}

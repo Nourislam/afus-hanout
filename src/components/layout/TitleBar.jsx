@@ -46,7 +46,7 @@ export function TitleBar({ bare = false, loggedIn = true }) {
             {/* The program (Afus). The shop's own logo and name are in the menu. */}
             <div className="flex items-center gap-2 min-w-0 text-xs text-zinc-400" title={t('titlebar.program')}>
                 <AfusLogo size={16} />
-                <span className="font-medium truncate">{t('app.name')}</span>
+                <span className="font-medium truncate" title={t('app.name')}>{t('app.name')}</span>
             </div>
 
             <div className="flex-1" />

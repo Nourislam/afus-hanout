@@ -28,7 +28,7 @@ export default {
     'season.tab': ["Seasons", "Saisons", "المواسم"],
     'season.by.season': ["Season", "Saison", "الموسم"],
     'season.by.collection': ["Collection", "Collection", "المجموعة"],
-    'season.hint': ["Bought = sold + still in stock. Revenue without TVA, returns taken off. Profit = revenue - purchase cost of the pieces sold.", "Acheté = vendu + encore en stock. CA hors TVA, retours déduits. Bénéfice = CA - coût d'achat des pièces vendues.", "المشترى = المباع + المتبقي في المخزون. المبيعات بدون TVA وبعد خصم المرتجعات. الربح = المبيعات - سعر شراء القطع المباعة."],
+    'season.hint': ["Bought = sold + in stock. Revenue without TVA, after returns.", "Acheté = vendu + en stock. CA hors TVA, après retours.", "المشترى = المباع + المخزون. المبيعات بدون TVA وبعد المرتجعات."],
     'season.none.season': ["No article has a season yet (product form, \"Season\").", "Aucun article n'a encore de saison (fiche article, « Saison »).", "لا توجد سلعة لها موسم بعد (بطاقة السلعة، «الموسم»)."],
     'season.none.collection': ["No article has a collection yet (product form, \"Collection\").", "Aucun article n'a encore de collection (fiche article, « Collection »).", "لا توجد سلعة لها مجموعة بعد (بطاقة السلعة، «المجموعة»)."],
     'season.bought': ["Bought", "Acheté", "ما اشتُري"],
@@ -48,7 +48,7 @@ export default {
     // Markdown manager (Reports)
     'markdown.tab': ["Markdowns", "Démarques", "التخفيضات"],
     'markdown.title': ["Suggested markdowns", "Démarques proposées", "تخفيضات مقترحة"],
-    'markdown.hint': ["Articles with stock, older than 30 days, of which less than 20 % sold in 30 days. First 10 %, then 20 %, then 30 % if it still does not sell. Nothing changes until you approve (14 days on that article).", "Articles en stock, de plus de 30 jours, dont moins de 20 % s'est vendu en 30 jours. D'abord 10 %, puis 20 %, puis 30 % si ça ne se vend toujours pas. Rien ne change tant que vous n'approuvez pas (14 jours sur cet article).", "سلع في المخزون، عمرها أكثر من 30 يوماً، بيع منها أقل من 20% في 30 يوماً. أولاً 10%، ثم 20%، ثم 30% إذا بقيت لا تُباع. لا يتغير شيء حتى توافق (14 يوماً على هذه السلعة)."],
+    'markdown.hint': ["Slow articles (30+ days, <20 % sold): 10 %, 20 %, then 30 %, only if you approve.", "Articles lents (30 j+, <20 % vendus) : 10 %, 20 %, puis 30 %, si vous approuvez.", "سلع راكدة (30 يومًا+، بيع أقل من 20%): 10% ثم 20% ثم 30%، بموافقتك فقط."],
     'markdown.none': ["No article needs a markdown today.", "Aucun article n'a besoin d'une démarque aujourd'hui.", "لا توجد سلعة تحتاج تخفيضاً اليوم."],
     'markdown.why': ["{stock} in stock · {sold} sold in 30 days ({rate} %)", "{stock} en stock · {sold} vendus en 30 jours ({rate} %)", "{stock} في المخزون · بيع {sold} في 30 يوماً ({rate}%)"],
     'markdown.after': ["after -{n} %", "après -{n} %", "بعد -{n}%"],

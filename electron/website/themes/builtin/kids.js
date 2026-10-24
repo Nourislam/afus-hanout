@@ -7,7 +7,7 @@ module.exports = {
     name: { ar: 'أطفال', fr: 'Enfants', en: 'Kids' },
     description: {
         ar: 'ألوان دافئة ومرحة وأشكال دائرية والمقاسات ظاهرة على كل سلعة. لملابس الأطفال والرضع.',
-        fr: 'Couleurs gaies, formes arrondies, tailles visibles sur chaque article. Pour la mode enfant.',
+        fr: 'Couleurs gaies, formes rondes, tailles visibles. Mode enfant.',
         en: 'Cheerful colours, round shapes, sizes on every card. For kids and baby clothes.',
     },
     tags: ['kids', 'baby', 'family'],

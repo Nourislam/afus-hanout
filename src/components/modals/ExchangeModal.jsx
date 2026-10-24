@@ -121,7 +121,7 @@ export default function ExchangeModal({ isOpen, onClose, sale, onDone }) {
                                     <button type="button" disabled={l.left === 0}
                                         onClick={() => { setLineId(l.id); setTarget(null); setQuantity(1); }}
                                         className={`w-full text-start rounded-lg border p-3 transition-colors disabled:opacity-50 ${l.id === lineId ? 'border-indigo-500 bg-indigo-500/10' : 'border-dark-border hover:border-zinc-500'}`}>
-                                        <span className="block font-medium truncate">{lineText(l)}</span>
+                                        <span className="block font-medium truncate" title={lineText(l)}>{lineText(l)}</span>
                                         <span className="block text-xs text-zinc-500">
                                             {t('exchange.lineInfo', { sold: l.quantity, left: l.left })} · <bdi>{formatMoney(l.unit_price)}</bdi>
                                         </span>
@@ -149,7 +149,7 @@ export default function ExchangeModal({ isOpen, onClose, sale, onDone }) {
                                         <button key={v.id} type="button" disabled={out}
                                             onClick={() => setTarget({ variantId: v.id, label: `${line.product_name} · ${variantLabel(v)}` })}
                                             className={`rounded-lg border p-2 text-start text-sm disabled:opacity-40 ${target?.variantId === v.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-dark-border hover:border-zinc-500'}`}>
-                                            <span className="block font-medium truncate">{variantLabel(v)}</span>
+                                            <span className="block font-medium truncate" title={variantLabel(v)}>{variantLabel(v)}</span>
                                             <span className="block text-xs text-zinc-500">{out ? t('dash.stock.out') : t('exchange.inStock', { n: v.stock_quantity })}</span>
                                         </button>
                                     );

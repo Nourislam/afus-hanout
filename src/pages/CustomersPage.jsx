@@ -15,12 +15,11 @@ import { Table, TableHead, TableBody, TableRow, TableCell, TableHeader, EmptySta
 import { toast } from '../components/ui/Toast';
 import { v4 as uuid } from 'uuid';
 import { ExcelImport } from '../components/ui/ExcelImport';
-import { FileSpreadsheet } from 'lucide-react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAuthStore, PERMISSIONS } from '../stores/authStore';
 import { paymentLabel } from '../lib/payments';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
-import { ExportButton } from '../components/ui/ExportButton';
+import { ExportButton, ExcelIcon } from '../components/ui/ExportButton';
 
 // Phone numbers are compared by their digits only ("0555 12 34 56" = "0555123456")
 const digits = (v) => String(v || '').replace(/\D/g, '');
@@ -154,7 +153,7 @@ export default function CustomersPage() {
                     <>
                         <ExportButton kind="customers" label={t('export.customers')} />
                         <Button variant="secondary" onClick={() => setShowImportModal(true)}>
-                            <FileSpreadsheet className="w-4 h-4" />
+                            <ExcelIcon direction="up" />
                             {t('common.importExcel')}
                         </Button>
                         <Button onClick={() => { setEditingCustomer(null); setShowModal(true); }}>

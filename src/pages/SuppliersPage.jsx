@@ -17,8 +17,7 @@ import {
     AlertCircle,
     PackageCheck,
     Clock,
-    FileSpreadsheet,
-} from 'lucide-react';
+    } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Card } from '../components/ui/Card';
@@ -28,7 +27,7 @@ import { toast } from '../components/ui/Toast';
 import SupplierHistoryModal from '../components/modals/SupplierHistoryModal';
 import { useSettingsStore } from '../stores/settingsStore';
 import { effectiveFeatures } from '../lib/features';
-import { ExportButton } from '../components/ui/ExportButton';
+import { ExportButton, ExcelIcon } from '../components/ui/ExportButton';
 import { ExcelImport } from '../components/ui/ExcelImport';
 
 const EMPTY_FORM = { name: '', contact_person: '', email: '', phone: '', address: '', website: '', notes: '' };
@@ -155,7 +154,7 @@ export default function SuppliersPage() {
                     <>
                         <ExportButton kind="suppliers" label={t('export.suppliers')} />
                         <Button variant="secondary" onClick={() => setShowImport(true)} data-testid="suppliers-import">
-                            <FileSpreadsheet className="w-4 h-4" /> {t('common.importExcel')}
+                            <ExcelIcon direction="up" /> {t('common.importExcel')}
                         </Button>
                         <Button onClick={() => setShowModal(true)}>
                             <Plus className="w-4 h-4" />

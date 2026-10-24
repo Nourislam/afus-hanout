@@ -62,7 +62,7 @@ export function WebsiteOrdersPage() {
                     : (
                         <section className="card space-y-3 max-w-xl" data-testid="website-orders-none">
                             <p className="text-sm text-zinc-300">{t('website.ordersPage.none')}</p>
-                            <Link className="btn btn-primary px-3 py-1.5 text-sm inline-flex" to="/website">{t('website.ordersPage.create')}</Link>
+                            <Link className="btn btn-primary h-8 px-3 text-sm inline-flex" to="/website">{t('website.ordersPage.create')}</Link>
                         </section>
                     )}
             </div>
@@ -100,7 +100,7 @@ function WebsiteDashboard({ site, setSite, preview, busy, run }) {
                     <section className="card space-y-2" data-testid="website-orders-link">
                         <h2 className="font-semibold flex items-center gap-2"><ShoppingBag className="w-4 h-4 text-indigo-300" /> {t('website.ordersPage.title')}</h2>
                         <p className="text-xs text-zinc-500">{t('website.ordersPage.subtitle')}</p>
-                        <Link className="btn btn-secondary px-3 py-1.5 text-sm inline-flex" to="/website-orders" data-testid="website-open-orders">{t('website.ordersPage.open')}</Link>
+                        <Link className="btn btn-secondary h-8 px-3 text-sm inline-flex" to="/website-orders" data-testid="website-open-orders">{t('website.ordersPage.open')}</Link>
                     </section>
                     {/* What the website will show (read from the catalogue) */}
                     <section className="card space-y-3 xl:col-span-2" data-testid="website-preview">

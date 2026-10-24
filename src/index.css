@@ -158,8 +158,10 @@ textarea.ltr {
 
 /* Custom Components */
 @layer components {
+  /* One height per size whatever the variant or the content (text or icon):
+     the border is always there, transparent when the variant has none */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-150 inline-flex items-center justify-center gap-2 whitespace-nowrap select-none disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply h-10 px-4 border border-transparent rounded-lg font-medium transition-colors duration-150 inline-flex items-center justify-center gap-2 whitespace-nowrap select-none disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-primary {
@@ -238,12 +240,14 @@ textarea.ltr {
     @apply w-full text-sm;
   }
 
+  /* Narrower cells on a small window, and a long column name may take two
+     lines: the columns fit instead of scrolling */
   .table th {
-    @apply px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-zinc-500 bg-dark-secondary border-b border-dark-border whitespace-nowrap;
+    @apply px-3 xl:px-4 py-3 text-start align-bottom text-xs leading-4 font-semibold uppercase tracking-wide text-zinc-500 bg-dark-secondary border-b border-dark-border;
   }
 
   .table td {
-    @apply px-4 py-3 border-b border-dark-border/70;
+    @apply px-3 xl:px-4 py-3 border-b border-dark-border/70;
   }
 
   .table tr:last-child td {
@@ -377,15 +381,18 @@ textarea.ltr {
     @apply flex-1 overflow-y-auto p-6;
   }
 
+  /* Always one line, 40px high like the fields and buttons beside it */
   .segmented {
-    @apply inline-flex flex-wrap max-w-full items-center gap-1 p-1 rounded-lg bg-dark-tertiary border border-dark-border;
+    @apply inline-flex flex-nowrap max-w-full items-center gap-1 p-[3px] rounded-lg bg-dark-tertiary border border-dark-border;
   }
 
-  .segmented > button {
+  .segmented > button,
+  .segmented > .segmented-slot > button {
     @apply px-3 h-8 rounded-md text-sm font-medium text-zinc-400 hover:text-white transition-colors whitespace-nowrap;
   }
 
-  .segmented > button.active {
+  .segmented > button.active,
+  .segmented > .segmented-slot > button.active {
     @apply bg-dark-secondary text-white shadow-sm shadow-black/40;
   }
 }
@@ -395,7 +402,9 @@ textarea.ltr {
 html.theme-light .text-white,
 html.theme-light .hover\:text-white:hover,
 html.theme-light .segmented > button.active,
-html.theme-light .segmented > button:hover {
+html.theme-light .segmented > button:hover,
+html.theme-light .segmented > .segmented-slot > button.active,
+html.theme-light .segmented > .segmented-slot > button:hover {
   color: rgb(var(--fg));
 }
 
@@ -481,7 +490,8 @@ html.theme-light :is(.btn-primary, .btn-success, .btn-danger, .btn-warning, .num
   html.theme-light .text-blue-400, html.theme-light .hover\:text-blue-400:hover { color: #2563eb; }
 
 html.theme-light .modal-content,
-html.theme-light .segmented > button.active {
+html.theme-light .segmented > button.active,
+html.theme-light .segmented > .segmented-slot > button.active {
   box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.18);
 }
 

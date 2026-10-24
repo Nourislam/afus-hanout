@@ -126,7 +126,7 @@ function MainShop({ view, run, busy }) {
                             <li key={s.id} className="flex items-center gap-3 py-2.5">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-none" />
                                 <span className="flex-1 min-w-0">
-                                    <span className="block font-medium truncate">{s.name}</span>
+                                    <span className="block font-medium truncate" title={s.name}>{s.name}</span>
                                     <span className="block text-xs text-zinc-500">{t('shops.list.seen', { date: formatDate(s.lastSeen || s.joinedAt, 'datetime') })}</span>
                                 </span>
                                 <Button size="sm" variant="ghost" onClick={() => setRemoving(s)} aria-label={t('shops.list.remove')}><Trash2 className="w-4 h-4" /></Button>

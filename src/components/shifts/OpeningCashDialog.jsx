@@ -121,7 +121,7 @@ export default function OpeningCashDialog({ employee, onSuccess, onCancel }) {
                 <div className="flex gap-3">
                     <button
                         onClick={onCancel}
-                        className="btn btn-secondary flex-1"
+                        className="btn btn-secondary flex-1 h-12"
                         disabled={loading}
                     >
                         {t('common.cancel')}

@@ -27,7 +27,7 @@ export default {
     'brands.show': ["Show in the list", "Afficher dans la liste", "إظهار في القائمة"],
     'brands.showHidden': ["Show hidden brands ({n})", "Afficher les marques masquées ({n})", "إظهار الماركات المخفية ({n})"],
     'brands.hideHidden': ["Hide hidden brands", "Masquer les marques masquées", "إخفاء الماركات المخفية"],
-    'brands.hint': ["Renaming a brand also renames it on its products. Hidden brands are not offered when entering products.", "Renommer une marque la renomme aussi sur ses articles. Les marques masquées ne sont plus proposées.", "تغيير اسم الماركة يغيّره في سلعها أيضاً. الماركات المخفية لا تظهر عند الإدخال."],
+    'brands.hint': ["A new name applies to its products. Hidden brands are not offered.", "Le nouveau nom s'applique aux articles. Marques masquées : non proposées.", "الاسم الجديد يُطبق على سلعها. الماركة المخفية لا تُقترح."],
     'brands.pick': ["Choose a brand", "Choisir une marque", "اختر الماركة"],
     'brands.none': ["No brand", "Sans marque", "بدون ماركة"],
     'brands.addNamed': ["Add \"{name}\"", "Ajouter « {name} »", "إضافة «{name}»"],

@@ -15,10 +15,13 @@ export function PageHeader({ icon: Icon, title, subtitle, actions, children, her
     if (embedded || !hero) {
         if (!actions && !children) return title && !embedded ? <h1 className="sr-only">{title}</h1> : null;
         return (
-            <div className="flex-none flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-6 py-3 border-b border-dark-border bg-dark-primary" data-testid="page-toolbar">
+            // Lined up on the first line (fields, tabs and buttons are all 40px
+            // high); when the window is too narrow the buttons go to the next
+            // line at the end side, the tabs are never squeezed onto two lines
+            <div className="flex-none flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-6 py-3 border-b border-dark-border bg-dark-primary" data-testid="page-toolbar">
                 {title && !embedded && <h1 className="sr-only">{title}</h1>}
-                <div className="flex-1 min-w-[240px]">{children}</div>
-                {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+                <div className="flex-1">{children}</div>
+                {actions && <div className="flex flex-wrap items-center justify-end gap-2 ms-auto">{actions}</div>}
             </div>
         );
     }

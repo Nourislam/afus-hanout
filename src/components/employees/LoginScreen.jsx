@@ -219,7 +219,7 @@ export default function LoginScreen() {
                                             {employee.name.charAt(0)}
                                         </span>
                                     </div>
-                                    <p className="font-medium truncate">{employee.name}</p>
+                                    <p className="font-medium truncate" title={employee.name}>{employee.name}</p>
                                     <p className="text-xs text-zinc-500">{t(`role.${employee.role}`)}</p>
                                     {demo.active && demoPin(employee) && (
                                         <p className="mt-2 text-sm font-semibold text-orange-300 tabular" data-testid="demo-pin">{t('demo.loginPin', { pin: demoPin(employee) })}</p>

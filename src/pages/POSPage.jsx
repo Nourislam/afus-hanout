@@ -360,10 +360,11 @@ export default function POSPage() {
                                     }
                                 }}
                                 placeholder={t('pos.searchPlaceholder')}
-                                className="input h-11 ps-10 pe-24 text-base"
+                                className="input h-11 ps-10 pe-10 xl:pe-24 text-base"
                             />
                             <span className="absolute end-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-[11px] text-emerald-300 bg-emerald-500/10 rounded-md px-2 py-1 pointer-events-none">
-                                <ScanLine className="w-3.5 h-3.5" /> {t('pos.scannerReady')}
+                                {/* Below 1280px only the icon: the search words stay readable */}
+                                <ScanLine className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{t('pos.scannerReady')}</span><span className="sr-only xl:hidden">{t('pos.scannerReady')}</span>
                             </span>
                         </div>
                         {brands.length > 0 && (
@@ -478,13 +479,15 @@ export default function POSPage() {
                                         return (
                                             <tr key={product.id} className={`cursor-pointer ${out ? 'opacity-45' : ''}`} onClick={() => !out && handleProductClick(product)}>
                                                 <td className="w-14"><ProductImage product={product} className="w-10 h-12" /></td>
+                                                {/* Narrow list (small window, ticket beside it): the sizes go under the name */}
                                                 <td>
                                                     <p className="font-medium">{product.name}</p>
                                                     <p className="text-xs text-zinc-500">{[product.brand, product.category_name].filter(Boolean).join(' · ')}</p>
+                                                    <div className="xl:hidden mt-1"><VariantHints product={product} /></div>
                                                 </td>
-                                                <td className="w-48"><VariantHints product={product} /></td>
-                                                <td className="w-20 text-zinc-400 tabular">{product.stock_quantity}</td>
-                                                <td className="w-32 text-end font-semibold text-indigo-300 tabular">{money(price)}</td>
+                                                <td className="hidden xl:table-cell w-48"><VariantHints product={product} /></td>
+                                                <td className="text-zinc-400 tabular whitespace-nowrap">{product.stock_quantity}</td>
+                                                <td className="text-end font-semibold text-indigo-300 tabular whitespace-nowrap">{money(price)}</td>
                                             </tr>
                                         );
                                     })}
@@ -521,7 +524,7 @@ export default function POSPage() {
                         <UserRound className="w-4 h-4 text-zinc-500" />
                         {cart.customer ? (
                             <>
-                                <span className="font-medium truncate">{cart.customer.name}</span>
+                                <span className="font-medium truncate" title={cart.customer.name}>{cart.customer.name}</span>
                                 {!!cart.customer.is_wholesale && <span className="badge bg-sky-500/15 text-sky-300 flex-none" data-testid="pos-wholesale">{t('wholesale.badge')}</span>}
                                 {cart.customer.phone && <span className="text-zinc-500 ltr truncate">{cart.customer.phone}</span>}
                                 <span className="flex-1" />
@@ -557,7 +560,7 @@ export default function POSPage() {
                                 <div className="flex items-start gap-3 p-2.5">
                                     <ProductImage product={item} className="w-11 h-14 flex-none" />
                                     <button type="button" className="flex-1 min-w-0 text-start" onClick={() => setEditingLine(isEditing ? null : item.id)}>
-                                        <p className="font-medium text-sm truncate">{item.product_name}</p>
+                                        <p className="font-medium text-sm truncate" title={item.product_name}>{item.product_name}</p>
                                         {(item.color || item.size || item.variant_label) && (
                                             <p className="text-xs text-zinc-300 flex items-center gap-1.5 mt-0.5">
                                                 {hex && <span className="w-2.5 h-2.5 rounded-full ring-1 ring-zinc-600" style={{ background: hex }} />}

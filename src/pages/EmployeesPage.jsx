@@ -6,6 +6,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Plus, Edit2, Trash2, UserCog, Shield, ShieldCheck, User, Clock, Receipt, ShoppingBag, Banknote, Printer } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { formatDuration } from '../components/shifts/ShiftSummaryDialog';
+import { ExcelIcon } from '../components/ui/ExportButton';
 import { Button } from '../components/ui/Button';
 import { Input, SearchInput } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
@@ -16,7 +17,6 @@ import { toast } from '../components/ui/Toast';
 import { useAuthStore } from '../stores/authStore';
 import { v4 as uuid } from 'uuid';
 import { ExcelImport } from '../components/ui/ExcelImport';
-import { FileSpreadsheet } from 'lucide-react';
 import CashierRights from '../components/employees/CashierRights';
 import CommissionsBoard from '../components/employees/CommissionsBoard';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -76,12 +76,14 @@ function DrawerHistory({ shifts }) {
                 <thead>
                     <tr>
                         <th>{t('employees.employee')}</th>
-                        <th>{t('employees.opened')}</th>
-                        <th>{t('employees.closedAt')}</th>
+                        {/* Below 1280px the closing time and the counted cash go under the opening time and
+                            the expected cash: every figure stays, the table fits without scrolling */}
+                        <th>{t('employees.opened')}<span className="xl:hidden"> · {t('employees.closedAt')}</span></th>
+                        <th className="hidden xl:table-cell">{t('employees.closedAt')}</th>
                         <th>{t('employees.hoursWorked')}</th>
                         <th>{t('reports.totalSales')}</th>
-                        <th>{t('shift.expectedCash')}</th>
-                        <th>{t('shift.closingCash')}</th>
+                        <th>{t('shift.expectedCash')}<span className="xl:hidden"> · {t('shift.closingCash')}</span></th>
+                        <th className="hidden xl:table-cell">{t('shift.closingCash')}</th>
                         <th>{t('employees.cashDiff')}</th>
                         <th><span className="sr-only">{t('z.print')}</span></th>
                     </tr>
@@ -90,15 +92,23 @@ function DrawerHistory({ shifts }) {
                     {shifts.map(shift => {
                         const stats = shift.stats || {};
                         const diff = stats.cash_difference;
+                        const closed = shift.end_time ? formatLocalDate(shift.end_time, 'datetime') : <span className="badge bg-emerald-500/15 text-emerald-300">{t('shift.open')}</span>;
+                        const counted = shift.closing_cash === null || shift.closing_cash === undefined ? '—' : formatMoney(shift.closing_cash);
                         return (
                             <tr key={shift.id}>
                                 <td className="font-medium">{shift.employee_name}</td>
-                                <td className="whitespace-nowrap">{formatLocalDate(shift.start_time, 'datetime')}</td>
-                                <td className="whitespace-nowrap">{shift.end_time ? formatLocalDate(shift.end_time, 'datetime') : <span className="badge bg-emerald-500/15 text-emerald-300">{t('shift.open')}</span>}</td>
+                                <td className="whitespace-nowrap">
+                                    {formatLocalDate(shift.start_time, 'datetime')}
+                                    <div className="xl:hidden mt-0.5 text-xs text-zinc-500">{closed}</div>
+                                </td>
+                                <td className="hidden xl:table-cell whitespace-nowrap">{closed}</td>
                                 <td className="tabular">{formatDuration(stats.duration_minutes)}</td>
                                 <td className="tabular">{formatMoney(stats.total_sales || 0)}</td>
-                                <td className="tabular">{formatMoney(stats.expected_cash || 0)}</td>
-                                <td className="tabular">{shift.closing_cash === null || shift.closing_cash === undefined ? '—' : formatMoney(shift.closing_cash)}</td>
+                                <td className="tabular">
+                                    {formatMoney(stats.expected_cash || 0)}
+                                    <div className="xl:hidden mt-0.5 text-xs text-zinc-500">{counted}</div>
+                                </td>
+                                <td className="hidden xl:table-cell tabular">{counted}</td>
                                 <td className={`tabular font-medium ${diff === null || diff === undefined ? '' : diffTone(diff)}`}>{diff === null || diff === undefined ? '—' : signedMoney(diff)}</td>
                                 <td>
                                     {/* The closing report (Z) again */}
@@ -225,7 +235,7 @@ export default function EmployeesPage() {
                 actions={isAdmin() && (
                     <>
                         <Button variant="secondary" onClick={() => setShowImportModal(true)}>
-                            <FileSpreadsheet className="w-4 h-4" /> {t('common.importExcel')}
+                            <ExcelIcon direction="up" /> {t('common.importExcel')}
                         </Button>
                         <Button onClick={() => { setEditingEmployee(null); setShowModal(true); }}>
                             <Plus className="w-4 h-4" /> {t('employees.add')}

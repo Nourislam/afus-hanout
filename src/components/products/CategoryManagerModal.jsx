@@ -125,7 +125,7 @@ export function CategoryManager({ categories, onSave, layout = 'list' }) {
                                     <>
                                         <div className="flex items-center gap-3 min-w-0">
                                             <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: category.color }} />
-                                            <span className="font-medium truncate">{category.name}</span>
+                                            <span className="font-medium truncate" title={category.name}>{category.name}</span>
                                             {category.product_count !== undefined && <span className="text-xs text-zinc-500 shrink-0">{t('brands.productCount', { n: category.product_count })}</span>}
                                         </div>
                                         <div className="flex items-center">

@@ -146,8 +146,8 @@ function SeasonRow({ row, label, money, canDiscount, open, onToggle, onClear }) 
                 {money && <td className={row.profit < 0 ? 'text-red-300' : ''}><Money value={row.profit} /></td>}
                 <td>
                     {canDiscount && row.clearance.length > 0 && (
-                        <Button size="sm" variant="secondary" className="whitespace-nowrap" onClick={onClear} data-testid={`season-clear-${row.key}`}>
-                            <Tag className="w-4 h-4" /> {t('season.clearance')}
+                        <Button size="sm" variant="secondary" className="whitespace-nowrap" onClick={onClear} data-testid={`season-clear-${row.key}`} title={t('season.clearance')} aria-label={t('season.clearance')}>
+                            <Tag className="w-4 h-4" /> <span className="hidden xl:inline">{t('season.clearance')}</span>
                         </Button>
                     )}
                 </td>

@@ -286,7 +286,7 @@ export function VariantEditor({
                         <input className="input input-sm w-36" value={customColor} placeholder={t('variants.otherColor')}
                             onChange={(e) => setCustomColor(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomColor(); } }} />
-                        <Button type="button" variant="ghost" size="icon" onClick={addCustomColor} aria-label="add"><Plus className="w-4 h-4" /></Button>
+                        <Button type="button" variant="ghost" size="iconSm" onClick={addCustomColor} aria-label={t('common.add')} title={t('common.add')}><Plus className="w-4 h-4" /></Button>
                     </div>
                 </div>
                 )}

@@ -80,7 +80,7 @@ export default function CustomerPickerModal({ isOpen, onClose, onSelect }) {
                                 <button key={c.id} type="button" onClick={() => onSelect(c)}
                                     className="w-full flex items-center justify-between gap-3 p-3 rounded-lg bg-dark-tertiary/60 hover:bg-dark-tertiary text-start">
                                     <div className="min-w-0">
-                                        <p className="font-medium truncate">{c.name}</p>
+                                        <p className="font-medium truncate" title={c.name}>{c.name}</p>
                                         <p className="text-xs text-zinc-500 ltr text-start">{c.phone || '—'}</p>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs flex-none">

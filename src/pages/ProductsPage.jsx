@@ -3,7 +3,7 @@ import { formatMoney } from '../i18n/format';
 import { useState, useEffect } from 'react';
 import ProductMatrixModal from '../components/products/ProductMatrixModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Package, Grid, List, FileSpreadsheet, QrCode, Tag, X, Grid3x3 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Package, Grid, List, QrCode, Tag, X, Grid3x3 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { PageHeader } from '../components/ui/PageHeader';
 import { SearchInput } from '../components/ui/Input';
@@ -21,7 +21,7 @@ import { translateError } from '../i18n/errors';
 import { useSettingsStore } from '../stores/settingsStore';
 import { ProductFormModal } from '../components/products/ProductFormModal';
 import { lacksCost, readFilter } from '../lib/listFilters';
-import { ExportButton } from '../components/ui/ExportButton';
+import { ExportButton, ExcelIcon } from '../components/ui/ExportButton';
 
 export default function ProductsPage() {
     const [products, setProducts] = useState([]);
@@ -174,7 +174,7 @@ export default function ProductsPage() {
                             <PermissionGate permission={PERMISSIONS.PRODUCTS_CREATE}>
                                 <div className="flex items-center gap-2">
                                     <Button variant="secondary" onClick={() => setShowExcelImport(true)}>
-                                        <FileSpreadsheet className="w-4 h-4" />
+                                        <ExcelIcon direction="up" />
                                         {t('common.importExcel')}
                                     </Button>
                                     <Button onClick={() => {

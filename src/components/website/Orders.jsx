@@ -1,6 +1,6 @@
 // Website orders page: the orders, the customers and their history, statuses and labels.
 import { useEffect, useState } from 'react';
-import { RefreshCw, CheckCircle2, Tag, PackageCheck, XCircle, ShoppingBag, Users, Undo2, Printer, PhoneCall, FileDown } from 'lucide-react';
+import { RefreshCw, CheckCircle2, Tag, PackageCheck, XCircle, ShoppingBag, Users, Undo2, Printer, PhoneCall, FileDown, MessageCircle } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { StatTile } from '../ui/StatTile';
@@ -70,12 +70,12 @@ export function WebsiteOrders() {
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm" data-testid="website-orders-table">
                                 <thead className="text-zinc-500 text-xs">
-                                    <tr>{['date', 'customer', 'phone', 'article', 'options', 'quantity', 'where', 'status'].map(k => <th key={k} className="text-start font-medium py-2 px-2 whitespace-nowrap">{t(`website.orders.col.${k}`)}</th>)}</tr>
+                                    <tr>{['date', 'customer', 'phone', 'article', 'options', 'quantity', 'where', 'status'].map(k => <th key={k} className="text-start align-bottom font-medium py-2 px-2">{t(`website.orders.col.${k}`)}</th>)}</tr>
                                 </thead>
                                 <tbody>
                                     {data.orders.map(o => (
                                 <tr key={o.id} className="border-t border-dark-border align-top">
-                                    <td className="py-2 px-2 whitespace-nowrap">{formatDate(o.createdAt, 'datetime')}</td>
+                                    <td className="py-2 px-2 min-w-[5.5rem]">{formatDate(o.createdAt, 'datetime')}</td>
                                     <td className="py-2 px-2">
                                         <bdi>{o.customerName}</bdi>
                                         {o.customer && <CustomerBadge c={o.customer} onOpen={() => setHistory(o.phoneKey)} />}
@@ -528,7 +528,7 @@ function OrderTools({ order, onChanged }) {
         <div className="space-y-1.5 min-w-[11rem]" data-testid="website-order-tools">
             <Button size="sm" variant="secondary" className="w-full" loading={busy === 'wa'} data-testid={`website-order-whatsapp-${order.number}`}
                 onClick={() => go('wa', () => window.electronAPI.website.confirmMessage({ id: order.id, open: true }))}>
-                <PhoneCall className="w-4 h-4" /> {t('website.orders.whatsappConfirm')}
+                <MessageCircle className="w-4 h-4" /> {t('website.orders.whatsappConfirm')}
             </Button>
             <div className="flex gap-1">
                 <input className="input input-sm flex-1 min-w-0 font-mono" dir="ltr" value={number} onChange={(e) => setNumber(e.target.value)} placeholder={t('website.orders.trackingPh')}

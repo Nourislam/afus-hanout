@@ -94,7 +94,7 @@ export default function StockTab({ access, features, ranges }) {
                                         {matrixButton(row.product_id)}
                                     </>
                                 )}>
-                                    <p className="font-medium truncate">{piece(row)}</p>
+                                    <p className="font-medium truncate" title={piece(row)}>{piece(row)}</p>
                                     <p className="text-xs text-zinc-500">{t('dash.runOut.left', { n: row.stock })} · {t('dash.runOut.pace', { sold: row.sold, perDay: row.per_day })}</p>
                                 </Row>
                             ))}
@@ -134,7 +134,7 @@ export default function StockTab({ access, features, ranges }) {
                         <ul className="divide-y divide-dark-border">
                             {data.outOfStock.map(row => (
                                 <Row key={row.variant_id || row.product_id} aside={<span className="badge bg-red-500/15 text-red-300 whitespace-nowrap">{t('dash.stock.out')}</span>}>
-                                    <p className="font-medium truncate">{piece(row)}</p>
+                                    <p className="font-medium truncate" title={piece(row)}>{piece(row)}</p>
                                     <p className="text-xs text-zinc-500">{t('dash.stock.sold30', { n: row.sold })}</p>
                                 </Row>
                             ))}
@@ -147,7 +147,7 @@ export default function StockTab({ access, features, ranges }) {
                         <ul className="divide-y divide-dark-border">
                             {data.low.map(row => (
                                 <Row key={row.variant_id || row.product_id} aside={<span className="badge bg-amber-500/15 text-amber-300 whitespace-nowrap">{t('dash.selling.left', { n: row.stock_quantity })}</span>}>
-                                    <p className="font-medium truncate">{piece(row)}</p>
+                                    <p className="font-medium truncate" title={piece(row)}>{piece(row)}</p>
                                 </Row>
                             ))}
                         </ul>
@@ -159,7 +159,7 @@ export default function StockTab({ access, features, ranges }) {
                         <ul className="divide-y divide-dark-border">
                             {data.missingSizes.map(row => (
                                 <Row key={row.product_id}>
-                                    <p className="font-medium truncate">{row.product_name}</p>
+                                    <p className="font-medium truncate" title={row.product_name}>{row.product_name}</p>
                                     <p className="text-xs">
                                         <span className="text-red-300">{t('dash.stock.missing', { sizes: row.missing.map(sizeLabel).join(' · ') })}</span>
                                         <span className="text-zinc-500"> — {t('dash.stock.available', { sizes: row.available.map(sizeLabel).join(' · ') })}</span>
@@ -187,7 +187,7 @@ export default function StockTab({ access, features, ranges }) {
                                             {matrixButton(row.product_id)}
                                         </>
                                     )}>
-                                        <p className="font-medium truncate">{row.name}</p>
+                                        <p className="font-medium truncate" title={row.name}>{row.name}</p>
                                         <p className="text-xs text-zinc-500">
                                             {access.stockValue ? <>{t('dash.dead.row', { n: row.stock, cost: '' })}<Money value={row.cost_value} /></> : t('dash.slow.pieces', { n: row.stock })}
                                             {' · '}
