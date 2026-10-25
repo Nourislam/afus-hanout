@@ -164,7 +164,7 @@ export default function CustomersPage() {
                 )}
             >
                 <div className="flex flex-wrap items-center gap-3">
-                    <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder={t('partners.customerSearch')} className="w-full sm:w-96" />
+                    <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder={t('partners.customerSearch')} className="flex-1 min-w-[12rem] max-w-sm" />
                     {showCredit && (
                         <div className="segmented">
                             <button type="button" className={!onlyOwing ? 'active' : ''} onClick={() => setOnlyOwing(false)}>

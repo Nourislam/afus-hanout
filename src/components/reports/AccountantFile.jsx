@@ -2,8 +2,9 @@
 // kridi paid in, stock), saved, then its folder opened to attach it to an
 // e-mail or a WhatsApp message (exportService.js accountantSheets). Owner only.
 import { useState } from 'react';
-import { Send, FolderOpen, FileDown } from 'lucide-react';
+import { Send, FolderOpen } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { ExcelIcon } from '../ui/ExportButton';
 import { Modal, ModalBody, ModalFooter } from '../ui/Modal';
 import { Select } from '../ui/Select';
 import { toast } from '../ui/Toast';
@@ -76,7 +77,7 @@ export function AccountantFile() {
                 <ModalFooter>
                     <Button variant="secondary" onClick={close}>{t('common.close')}</Button>
                     {!saved ? (
-                        <Button onClick={save} loading={busy} data-testid="accountant-save"><FileDown className="w-4 h-4" /> {t('acc.save')}</Button>
+                        <Button size="icon" onClick={save} loading={busy} data-testid="accountant-save" title={t('acc.save')} aria-label={t('acc.save')}>{!busy && <ExcelIcon />}</Button>
                     ) : (
                         <Button onClick={() => window.electronAPI.exports.showFile(saved.filePath)} data-testid="accountant-folder">
                             <FolderOpen className="w-4 h-4" /> {t('acc.folder')}

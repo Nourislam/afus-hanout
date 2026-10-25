@@ -3,7 +3,7 @@ export default {
     'demo.try': ["Try the demo shop", "Essayer la boutique de démo", "جرّب المحل التجريبي"],
     'demo.opening': ["Preparing the demo shop…", "Préparation de la boutique de démo…", "جاري تجهيز المحل التجريبي…"],
     'demo.entered': ["You are in the demo shop: try everything, nothing touches your real shop", "Vous êtes dans la boutique de démo : essayez tout, rien ne touche votre vraie boutique", "أنت في المحل التجريبي: جرّب كل شيء، لا شيء يمسّ محلك الحقيقي"],
-    'demo.banner': ["DEMO SHOP — sample data, kept apart from your real shop", "BOUTIQUE DE DÉMO — données d'exemple, séparées de votre vraie boutique", "وضع العرض — هذه البيانات تجريبية ومنفصلة عن محلك الحقيقي"],
+    'demo.banner': ["DEMO SHOP — sample data, kept apart from your real shop", "BOUTIQUE DE DÉMO — données d'exemple, séparées de votre boutique", "وضع العرض — هذه البيانات تجريبية ومنفصلة عن محلك الحقيقي"],
     'demo.reset': ["Start the demo again", "Recommencer la démo", "إعادة العرض للبداية"],
     'demo.resetTitle': ["Start the demo again?", "Recommencer la démo ?", "إعادة العرض للبداية؟"],
     'demo.resetText': ["Everything done in the demo shop is erased and the demo goes back to how it was at the start. Your real shop is not touched.", "Tout ce qui a été fait dans la boutique de démo est effacé et la démo revient à son état de départ. Votre vraie boutique n'est pas touchée.", "كل ما فعلته في المحل التجريبي سيُحذف ويعود العرض كما كان في البداية. محلك الحقيقي لا يتأثر."],

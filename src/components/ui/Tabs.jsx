@@ -1,6 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useT } from '../../i18n';
+import { Menu, MenuItem } from './Menu';
+import { ToolbarContext } from './PageHeader';
 
 /**
  * Tabs. Controlled with `value` + `onChange`, or uncontrolled with
@@ -9,15 +11,20 @@ import { useT } from '../../i18n';
  *
  * Always one line: the tabs that do not fit go into a "More" menu (the open
  * tab always stays in sight), so none is cut, hidden or put on a second line.
+ * In the top row of a screen they keep room for a few tabs: the buttons
+ * beside them go to the next line first.
  */
 export function Tabs({ tabs, value, defaultTab, onChange, variant = 'pills', className = '', testId = '' }) {
     const { t } = useT();
+    const inToolbar = useContext(ToolbarContext);
     const [internal, setInternal] = useState(defaultTab || tabs[0]?.id);
     const active = value ?? internal;
     const boxRef = useRef(null);
     const measureRef = useRef(null);
     const moreRef = useRef(null);
-    const [fit, setFit] = useState(tabs.length);
+    // The width of each tab (measured once per set of tabs) and the room there is
+    const [sizes, setSizes] = useState(null);
+    const [room, setRoom] = useState(0);
     const [open, setOpen] = useState(false);
     const underline = variant === 'underline';
     const signature = tabs.map(tab => `${tab.id}:${tab.label}:${tab.count ?? ''}`).join('|');
@@ -28,48 +35,52 @@ export function Tabs({ tabs, value, defaultTab, onChange, variant = 'pills', cla
         onChange?.(id);
     };
 
-    // How many tabs fit, from their real width (drawn once, out of sight)
+    // The tabs drawn once, out of sight: again only when they change (or the font loads)
     useLayoutEffect(() => {
-        const box = boxRef.current, measure = measureRef.current;
-        if (!box || !measure) return undefined;
-        const compute = () => {
+        const measure = measureRef.current;
+        if (!measure) return undefined;
+        const read = () => {
             const items = [...measure.children];
             const more = items.pop().getBoundingClientRect().width;
             const style = getComputedStyle(measure);
-            const gap = parseFloat(style.columnGap) || 0;
             const frame = parseFloat(style.paddingInlineStart) + parseFloat(style.paddingInlineEnd) + parseFloat(style.borderInlineStartWidth) + parseFloat(style.borderInlineEndWidth);
             const widths = items.map(el => el.getBoundingClientRect().width);
-            const room = box.clientWidth - frame;
-            const all = widths.reduce((sum, w) => sum + w, 0) + gap * Math.max(0, widths.length - 1);
-            if (all <= room + 0.5) { setFit(widths.length); return; }
-            let used = more, n = 0;
-            for (const w of widths) {
-                if (used + gap + w > room) break;
-                used += gap + w; n += 1;
-            }
-            setFit(Math.max(1, n));
+            setSizes({ widths, more, gap: parseFloat(style.columnGap) || 0, frame, all: measure.getBoundingClientRect().width });
         };
-        compute();
+        read();
         if (typeof ResizeObserver === 'undefined') return undefined;
-        const observer = new ResizeObserver(compute);
-        observer.observe(box);
+        const observer = new ResizeObserver(read);
         observer.observe(measure);
         return () => observer.disconnect();
     }, [signature, variant]);
 
-    // The menu closes on a click elsewhere or Escape
-    useEffect(() => {
-        if (!open) return undefined;
-        const onDown = (e) => { if (!moreRef.current?.contains(e.target)) setOpen(false); };
-        const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
-        document.addEventListener('mousedown', onDown);
-        document.addEventListener('keydown', onKey);
-        return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
-    }, [open]);
+    // The room follows the window
+    useLayoutEffect(() => {
+        const box = boxRef.current;
+        if (!box) return undefined;
+        const read = () => setRoom(box.clientWidth);
+        read();
+        if (typeof ResizeObserver === 'undefined') return undefined;
+        const observer = new ResizeObserver(read);
+        observer.observe(box);
+        return () => observer.disconnect();
+    }, []);
 
+    // The open tab first, then the others in their order, as long as they fit with "More"
     const at = tabs.findIndex(tab => tab.id === active);
-    let shown = tabs.map((_, i) => i).slice(0, fit);
-    if (at >= fit && fit > 0) shown = [...shown.slice(0, fit - 1), at];
+    let shown = tabs.map((_, i) => i);
+    if (sizes && room && sizes.all > room + 0.5) {
+        const { widths, more, gap, frame } = sizes;
+        const keep = new Set(at >= 0 ? [at] : []);
+        let used = frame + more + (at >= 0 ? gap + widths[at] : 0);
+        for (let i = 0; i < widths.length; i += 1) {
+            if (i === at) continue;
+            if (used + gap + widths[i] > room) break;
+            used += gap + widths[i];
+            keep.add(i);
+        }
+        shown = shown.filter(i => keep.has(i));
+    }
     const hidden = tabs.map((_, i) => i).filter(i => !shown.includes(i));
 
     const tabClass = (on) => underline
@@ -86,16 +97,17 @@ export function Tabs({ tabs, value, defaultTab, onChange, variant = 'pills', cla
         </>
     );
     const barClass = underline
-        ? 'flex items-center gap-1 border-b border-dark-border'
+        ? 'flex flex-nowrap items-center gap-1 border-b border-dark-border'
         : 'segmented';
-    const moreOn = hidden.includes(at);
+    // In the top row: room for all the tabs, or at least for a few of them
+    const minWidth = inToolbar && sizes ? `min(${Math.ceil(sizes.all)}px, 26rem)` : undefined;
 
     return (
-        <div ref={boxRef} className={`relative w-full min-w-0 [contain:inline-size] ${className}`}>
+        <div ref={boxRef} className={`relative w-full min-w-0 [contain:inline-size] ${className}`} style={{ minWidth }}>
             {/* Every tab, out of sight (and taking no room): their widths decide how many fit */}
             <div aria-hidden="true" className="absolute inset-0 overflow-hidden invisible pointer-events-none">
                 <div ref={measureRef} className={`${barClass} absolute top-0 start-0 w-max border-transparent`} style={{ maxWidth: 'none' }}>
-                    {tabs.map(tab => <button key={tab.id} type="button" tabIndex={-1} className={tabClass(tab.id === active)}>{content(tab, false)}</button>)}
+                    {tabs.map(tab => <button key={tab.id} type="button" tabIndex={-1} className={tabClass(false)}>{content(tab, false)}</button>)}
                     <button type="button" tabIndex={-1} className={tabClass(false)}>{t('nav.more')} <ChevronDown className="w-4 h-4" /></button>
                 </div>
             </div>
@@ -117,38 +129,29 @@ export function Tabs({ tabs, value, defaultTab, onChange, variant = 'pills', cla
                     );
                 })}
                 {hidden.length > 0 && (
-                    <div ref={moreRef} className="segmented-slot relative flex-none">
+                    <div ref={moreRef} className="segmented-slot flex-none">
                         <button
                             type="button"
                             aria-haspopup="menu"
                             aria-expanded={open}
                             onClick={() => setOpen(v => !v)}
-                            className={tabClass(moreOn)}
+                            className={tabClass(false)}
                             data-testid={testId ? `${testId}-more` : undefined}
                         >
                             {t('nav.more')} <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
                         </button>
-                        {open && (
-                            <div role="menu" className="absolute top-full end-0 mt-1 z-40 min-w-[12rem] p-1 rounded-lg bg-dark-secondary border border-dark-border shadow-xl shadow-black/40 flex flex-col">
-                                {hidden.map(i => {
-                                    const tab = tabs[i];
-                                    return (
-                                        <button
-                                            key={tab.id}
-                                            type="button"
-                                            role="menuitem"
-                                            onClick={() => select(tab.id)}
-                                            data-testid={testId ? `${testId}-${tab.id}` : undefined}
-                                            className="flex items-center gap-2 h-9 px-3 rounded-md text-sm text-start whitespace-nowrap text-zinc-300 hover:bg-dark-tertiary hover:text-white"
-                                        >
-                                            {tab.icon && <tab.icon className="w-4 h-4 flex-none" />}
-                                            <span className="flex-1">{tab.label}</span>
-                                            {tab.count !== undefined && <span className="text-xs text-zinc-500 tabular">{tab.count}</span>}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        )}
+                        <Menu open={open} onClose={() => setOpen(false)} anchorRef={moreRef}>
+                            {hidden.map(i => {
+                                const tab = tabs[i];
+                                return (
+                                    <MenuItem key={tab.id} onClick={() => select(tab.id)} testId={testId ? `${testId}-${tab.id}` : undefined}>
+                                        {tab.icon && <tab.icon className="w-4 h-4 flex-none" />}
+                                        <span className="flex-1">{tab.label}</span>
+                                        {tab.count !== undefined && <span className="text-xs text-zinc-500 tabular">{tab.count}</span>}
+                                    </MenuItem>
+                                );
+                            })}
+                        </Menu>
                     </div>
                 )}
             </div>

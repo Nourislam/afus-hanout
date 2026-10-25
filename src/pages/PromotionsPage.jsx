@@ -278,7 +278,7 @@ export default function PromotionsPage() {
                 )}
             >
                 <div className="flex flex-wrap items-center gap-3">
-                    <div className="relative w-72 max-w-full">
+                    <div className="relative flex-1 min-w-[12rem] max-w-sm">
                         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                         <input className="input ps-9" placeholder={t('promo.search')} value={query} onChange={(e) => setQuery(e.target.value)} />
                     </div>
@@ -290,7 +290,7 @@ export default function PromotionsPage() {
                             </button>
                         ))}
                     </div>
-                    <span className="text-sm text-zinc-500 hidden xl:inline">{t('promo.usesTotal', { n: totalUses })}</span>
+                    <span className="text-sm text-zinc-500 hidden 2xl:inline">{t('promo.usesTotal', { n: totalUses })}</span>
                 </div>
             </PageHeader>
 

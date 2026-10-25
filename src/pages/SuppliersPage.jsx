@@ -164,7 +164,7 @@ export default function SuppliersPage() {
                 )}
             >
                 <div className="flex flex-wrap items-center gap-3">
-                    <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder={t('partners.supplierSearch')} className="w-full sm:w-96" />
+                    <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder={t('partners.supplierSearch')} className="flex-1 min-w-[12rem] max-w-sm" />
                     <div className="segmented">
                         <button type="button" className={!onlyToPay ? 'active' : ''} onClick={() => setOnlyToPay(false)}>
                             {t('partners.all')} <span className="ms-1 text-zinc-500 tabular">{suppliers.length}</span>

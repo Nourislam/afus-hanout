@@ -62,7 +62,7 @@ export default {
     'employees.deleteFailed': ["Failed to delete employee", "Échec de la suppression", "تعذّر حذف العامل"],
     'employees.subtitle': ["Manage staff and access levels", "Gérer les vendeurs et leurs accès", "إدارة البائعين وصلاحياتهم"],
     'employees.add': ["Add Employee", "Ajouter un employé", "إضافة عامل"],
-    'employees.search': ["Search employees...", "Rechercher un employé…", "ابحث عن عامل…"],
+    'employees.search': ["Search employees…", "Nom de l'employé…", "ابحث عن عامل…"],
     'employees.none': ["No employees found", "Aucun employé", "لا يوجد عمال"],
     'employees.addHint': ["Add employees to manage staff access", "Ajoutez les vendeurs de la boutique", "أضف البائعين في المحل"],
     'employees.you': ["(You)", "(Vous)", "(أنت)"],

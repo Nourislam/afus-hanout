@@ -68,7 +68,7 @@ export default {
     'promo.total': ["Total Promotions", "Promotions", "عدد التخفيضات"],
     'promo.activeNow': ["Active Now", "En cours", "جارية الآن"],
     'promo.uses': ["Total Uses", "Utilisations", "مرات الاستعمال"],
-    'promo.search': ["Search by name or coupon code...", "Rechercher par nom ou code promo…", "ابحث بالاسم أو رمز التخفيض…"],
+    'promo.search': ["Name or coupon code…", "Nom ou code promo…", "ابحث بالاسم أو رمز التخفيض…"],
     'promo.none': ["No promotions found", "Aucune promotion", "لا توجد تخفيضات"],
     'promo.deactivate': ["Deactivate", "Désactiver", "إيقاف"],
     'promo.activate': ["Activate", "Activer", "تفعيل"],

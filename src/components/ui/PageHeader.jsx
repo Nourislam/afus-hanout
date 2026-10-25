@@ -4,6 +4,9 @@ import { createContext, useContext } from 'react';
 // tabs: the inner screen then shows only its toolbar, not a second title.
 export const EmbeddedPageContext = createContext(false);
 
+// True inside the top row of a screen (Tabs there keep room for a few tabs)
+export const ToolbarContext = createContext(false);
+
 /**
  * The row at the top of every screen: the page's tabs or tools on one side,
  * its buttons on the other, on one line. The page's name is the highlighted
@@ -20,7 +23,7 @@ export function PageHeader({ icon: Icon, title, subtitle, actions, children, her
             // line at the end side, the tabs are never squeezed onto two lines
             <div className="flex-none flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-6 py-3 border-b border-dark-border bg-dark-primary" data-testid="page-toolbar">
                 {title && !embedded && <h1 className="sr-only">{title}</h1>}
-                <div className="flex-1">{children}</div>
+                <div className="flex-1"><ToolbarContext.Provider value>{children}</ToolbarContext.Provider></div>
                 {actions && <div className="flex flex-wrap items-center justify-end gap-2 ms-auto">{actions}</div>}
             </div>
         );

@@ -198,10 +198,7 @@ export default function ReportsPage() {
                     </>
                 )}
             >
-                {/* At least 26rem for the tabs: on a narrow window the buttons go to the next line */}
-                <div className="min-w-[26rem]">
-                    <Tabs tabs={tabs.map(([id, label]) => ({ id, label }))} value={activeTab} onChange={setActiveTab} testId="reports-tab" />
-                </div>
+                <Tabs tabs={tabs.map(([id, label]) => ({ id, label }))} value={activeTab} onChange={setActiveTab} testId="reports-tab" />
             </PageHeader>
 
             <div className="page-body">

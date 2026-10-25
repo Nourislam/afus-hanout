@@ -523,7 +523,7 @@ export default {
     'website.delivery.wilaya': ["Wilaya", "Wilaya", "الولاية"],
     'website.delivery.off': ["Not delivered", "Non livrée", "لا يوجد توصيل"],
     'website.messages.title': ["WhatsApp confirmation message", "Message de confirmation WhatsApp", "رسالة التأكيد عبر واتساب"],
-    'website.messages.hint': ["Sent to the customer with “Confirm on WhatsApp” on each order.", "Envoyé au client avec « Via WhatsApp » sur chaque commande.", "تُرسل إلى الزبون بزر «تأكيد عبر واتساب» في كل طلب."],
+    'website.messages.hint': ["Sent to the customer with “Confirm on WhatsApp” on each order.", "Envoyé au client par le bouton « Via WhatsApp » de chaque commande.", "تُرسل إلى الزبون بزر «تأكيد عبر واتساب» في كل طلب."],
     'website.messages.fields': ["Filled in for each order: {name} {number} {shop} {items} {total} {delivery}", "Remplis pour chaque commande : {name} {number} {shop} {items} {total} {delivery}", "تُملأ لكل طلب: {name} {number} {shop} {items} {total} {delivery}"],
     'website.messages.reset': ["Back to the default message", "Revenir au message par défaut", "الرجوع إلى الرسالة الافتراضية"],
     'website.notify.title': ["New order alert", "Alerte de nouvelle commande", "تنبيه الطلب الجديد"],

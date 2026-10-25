@@ -75,7 +75,10 @@ export function ColorsPage() {
                         </form>
                     </PermissionGate>
                 )}
-            />
+            >
+                {/* The hint on the empty side of the top row: the colours fit the window below */}
+                <p className="form-hint min-h-10 flex items-center">{t('catalogCustom.colorsHint')}</p>
+            </PageHeader>
             <div className="page-body space-y-6">
                 {custom.customColors.length > 0 && (
                     <section>
@@ -110,7 +113,6 @@ export function ColorsPage() {
                             );
                         })}
                     </div>
-                    <p className="form-hint mt-3">{t('catalogCustom.colorsHint')}</p>
                 </section>
             </div>
         </div>

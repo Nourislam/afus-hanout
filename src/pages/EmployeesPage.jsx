@@ -232,14 +232,22 @@ export default function EmployeesPage() {
                 icon={UserCog}
                 title={t('nav.employees')}
                 subtitle={t('employees.subtitle')}
-                actions={isAdmin() && (
+                actions={(shown !== 'goals' || isAdmin()) && (
                     <>
-                        <Button variant="secondary" onClick={() => setShowImportModal(true)}>
-                            <ExcelIcon direction="up" /> {t('common.importExcel')}
-                        </Button>
-                        <Button onClick={() => { setEditingEmployee(null); setShowModal(true); }}>
-                            <Plus className="w-4 h-4" /> {t('employees.add')}
-                        </Button>
+                        {/* The period sits with the buttons: the row stays two lines at most */}
+                        {shown !== 'goals' && <div className="segmented">
+                            {PERIODS.map(id => (
+                                <button key={id} type="button" className={period === id ? 'active' : ''} onClick={() => setPeriod(id)}>{t(`employees.period.${id}`)}</button>
+                            ))}
+                        </div>}
+                        {isAdmin() && <>
+                            <Button variant="secondary" onClick={() => setShowImportModal(true)}>
+                                <ExcelIcon direction="up" /> {t('common.importExcel')}
+                            </Button>
+                            <Button onClick={() => { setEditingEmployee(null); setShowModal(true); }}>
+                                <Plus className="w-4 h-4" /> {t('employees.add')}
+                            </Button>
+                        </>}
                     </>
                 )}
             >
@@ -249,13 +257,8 @@ export default function EmployeesPage() {
                             <button key={id} type="button" className={shown === id ? 'active' : ''} onClick={() => setView(id)}>{t(`employees.view.${id}`)}</button>
                         ))}
                     </div>
-                    {shown !== 'goals' && <div className="segmented">
-                        {PERIODS.map(id => (
-                            <button key={id} type="button" className={period === id ? 'active' : ''} onClick={() => setPeriod(id)}>{t(`employees.period.${id}`)}</button>
-                        ))}
-                    </div>}
                     {shown === 'team' && (
-                        <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder={t('employees.search')} className="w-64 max-w-full" />
+                        <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder={t('employees.search')} className="flex-1 min-w-[12rem] max-w-sm" />
                     )}
                 </div>
             </PageHeader>

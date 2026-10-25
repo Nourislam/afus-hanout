@@ -33,7 +33,7 @@ export function PagesCard({ site, busy, run }) {
                     ))}
                 </nav>
                 <div className="space-y-2 min-w-0">
-                    <textarea className="input w-full min-h-[320px] leading-relaxed" value={pages[open] || ''} maxLength={6000} data-testid="website-page-text"
+                    <textarea className="input w-full min-h-[min(20rem,40vh)] leading-relaxed" value={pages[open] || ''} maxLength={6000} data-testid="website-page-text"
                         onChange={(e) => setPages(p => ({ ...p, [open]: e.target.value }))}
                         placeholder={t(open === 'about' ? 'website.pages.aboutPlaceholder' : 'website.pages.placeholder')} />
                     <div className="flex flex-wrap items-center justify-between gap-2">

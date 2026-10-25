@@ -381,7 +381,9 @@ textarea.ltr {
     @apply flex-1 overflow-y-auto p-6;
   }
 
-  /* Always one line, 40px high like the fields and buttons beside it */
+  /* Always one line, 40px high like the fields and buttons beside it (its
+     full width counts in the top row: the buttons beside it go to the next
+     line, it is never squeezed onto two) */
   .segmented {
     @apply inline-flex flex-nowrap max-w-full items-center gap-1 p-[3px] rounded-lg bg-dark-tertiary border border-dark-border;
   }
