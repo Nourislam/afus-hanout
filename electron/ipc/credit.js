@@ -20,7 +20,6 @@ module.exports = function register(ctx) {
     const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
     ipcMain.handle('db:creditSales:getAll', (_, params = {}) => {
-      console.log('db:creditSales:getAll called with:', params);
       let query = `
     SELECT cs.*, s.receipt_number, c.name as customer_name, c.email as customer_email, c.phone as customer_phone
     FROM credit_sales cs

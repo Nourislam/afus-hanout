@@ -39,13 +39,15 @@ export function Tabs({ tabs, value, defaultTab, onChange, variant = 'pills', cla
     useLayoutEffect(() => {
         const measure = measureRef.current;
         if (!measure) return undefined;
+        // The layout width (not the drawn one: a window still growing in would give less)
+        const width = (el) => parseFloat(getComputedStyle(el).width) || 0;
         const read = () => {
             const items = [...measure.children];
-            const more = items.pop().getBoundingClientRect().width;
+            const more = width(items.pop());
             const style = getComputedStyle(measure);
             const frame = parseFloat(style.paddingInlineStart) + parseFloat(style.paddingInlineEnd) + parseFloat(style.borderInlineStartWidth) + parseFloat(style.borderInlineEndWidth);
-            const widths = items.map(el => el.getBoundingClientRect().width);
-            setSizes({ widths, more, gap: parseFloat(style.columnGap) || 0, frame, all: measure.getBoundingClientRect().width });
+            const widths = items.map(width);
+            setSizes({ widths, more, gap: parseFloat(style.columnGap) || 0, frame, all: width(measure) });
         };
         read();
         if (typeof ResizeObserver === 'undefined') return undefined;
@@ -82,6 +84,8 @@ export function Tabs({ tabs, value, defaultTab, onChange, variant = 'pills', cla
         shown = shown.filter(i => keep.has(i));
     }
     const hidden = tabs.map((_, i) => i).filter(i => !shown.includes(i));
+    // Every tab fits again: the list is closed (it must not open by itself later)
+    useLayoutEffect(() => { if (!hidden.length) setOpen(false); }, [hidden.length]);
 
     const tabClass = (on) => underline
         ? `relative flex flex-none items-center gap-2 px-3 h-10 text-sm font-medium whitespace-nowrap transition-colors ${on ? 'text-white' : 'text-zinc-500 hover:text-zinc-200'}`

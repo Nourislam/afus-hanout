@@ -1,4 +1,3 @@
-console.log('=== MAIN.JS LOADED ===');
 const { app, BrowserWindow, ipcMain, dialog, protocol, shell, nativeTheme, Menu, safeStorage, clipboard, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -603,15 +602,11 @@ async function getSettings() {
 // CREDIT SALES HANDLERS
 // ==========================================
 
-console.log('Registering credit sales IPC handlers...');
-
 // Kridi invoices (services/creditSaleService.js)
 const creditSales = require('./services/creditSaleService');
 const generateInvoiceNumber = () => creditSales.nextInvoiceNumber(dbApi);
 /** A customer's debt for one sale (inside the caller's transaction). */
 const createCreditSale = (creditSale) => creditSales.createCreditSale(dbApi, creditSale);
-
-console.log('Electron main process started (Phase 5 - Credit Sales enabled)');
 
 // End of file
 

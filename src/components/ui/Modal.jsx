@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { t } from '../../i18n';
+import { ToolbarContext } from './PageHeader';
 
 // Dialogs open one above the other (a photo preview over the article form):
 // Escape closes only the one on top
@@ -66,7 +67,8 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', showClose
                         </button>
                     )}
                 </div>
-                {children}
+                {/* A window opened from a screen's top row is not part of that row */}
+                <ToolbarContext.Provider value={false}>{children}</ToolbarContext.Provider>
             </div>
         </div>
     );

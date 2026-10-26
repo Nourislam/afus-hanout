@@ -46,7 +46,7 @@ export function ExportButton({ kind, args = {}, label, variant = 'secondary', si
     const { busy, save } = useExport();
     const name = label || t('export.excel');
     return (
-        <Button variant={variant} size={size === 'iconSm' ? 'iconSm' : 'icon'} onClick={() => save({ kind, args })} loading={!!busy} className={className}
+        <Button variant={variant} size={size} onClick={() => save({ kind, args })} loading={!!busy} className={className}
             data-testid={testId || `export-${kind}`} title={`${name}\n${t('export.hint')}`} aria-label={name}>
             {!busy && <ExcelIcon />}
         </Button>
