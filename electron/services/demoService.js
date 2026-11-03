@@ -1,6 +1,6 @@
 /**
  * Demo shop: a complete clothing shop in its own folder and file
- * (<data folder>/demo/afus-boutique-demo.db, pictures in demo/images), never
+ * (<data folder>/demo/<file prefix>-demo.db, pictures in demo/images), never
  * in the shop's database. Switching only changes which file the program has
  * open (database/init.js "profile"); the shop's file is closed untouched and
  * opened again as it was.

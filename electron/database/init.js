@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { app } = require('electron');
 const { applyMigrations } = require('./migrations');
-const { databasePath } = require('../brand');
+const { databasePath, BRAND } = require('../brand');
 
 let db = null;
 let SQL = null;
@@ -16,7 +16,7 @@ let transactionDepth = 0;
 // a separate file in its own folder). The program always starts on 'real'.
 let profile = 'real';
 const DEMO_FOLDER = 'demo';
-const DEMO_FILE = 'afus-boutique-demo.db';
+const DEMO_FILE = `${BRAND.fileSlug}-demo.db`;
 
 /** Folder of the open shop's data: the data folder, or its demo/ subfolder. */
 function getDataRoot() {
