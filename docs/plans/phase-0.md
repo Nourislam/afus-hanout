@@ -270,10 +270,7 @@ Expected: FAIL, `productName: 'Afus Boutique'`.
 ```
 (`"version": "0.1.0"` only if Q2 is approved; otherwise keep `1.5.0`.) In `package-lock.json` set the top-level `"name"`/`"version"` and `packages[""].name`/`.version` to the same values.
 
-`tests/brand.test.js:13` (after Q1 approval):
-```js
-const OLD_NAMES = /storepos|store-pos|store_pos|com\.storepos|cirvex|storeclothes/i;
-```
+`tests/brand.test.js:13` (after Q1 approval): remove `hanout|` from the `OLD_NAMES` regular expression; every other name in it stays.
 `electron/brand.js` header comment: `Product identity, read by the main process.` and `/** Folder of the shop's data: %APPDATA%\<dataDirName> (macOS: ~/Library/Application Support/<dataDirName>). */`. `src/config/brand.js` first line: `// Product identity for the interface.`
 
 - [ ] **Step 4: Run the identity tests**
