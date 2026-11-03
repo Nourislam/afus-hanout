@@ -4,18 +4,11 @@ name: Build Windows Installer
 # downloadable artifact of the run. Nothing is published: no GitHub Release,
 # no GH_TOKEN needed.
 #
-# - workflow_dispatch: start it from the Actions tab ("Run workflow").
-#   GitHub only shows that button for workflows present on the default branch.
-# - push on the feature branch (only when this file changes): runs it from the
-#   feature branch without merging to main. Re-run it from the run page.
+# Start it from the Actions tab ("Run workflow"). GitHub only shows that
+# button for workflows present on the default branch.
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - claude/keen-wright-cushvb
-    paths:
-      - .github/workflows/build-windows-installer.yml
 
 permissions:
   contents: read
@@ -44,10 +37,15 @@ jobs:
       - name: Build Windows installer
         run: npm run electron:build:win -- --publish never
 
+      - name: Read the version
+        id: version
+        shell: bash
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: Afus-Boutique-Setup-1.2.0-win
-          path: release/Afus Boutique Setup *.exe
+          name: Afus-Hanout-Setup-${{ steps.version.outputs.version }}-win
+          path: release/Afus Hanout Setup *.exe
           if-no-files-found: error
           retention-days: 90
