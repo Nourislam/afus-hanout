@@ -1,8 +1,8 @@
 {
-  "name": "afus-boutique",
-  "productName": "Afus Boutique",
-  "version": "1.5.0",
-  "description": "Afus Boutique - offline sales and stock management for Algerian clothing and accessory shops (Windows and macOS desktop, Electron)",
+  "name": "afus-hanout",
+  "productName": "Afus Hanout",
+  "version": "0.1.0",
+  "description": "Afus Hanout - offline sales and stock management for Algerian grocery shops (Windows and macOS desktop, Electron)",
   "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
@@ -29,7 +29,7 @@
     "point-of-sale",
     "electron",
     "retail",
-    "clothing"
+    "grocery"
   ],
   "author": {
     "name": "Afus"
@@ -81,9 +81,9 @@
     "zustand": "^4.4.7"
   },
   "build": {
-    "appId": "dz.afus.boutique",
-    "productName": "Afus Boutique",
-    "executableName": "AfusBoutique",
+    "appId": "dz.afus.hanout",
+    "productName": "Afus Hanout",
+    "executableName": "AfusHanout",
     "copyright": "Copyright © Afus. Includes software licensed under the MIT License (see LICENSE.txt).",
     "directories": {
       "output": "release",
@@ -120,7 +120,7 @@
       "uninstallerIcon": "public/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Afus Boutique",
+      "shortcutName": "Afus Hanout",
       "deleteAppDataOnUninstall": false,
       "artifactName": "${productName} Setup ${version}.${ext}"
     },
@@ -143,7 +143,7 @@
       ],
       "category": "public.app-category.business",
       "icon": "public/icon-512.png",
-      "artifactName": "Afus-Boutique-${version}-${arch}-mac.${ext}",
+      "artifactName": "Afus-Hanout-${version}-${arch}-mac.${ext}",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "signing/entitlements.mac.plist",
@@ -159,7 +159,7 @@
     },
     "publish": null,
     "dmg": {
-      "artifactName": "Afus-Boutique-${version}-${arch}.${ext}"
+      "artifactName": "Afus-Hanout-${version}-${arch}.${ext}"
     }
   }
 }

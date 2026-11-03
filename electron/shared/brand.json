@@ -1,11 +1,11 @@
 {
   "companyName": "Afus",
-  "productName": "Afus Boutique",
+  "productName": "Afus Hanout",
   "shortName": "Afus",
-  "appId": "dz.afus.boutique",
-  "packageName": "afus-boutique",
-  "executableName": "AfusBoutique",
-  "dataDirName": "AfusBoutique",
-  "databaseFile": "afus-boutique.db",
-  "fileSlug": "afus-boutique"
+  "appId": "dz.afus.hanout",
+  "packageName": "afus-hanout",
+  "executableName": "AfusHanout",
+  "dataDirName": "AfusHanout",
+  "databaseFile": "afus-hanout.db",
+  "fileSlug": "afus-hanout"
 }
