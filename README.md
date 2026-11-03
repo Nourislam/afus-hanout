@@ -1,13 +1,17 @@
-# Afus Boutique
+# Afus Hanout
 
-**Afus Boutique** is the [Afus](docs/NAMING.md) application for clothing and accessory shops:
-an offline point of sale and stock manager for Windows and macOS (Electron + React + SQLite).
-It works without an account, without activation and without internet: all data lives in a
-local database on the shop's computer.
+**Afus Hanout** (in development) is the [Afus](docs/NAMING.md) application for Algerian grocery shops (hanout,
+superette, mini-market): an offline point of sale and stock manager for Windows and macOS
+(Electron + React + SQLite). Every sale, stock movement and kridi is kept in a local database on
+the shop's computer; it works without an account and without internet. There is **no website, no
+online store and no online orders**.
 
-> **بالعربية:** Afus Boutique برنامج من شركة Afus لمحلات الملابس والإكسسوارات: بيع، مخزون
-> بالألوان والمقاسات، ملصقات QR وباركود، تذاكر، كريدي، تقارير. يعمل بدون إنترنت وبدون حساب،
-> وكل البيانات تبقى على حاسوب المحل. الواجهة بالعربية (من اليمين إلى اليسار) والفرنسية والإنجليزية.
+> **بالعربية:** أفوس حانوت (قيد البناء) برنامج من شركة Afus لمحلات المواد الغذائية: الحانوت، والسوبيرات،
+> والميني ماركت. يعمل بدون إنترنت وبدون حساب، وكل البيانات تبقى على حاسوب المحل. لا موقع إلكتروني، ولا متجر إلكتروني، ولا طلبات عبر الإنترنت.
+
+Afus Hanout starts from the code of Afus Boutique, with its history (`git remote` `boutique`, push
+disabled). The plans are in [docs/plans](docs/plans); until phase 1 is done, the sections below still
+describe what came from Boutique.
 
 ## Features
 
