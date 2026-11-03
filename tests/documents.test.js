@@ -3,6 +3,7 @@ import { createRequire } from 'module';
 import { formatMoney as uiMoney } from '../src/i18n/format';
 
 const require = createRequire(import.meta.url);
+const BRAND = require('../electron/shared/brand.json');
 const ReceiptService = require('../electron/services/receiptService');
 const receiptService = new ReceiptService();
 const labelService = require('../electron/services/labelService');
@@ -112,8 +113,8 @@ describe('labels', () => {
 });
 
 describe('ticket extras', () => {
-    it('prints the small Afus Boutique line unless it is turned off', () => {
-        expect(receiptService.generateThermalReceiptHtml(SALE, { ...SHOP })).toContain('class="brand">Afus Boutique<');
+    it('prints the small product name line unless it is turned off', () => {
+        expect(receiptService.generateThermalReceiptHtml(SALE, { ...SHOP })).toContain(`class="brand">${BRAND.productName}<`);
         expect(receiptService.generateThermalReceiptHtml(SALE, { ...SHOP, receiptShowBrand: false })).not.toContain('class="brand"');
     });
 });

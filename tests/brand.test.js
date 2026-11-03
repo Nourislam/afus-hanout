@@ -41,8 +41,8 @@ describe('product identity', () => {
     });
 
     it('keeps the data in its own folder and database file', () => {
-        expect(dataDirectory('/appdata')).toBe(path.join('/appdata', 'AfusBoutique'));
-        expect(databasePath(path.join('/appdata', 'AfusBoutique'))).toBe(path.join('/appdata', 'AfusBoutique', 'afus-boutique.db'));
+        expect(dataDirectory('/appdata')).toBe(path.join('/appdata', BRAND.dataDirName));
+        expect(databasePath(path.join('/appdata', BRAND.dataDirName))).toBe(path.join('/appdata', BRAND.dataDirName, BRAND.databaseFile));
     });
 
     it('no former product name is left in the application, build or documentation', () => {

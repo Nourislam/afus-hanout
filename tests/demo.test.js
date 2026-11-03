@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
+const BRAND = require('../electron/shared/brand.json');
 
 // The real database module and demo service, on real files in a temporary data folder
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'afus-demo-'));
@@ -21,7 +22,7 @@ const pinService = require('../electron/services/pinService');
 const ShiftService = require('../electron/services/shiftService');
 const { EcommerceSyncManager } = require('../electron/ecommerce/EcommerceSyncManager');
 
-const REAL_FILE = path.join(dir, 'afus-boutique.db');
+const REAL_FILE = path.join(dir, BRAND.databaseFile);
 const realHash = () => crypto.createHash('sha256').update(fs.readFileSync(REAL_FILE)).digest('hex');
 const count = (table, where = '') => api.get(`SELECT COUNT(*) AS n FROM ${table} ${where}`).n;
 const RANGE = { startDate: '2000-01-01', endDate: '2999-01-01' };
@@ -49,7 +50,7 @@ describe('demo shop: its own database, never the shop\'s', () => {
         const result = await demo.enter({ lang: 'fr' });
         expect(result.created).toBe(true);
         expect(init.isDemo()).toBe(true);
-        expect(init.getDbPath()).toBe(path.join(dir, 'demo', 'afus-boutique-demo.db'));
+        expect(init.getDbPath()).toBe(path.join(dir, 'demo', `${BRAND.fileSlug}-demo.db`));
         expect(init.getDbPath()).not.toBe(REAL_FILE);
         expect(fs.existsSync(init.getDbPath())).toBe(true);
         expect(realHash()).toBe(realBefore.hash);
@@ -226,7 +227,7 @@ describe('demo shop: its own database, never the shop\'s', () => {
         await init.initDatabase();
         expect(init.isDemo()).toBe(false);
         expect(api.get("SELECT id FROM products WHERE id = 'real-jean'")).not.toBe(null);
-        expect(fs.existsSync(path.join(dir, 'demo', 'afus-boutique-demo.db'))).toBe(true);
+        expect(fs.existsSync(path.join(dir, 'demo', `${BRAND.fileSlug}-demo.db`))).toBe(true);
     });
 
     it('the demo file path can never be the shop\'s file', () => {
