@@ -1,6 +1,8 @@
 {
   "fonts": {
     "packages": ["@fontsource-variable/inter", "@fontsource-variable/cairo"],
+    "body": ["Inter Variable", "Cairo Variable", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
+    "bodyArabic": ["Cairo Variable", "Inter Variable", "system-ui", "sans-serif"],
     "sans": ["\"Inter Variable\"", "\"Cairo Variable\"", "system-ui", "-apple-system", "\"Segoe UI\"", "sans-serif"],
     "arabic": ["\"Cairo Variable\"", "\"Inter Variable\"", "system-ui", "sans-serif"]
   },
@@ -64,7 +66,7 @@
     "scale-in": "scaleIn 0.2s ease-out",
     "pulse-soft": "pulseSoft 2s infinite"
   },
-  "utilities": ["tabular", "ltr", "flip-rtl"],
+  "selectors": [".tabular", ".ltr", "[dir='rtl'] .flip-rtl"],
   "components": {
     "ui": [
       "Badge.jsx", "Button.jsx", "Card.jsx", "Combobox.jsx", "ConfirmDialog.jsx", "DatePicker.jsx",

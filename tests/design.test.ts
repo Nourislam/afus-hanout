@@ -1,69 +1,91 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
+import postcss from 'postcss';
 
 // The Afus look (docs/AFUS-DESIGN.md): the values in afus-design.json must be
 // the ones src/index.css and tailwind.config.js really use. To change the look
 // on purpose, change both and say why in the commit.
+const require = createRequire(import.meta.url);
 const ROOT = path.resolve(__dirname, '..');
 const read = (file: string): string => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
 interface AfusDesign {
-    fonts: { packages: string[]; sans: string[]; arabic: string[] };
+    fonts: { packages: string[]; body: string[]; bodyArabic: string[]; sans: string[]; arabic: string[] };
     theme: { default: 'dark'; dark: Record<string, string>; light: Record<string, string> };
     accent: Record<string, string>;
     animation: Record<string, string>;
-    utilities: string[];
+    selectors: string[];
     components: { ui: string[]; layout: string[] };
     icons: string;
 }
 
+interface TailwindTheme {
+    theme: { extend: { colors: { accent: Record<string, string> }; fontFamily: Record<string, string[]>; animation: Record<string, string> } };
+}
+
 const design = JSON.parse(read('afus-design.json')) as AfusDesign;
-const css = read('src/index.css');
-const tailwind = read('tailwind.config.js');
+const css = postcss.parse(read('src/index.css'));
+const loadConfig = require('tailwindcss/loadConfig') as (file: string) => TailwindTheme;
+const tailwind = loadConfig(path.join(ROOT, 'tailwind.config.js')).theme.extend;
 
-/** Custom properties declared in the CSS block that opens with `selector {`. */
-function cssVariables(selector: string): Record<string, string> {
-    const start = css.indexOf(`${selector} {`);
-    if (start < 0) throw new Error(`${selector} not found in src/index.css`);
-    const body = css.slice(start, css.indexOf('}', start));
-    return Object.fromEntries([...body.matchAll(/--([\w-]+):\s*([^;]+);/g)].map(m => [m[1], m[2].trim()]));
+/** Every declaration of the rules that list `selector`, in file order (a later one wins). */
+function declarations(selector: string): Record<string, string> {
+    const found: Record<string, string> = {};
+    css.walkRules(rule => {
+        if (rule.selectors.includes(selector)) rule.walkDecls(decl => { found[decl.prop] = decl.value; });
+    });
+    return found;
 }
 
-/** The text between `key: <open>` and its first closing bracket in tailwind.config.js. */
-function block(key: string, open: '[' | '{'): string {
-    const close = open === '[' ? ']' : '}';
-    const at = tailwind.search(new RegExp(`${key}:\\s*\\${open}`));
-    if (at < 0) throw new Error(`${key} not found in tailwind.config.js`);
-    return tailwind.slice(at, tailwind.indexOf(close, at));
+/** The custom properties (without `--`) set for `selector`. */
+function variables(selector: string): Record<string, string> {
+    return Object.fromEntries(Object.entries(declarations(selector))
+        .filter(([prop]) => prop.startsWith('--'))
+        .map(([prop, value]) => [prop.slice(2), value]));
 }
 
-const quoted = (text: string): string[] => [...text.matchAll(/'([^']*)'/g)].map(m => m[1]);
+/** A font-family value as a list of names without quotes. */
+const fontList = (value = ''): string[] => value.split(',').map(name => name.trim().replace(/^['"]|['"]$/g, ''));
+
+const lower = (colours: Record<string, string>): Record<string, string> =>
+    Object.fromEntries(Object.entries(colours).map(([name, value]) => [name, value.toLowerCase()]));
 
 describe('Afus look (docs/AFUS-DESIGN.md)', () => {
     it('fonts: Inter and Cairo, bundled with the program', () => {
-        for (const pkg of design.fonts.packages) expect(css).toContain(`@import '${pkg}';`);
-        expect(quoted(block('sans', '['))).toEqual(design.fonts.sans);
-        expect(quoted(block('arabic', '['))).toEqual(design.fonts.arabic);
+        const imports: string[] = [];
+        css.walkAtRules('import', rule => { imports.push(rule.params.replace(/^['"]|['"]$/g, '')); });
+        for (const pkg of design.fonts.packages) expect(imports).toContain(pkg);
+    });
+
+    it('fonts used on screen: Inter for Latin text, Cairo for Arabic', () => {
+        expect(fontList(declarations('body')['font-family'])).toEqual(design.fonts.body);
+        expect(fontList(declarations('html.lang-ar body')['font-family'])).toEqual(design.fonts.bodyArabic);
+    });
+
+    it('Tailwind font families', () => {
+        expect(tailwind.fontFamily.sans).toEqual(design.fonts.sans);
+        expect(tailwind.fontFamily.arabic).toEqual(design.fonts.arabic);
     });
 
     it('theme colours: dark by default, light under html.theme-light', () => {
-        expect(cssVariables(':root')).toEqual(design.theme.dark);
-        expect(cssVariables('html.theme-light')).toEqual(design.theme.light);
+        expect(variables(':root')).toEqual(design.theme.dark);
+        expect(variables('html.theme-light')).toEqual(design.theme.light);
     });
 
     it('accent colours', () => {
-        const accent = Object.fromEntries([...block('accent', '{').matchAll(/(\w+):\s*'(#[0-9a-f]{6})'/g)].map(m => [m[1], m[2]]));
-        expect(accent).toEqual(design.accent);
+        expect(lower(tailwind.colors.accent)).toEqual(lower(design.accent));
     });
 
     it('animations', () => {
-        const animation = Object.fromEntries([...block('animation', '{').matchAll(/'([\w-]+)':\s*'([^']+)'/g)].map(m => [m[1], m[2]]));
-        expect(animation).toEqual(design.animation);
+        expect(tailwind.animation).toEqual(design.animation);
     });
 
     it('Arabic text helpers: .tabular, .ltr, .flip-rtl', () => {
-        for (const name of design.utilities) expect(css).toMatch(new RegExp(`\\.${name}\\s*\\{`));
+        const selectors = new Set<string>();
+        css.walkRules(rule => { for (const s of rule.selectors) selectors.add(s); });
+        for (const selector of design.selectors) expect([...selectors]).toContain(selector);
     });
 
     it('shared components and icons are still there', () => {
