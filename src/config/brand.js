@@ -1,4 +1,4 @@
-// Afus Boutique identity for the interface. Single source shared with the
+// Product identity for the interface. Single source shared with the
 // main process: electron/shared/brand.json (see electron/brand.js).
 import BRAND from '../../electron/shared/brand.json';
 

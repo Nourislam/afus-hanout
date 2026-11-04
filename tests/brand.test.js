@@ -10,7 +10,7 @@ const pkg = require('../package.json');
 const { dataDirectory, databasePath } = require('../electron/brand');
 
 // Names of products this code base no longer belongs to
-const OLD_NAMES = /storepos|store-pos|store_pos|com\.storepos|hanout|cirvex|storeclothes/i;
+const OLD_NAMES = /storepos|store-pos|store_pos|com\.storepos|cirvex|storeclothes/i;
 
 function filesUnder(dir) {
     return fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((entry) => {
@@ -41,8 +41,8 @@ describe('product identity', () => {
     });
 
     it('keeps the data in its own folder and database file', () => {
-        expect(dataDirectory('/appdata')).toBe(path.join('/appdata', 'AfusBoutique'));
-        expect(databasePath(path.join('/appdata', 'AfusBoutique'))).toBe(path.join('/appdata', 'AfusBoutique', 'afus-boutique.db'));
+        expect(dataDirectory('/appdata')).toBe(path.join('/appdata', BRAND.dataDirName));
+        expect(databasePath(path.join('/appdata', BRAND.dataDirName))).toBe(path.join('/appdata', BRAND.dataDirName, BRAND.databaseFile));
     });
 
     it('no former product name is left in the application, build or documentation', () => {

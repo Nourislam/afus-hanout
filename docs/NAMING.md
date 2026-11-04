@@ -24,6 +24,7 @@ database.
 | Product | npm name | App ID | Executable | Data folder | Database |
 |---|---|---|---|---|---|
 | Afus Boutique | afus-boutique | dz.afus.boutique | AfusBoutique.exe | AfusBoutique | afus-boutique.db |
+| Afus Hanout | afus-hanout | dz.afus.hanout | AfusHanout.exe | AfusHanout | afus-hanout.db |
 | Afus Farm | afus-farm | dz.afus.farm | AfusFarm.exe | AfusFarm | afus-farm.db |
 | Afus POS | afus-pos | dz.afus.pos | AfusPOS.exe | AfusPOS | afus-pos.db |
 | Afus Stock | afus-stock | dz.afus.stock | AfusStock.exe | AfusStock | afus-stock.db |

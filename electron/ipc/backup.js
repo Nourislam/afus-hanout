@@ -145,7 +145,7 @@ module.exports = function register(ctx) {
       });
       if (!filePath) return { success: false, canceled: true };
       fs.copyFileSync(file, filePath);
-      // The pictures go with it (afus-boutique-images next to the file)
+      // The pictures go with it (afus-<product>-images next to the file)
       try { backupService.backupImages(backupFolder(), shopImagesDir()); backupService.exportImages(backupFolder(), filePath); } catch (error) { console.error('Pictures not exported:', error); }
       return { success: true, path: filePath };
     });

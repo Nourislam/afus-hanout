@@ -169,10 +169,11 @@ function createWindow() {
 // ------------------------------------------------------------------
 // Data folder
 // ------------------------------------------------------------------
-// Afus Boutique has its own folder (database, images, settings, browser
-// storage and cache): %APPDATA%\AfusBoutique, ~/Library/Application
-// Support/AfusBoutique on macOS. Each Afus product has its own folder and
-// data is never taken from another application.
+// The program has its own folder (database, images, settings, browser
+// storage and cache): %APPDATA%\Afus<Product>, ~/Library/Application
+// Support/Afus<Product> on macOS (dataDirName in electron/shared/brand.json).
+// Each Afus product has its own folder and data is never taken from another
+// application.
 function configureDataDirectory() {
   app.setName(BRAND.productName);
   app.setPath('userData', dataDirectory(app.getPath('appData')));

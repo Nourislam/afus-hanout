@@ -6,6 +6,7 @@ import path from 'path';
 
 const require = createRequire(import.meta.url);
 const backup = require('../electron/services/backupService');
+const BRAND = require('../electron/shared/brand.json');
 const initSqlJs = require('sql.js');
 
 let dir;
@@ -45,8 +46,8 @@ describe('backups', () => {
     });
 
     it('refuses names that leave the folder', () => {
-        expect(backup.isBackupName('../afus-boutique.db')).toBe(false);
-        expect(backup.isBackupName('afus-boutique-2026-10-01_09-00-00.db')).toBe(true);
+        expect(backup.isBackupName(`../${BRAND.databaseFile}`)).toBe(false);
+        expect(backup.isBackupName(`${BRAND.fileSlug}-2026-10-01_09-00-00.db`)).toBe(true);
         expect(() => backup.deleteBackup(dir, '../../etc/passwd')).toThrow();
     });
 

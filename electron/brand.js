@@ -1,5 +1,5 @@
 /**
- * Afus Boutique identity, read by the main process.
+ * Product identity, read by the main process.
  *
  * Single source: electron/shared/brand.json (also imported by the interface
  * through src/config/brand.js). package.json repeats name, appId, productName
@@ -9,7 +9,7 @@
 const path = require('path');
 const BRAND = require('./shared/brand.json');
 
-/** Folder of the shop's data: %APPDATA%\AfusBoutique (macOS: ~/Library/Application Support/AfusBoutique). */
+/** Folder of the shop's data: %APPDATA%\<dataDirName> (macOS: ~/Library/Application Support/<dataDirName>). */
 function dataDirectory(appDataPath) {
     return path.join(appDataPath, BRAND.dataDirName);
 }

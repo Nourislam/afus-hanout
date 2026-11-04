@@ -1,18 +1,19 @@
 /**
  * Backups of the shop's database, kept in a "Backups" folder next to it
- * (%APPDATA%\AfusBoutique\Backups). Every backup is a full copy of the
+ * (%APPDATA%\Afus<Product>\Backups). Every backup is a full copy of the
  * SQLite file; nothing leaves the computer unless the shop exports a copy.
  *
  * File names say when and why the copy was made:
- *   afus-boutique-2026-10-05_14-30-12.db                 made by the shop
- *   afus-boutique-2026-10-05_08-00-03-auto.db            daily automatic copy
- *   afus-boutique-2026-10-05_14-31-40-before-restore.db  taken just before a restore
- *   afus-boutique-2026-10-05_14-29-00-imported.db        copied in from a USB key…
+ *   afus-<product>-2026-10-05_14-30-12.db                 made by the shop
+ *   afus-<product>-2026-10-05_08-00-03-auto.db            daily automatic copy
+ *   afus-<product>-2026-10-05_14-31-40-before-restore.db  taken just before a restore
+ *   afus-<product>-2026-10-05_14-29-00-imported.db        copied in from a USB key…
+ * (afus-<product> is fileSlug in electron/shared/brand.json)
  *
  * Article pictures are kept beside them in Backups/images (each picture once,
  * whatever the number of backups), and come back with a restore. A second
  * copy can go to another folder (USB key, other disk, a synced folder):
- * <folder>/afus-boutique-backups, with its own images folder.
+ * <folder>/afus-<product>-backups, with its own images folder.
  */
 const fs = require('fs');
 const path = require('path');
@@ -214,7 +215,7 @@ function restoreImages(dir, imagesDir) {
 }
 
 /**
- * The second copy, in another folder: <folder>/afus-boutique-backups gets the
+ * The second copy, in another folder: <folder>/afus-<product>-backups gets the
  * backup file and the pictures; the oldest automatic copies there are removed
  * as in the main folder. Throws when the folder cannot be reached (USB key
  * not plugged in…), so the shop can be told.
@@ -246,7 +247,7 @@ function importImages(file, dir) {
     return copied;
 }
 
-/** An exported copy takes its pictures with it, in <folder>/afus-boutique-images. */
+/** An exported copy takes its pictures with it, in <folder>/afus-<product>-images. */
 function exportImages(dir, targetFile) {
     return mirrorFiles(imagesBackupDir(dir), path.join(path.dirname(targetFile), `${BRAND.fileSlug}-${IMAGES}`));
 }
