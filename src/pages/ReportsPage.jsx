@@ -18,7 +18,6 @@ import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { effectiveFeatures } from '../lib/features';
 import { PERMISSIONS } from '../lib/permissions';
-import SeasonReport from '../components/reports/SeasonReport';
 import MarkdownManager from '../components/reports/MarkdownManager';
 import ShopIntelligence from '../components/reports/ShopIntelligence';
 import NetProfit from '../components/reports/NetProfit';
@@ -64,9 +63,9 @@ export default function ReportsPage() {
     const tabs = [['overview', t('reports.overview')],
         // Add-on: what is left after the shop's charges (the owner's), right after the overview
         ...(features.charges && owner ? [['net', t('net.tab')]] : []),
-        ['smart', t('smart.tab')], ['articles', t('reports.articlesTab')], ['seasons', t('season.tab')],
+        ['smart', t('smart.tab')], ['articles', t('reports.articlesTab')],
         ...(features.promotions ? [['markdowns', t('markdown.tab')]] : []), ['shifts', t('reports.shifts')]];
-    const byPeriod = !['seasons', 'markdowns', 'smart', 'net'].includes(activeTab);
+    const byPeriod = !['markdowns', 'smart', 'net'].includes(activeTab);
     const [shiftData, setShiftData] = useState([]);
 
     useEffect(() => {
@@ -206,8 +205,6 @@ export default function ReportsPage() {
                     <NetProfit />
                 ) : activeTab === 'smart' ? (
                     <ShopIntelligence />
-                ) : activeTab === 'seasons' ? (
-                    <SeasonReport money={owner} canDiscount={canDiscount} />
                 ) : activeTab === 'markdowns' ? (
                     <MarkdownManager money={owner} canDecide={canDiscount} />
                 ) : loading ? (

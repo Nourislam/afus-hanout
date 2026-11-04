@@ -1,9 +1,8 @@
 import { t } from '../i18n';
 import { formatMoney } from '../i18n/format';
 import { useState, useEffect } from 'react';
-import ProductMatrixModal from '../components/products/ProductMatrixModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Package, Grid, List, QrCode, Tag, X, Grid3x3 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Package, Grid, List, QrCode, Tag, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { PageHeader } from '../components/ui/PageHeader';
 import { SearchInput } from '../components/ui/Input';
@@ -31,7 +30,6 @@ export default function ProductsPage() {
     const [viewMode, setViewMode] = useState('grid');
     const [showProductModal, setShowProductModal] = useState(false);
     // Colours x sizes of one article (stock, sold, buying plan)
-    const [matrixOf, setMatrixOf] = useState(null);
     const [editingProduct, setEditingProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showExcelImport, setShowExcelImport] = useState(false);
@@ -304,17 +302,6 @@ export default function ProductsPage() {
                                                 variant="ghost"
                                                 size="sm"
                                                 className="justify-center"
-                                                title={t('dash.do.matrix')}
-                                                aria-label={t('dash.do.matrix')}
-                                                data-testid="product-matrix"
-                                                onClick={() => setMatrixOf(product.id)}
-                                            >
-                                                <Grid3x3 className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="justify-center"
                                                 title={t('products.printLabels')}
                                                 aria-label={t('products.printLabels')}
                                                 onClick={() => navigate(`/labels?tab=articles&product=${product.id}`)}
@@ -393,16 +380,6 @@ export default function ProductsPage() {
                                                     <Edit2 className="w-4 h-4" />
                                                 </Button>
                                                 <Button
-                                                    variant="secondary"
-                                                    size="sm"
-                                                    title={t('dash.do.matrix')}
-                                                    aria-label={t('dash.do.matrix')}
-                                                    data-testid="product-matrix"
-                                                    onClick={() => setMatrixOf(product.id)}
-                                                >
-                                                    <Grid3x3 className="w-3 h-3" />
-                                                </Button>
-                                                <Button
                                                     variant="ghost"
                                                     size="icon"
                                                     title={t('products.printLabels')}
@@ -465,7 +442,6 @@ export default function ProductsPage() {
                     onImport={handleExcelImport}
                     title={t('products.importTitle')}
                 />
-                <ProductMatrixModal productId={matrixOf} isOpen={!!matrixOf} onClose={() => { setMatrixOf(null); loadData(); }} />
             </div>
         </>
     );

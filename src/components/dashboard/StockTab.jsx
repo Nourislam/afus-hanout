@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PackageX, PackageMinus, Ruler, Warehouse, ShoppingCart, Eye, Hourglass, Gauge, Moon, Percent, Grid3x3, Coins, TrendingUp } from 'lucide-react';
+import { PackageX, PackageMinus, Ruler, Warehouse, ShoppingCart, Eye, Hourglass, Gauge, Moon, Percent, Coins, TrendingUp } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useT } from '../../i18n';
 import { sizeLabel, variantLabel, seasonLabel } from '../../lib/clothing';
 import { DASHBOARD_LINKS } from '../../lib/listFilters';
 import { Money, Section, Row, Empty, Spinner, Tile, MiniTabs } from './parts';
-import ProductMatrixModal from '../products/ProductMatrixModal';
 
 const DEAD_DAYS = [30, 60, 90];
 const ST_BY = ['product', 'collection', 'season'];
@@ -33,7 +32,6 @@ export default function StockTab({ access, features, ranges }) {
     const [deadDays, setDeadDays] = useState(60);
     const [dead, setDead] = useState(null);
     const [worth, setWorth] = useState(null);
-    const [matrixOf, setMatrixOf] = useState(null);
     useEffect(() => {
         let cancelled = false;
         safe(window.electronAPI.insights.runOut({}), []).then(rows => { if (!cancelled) setRunOut(rows); });
@@ -55,11 +53,6 @@ export default function StockTab({ access, features, ranges }) {
 
     if (!data) return <Spinner />;
     const stLabel = (row) => (stBy === 'season' ? seasonLabel(row.key) : row.label);
-    const matrixButton = (productId) => (
-        <Button size="sm" variant="ghost" onClick={() => setMatrixOf(productId)} title={t('dash.do.matrix')} aria-label={t('dash.do.matrix')}>
-            <Grid3x3 className="w-4 h-4" />
-        </Button>
-    );
     // "Order" goes to the purchase orders when that module is on, to the stock otherwise
     const order = features.purchaseOrders
         ? <Button size="sm" variant="secondary" onClick={() => navigate(DASHBOARD_LINKS.orderSoldOut)}><ShoppingCart className="w-4 h-4" /> {t('dash.do.order')}</Button>
@@ -91,7 +84,6 @@ export default function StockTab({ access, features, ranges }) {
                                         <span className={`badge whitespace-nowrap ${row.days_left < 1 ? 'bg-red-500/15 text-red-300' : 'bg-amber-500/15 text-amber-300'}`}>
                                             {row.days_left < 1 ? t('dash.runOut.today') : t('dash.runOut.days', { n: Math.max(1, Math.round(row.days_left)) })}
                                         </span>
-                                        {matrixButton(row.product_id)}
                                     </>
                                 )}>
                                     <p className="font-medium truncate" title={piece(row)}>{piece(row)}</p>
@@ -116,7 +108,6 @@ export default function StockTab({ access, features, ranges }) {
                                             <span className="flex items-center gap-2 flex-none">
                                                 <span className="text-xs text-zinc-500 tabular">{t('dash.st.row', { sold: row.sold, total: row.sold + row.stock })}</span>
                                                 <span className="font-semibold tabular w-12 text-end"><bdi>{Math.round(row.rate)} %</bdi></span>
-                                                {stBy === 'product' && matrixButton(row.key)}
                                             </span>
                                         </div>
                                         <span className="mt-1 block h-1.5 rounded-full bg-dark-tertiary overflow-hidden" aria-hidden="true">
@@ -184,7 +175,6 @@ export default function StockTab({ access, features, ranges }) {
                                                     <Percent className="w-4 h-4" /> {t('dash.do.discount')}
                                                 </Button>
                                             )}
-                                            {matrixButton(row.product_id)}
                                         </>
                                     )}>
                                         <p className="font-medium truncate" title={row.name}>{row.name}</p>
@@ -201,7 +191,6 @@ export default function StockTab({ access, features, ranges }) {
                 </Section>
 
             </div>
-            <ProductMatrixModal productId={matrixOf} isOpen={!!matrixOf} onClose={() => setMatrixOf(null)} />
         </div>
     );
 }
