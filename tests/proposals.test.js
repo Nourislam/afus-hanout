@@ -30,7 +30,8 @@ describe('an error says what to do', () => {
         expect(codeOfMessage(text)).toBe('BACKUP_EXTERNAL_MISSING');
         expect(actionForCode('BACKUP_EXTERNAL_MISSING')).toMatchObject({ to: '/settings?tab=backup' });
         expect(actionForCode('PRINT_FAILED')).toMatchObject({ to: '/settings?tab=receipt' });
-        expect(actionForCode('WEBSITE_GITHUB_NOT_CONNECTED')).toMatchObject({ to: '/website?tab=accounts' });
+        // No website in Afus Hanout: its old codes lead nowhere
+        expect(actionForCode('WEBSITE_GITHUB_NOT_CONNECTED')).toBeNull();
         expect(actionForCode('SHIFT_REQUIRED')).toMatchObject({ to: '/pos' });
         expect(actionForCode('STOCK_INSUFFICIENT')).toBeNull();
         expect(codeOfMessage('any other text')).toBeNull();

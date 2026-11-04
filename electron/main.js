@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, shell, nativeTheme, Menu, safeStorage, clipboard, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, shell, nativeTheme, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { BRAND, dataDirectory, databasePath } = require('./brand');
@@ -8,11 +8,6 @@ const catalog = require('./services/catalogService');
 const salesStatsService = require('./services/salesStatsService');
 const returnService = require('./services/returnService');
 const loyaltyService = require('./services/loyaltyService');
-const { createWebsiteService } = require('./website/websiteService');
-const { createGithubClient } = require('./website/github');
-const { createSecureStore } = require('./website/secureStore');
-const { createCloudflareClient } = require('./website/cloudflare');
-const cloudflareCallbackPage = require('./website/callbackPage');
 const session = require('./services/session');
 const guard = require('./services/guard');
 const ipcGuard = require('./services/ipcGuard');
@@ -22,7 +17,6 @@ const ReceiptService = require('./services/receiptService');
 const ShiftService = require('./services/shiftService');
 const printDocument = require('./services/printDocument');
 const SyncManager = require('./sync/SyncManager');
-const EcommerceSyncManager = require('./ecommerce/EcommerceSyncManager');
 
 // Before the shop is set up nobody can log in: the setup wizard may do everything
 function isFirstSetup() {
@@ -158,11 +152,9 @@ function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null;
     SyncManager.setWindow(null);
-    EcommerceSyncManager.setWindow(null);
   });
 
   SyncManager.setWindow(mainWindow);
-  EcommerceSyncManager.setWindow(mainWindow);
 }
 
 
@@ -227,8 +219,6 @@ if (!gotTheLock) {
     // Install date, demo shop window (an expired demo is only closed, its data kept)
     refreshTrial();
     setInterval(refreshTrial, 60 * 60 * 1000);
-    // Website info typed by an older version: copied once to Settings › Shop
-    website.moveContactToShop();
 
     // Daily backup copy (on unless turned off in Settings › Backup)
     runDailyBackup();
@@ -239,11 +229,6 @@ if (!gotTheLock) {
 
     // Initialize the (optional, currently disabled) sync boundary
     await SyncManager.init();
-
-    // Online store connections (optional module): started once the database is
-    // open so the saved connections are loaded; the window is given by createWindow()
-    // Never with the demo shop either (its stock is not the shop's)
-    EcommerceSyncManager.init({ isEnabled: () => !isDemo() && (getSettingValue('features') || {}).ecommerce === true, isDemo });
 
 
   // Register app protocol for serving images
@@ -389,157 +374,6 @@ function refreshTrial() {
   try { trialClock = trialService.refresh(app.getPath('userData'), dbApi); } catch (error) { console.error('Trial dates:', error); }
 }
 
-// Website Manager (electron/website/): the shop's website, kept in the
-// settings table (key "website"); the catalogue is only read. Changes: the
-// owner only (services/ipcGuard.js).
-//
-// GitHub is linked with the shop's own account: the installer profile only
-// holds the public id of the AFUS GitHub app (no secret); the key GitHub
-// gives stays in this process, encrypted by the system (<userData>/secure).
-// In development only, a local test server may stand in for GitHub.
-const githubTestBase = () => {
-  const base = process.env.AFUS_GITHUB_TEST_BASE || '';
-  return !app.isPackaged && /^http:\/\/127\.0\.0\.1:\d+$/.test(base) ? base : null;
-};
-let githubClient = null;
-// Cloudflare: the same, with the public id of the AFUS OAuth client and the
-// local ports registered with it (http://127.0.0.1:<port>/oauth/callback)
-const cloudflareTestBase = () => {
-  const base = process.env.AFUS_CLOUDFLARE_TEST_BASE || '';
-  return !app.isPackaged && /^http:\/\/127\.0\.0\.1:\d+$/.test(base) ? base : null;
-};
-const CLOUDFLARE_PORTS = (Array.isArray(PROFILE.cloudflareRedirectPorts) ? PROFILE.cloudflareRedirectPorts : [47651, 47652, 47653])
-  .map(Number).filter(p => Number.isInteger(p) && p >= 1024 && p <= 65535).slice(0, 5);
-let cloudflareClient = null;
-const websiteSecureStore = createSecureStore({
-  dir: path.join(app.getPath('userData'), 'secure'),
-  safeStorage,
-  // Development tests on a Linux without a secret service only
-  allowWeak: !app.isPackaged && process.env.AFUS_TEST_WEAK_STORAGE === '1',
-});
-const bringBack = () => {
-  if (!mainWindow) return;
-  if (mainWindow.isMinimized()) mainWindow.restore();
-  mainWindow.show();
-  mainWindow.focus();
-};
-const website = createWebsiteService({
-  api: dbApi, getSetting: getSettingValue, saveSetting: saveSettingValue, codedError: catalog.codedError,
-  blockedMode: () => (isDemo() ? 'demo' : null),
-  currentEmployee: () => session.getEmployee(),
-  github: {
-    get client() {
-      if (!githubClient) {
-        const testBase = githubTestBase();
-        githubClient = createGithubClient({
-          clientId: PROFILE.githubClientId || (!app.isPackaged ? process.env.AFUS_GITHUB_CLIENT_ID : '') || '',
-          ...(testBase ? { webBase: testBase, apiBase: `${testBase}/api` } : {}),
-        });
-      }
-      return githubClient;
-    },
-    store: websiteSecureStore,
-    // GitHub's page in the browser, the short code ready to paste
-    openPage: async (url, userCode) => {
-      if (!String(url).startsWith(`${githubClient.webBase}/`)) return;
-      if (userCode) clipboard.writeText(userCode);
-      await shell.openExternal(url);
-    },
-    // Back to the program once the shop agreed on GitHub
-    onConnected: bringBack,
-  },
-  cloudflare: {
-    get client() {
-      if (!cloudflareClient) {
-        const testBase = cloudflareTestBase();
-        cloudflareClient = createCloudflareClient({
-          clientId: PROFILE.cloudflareClientId || (!app.isPackaged ? process.env.AFUS_CLOUDFLARE_CLIENT_ID : '') || '',
-          scopes: Array.isArray(PROFILE.cloudflareScopes) && PROFILE.cloudflareScopes.length ? PROFILE.cloudflareScopes : undefined,
-          ...(testBase ? { dashBase: testBase, apiBase: `${testBase}/client/v4`, workerUrl: (name) => `${testBase}/w/${name}` } : {}),
-        });
-      }
-      return cloudflareClient;
-    },
-    store: websiteSecureStore,
-    ports: CLOUDFLARE_PORTS,
-    // Cloudflare's page in the browser (only Cloudflare's own address)
-    openPage: async (url) => {
-      if (!String(url).startsWith(`${cloudflareClient.dashBase}/oauth2/auth?`)) return;
-      await shell.openExternal(url);
-    },
-    onConnected: bringBack,
-    // The page the browser shows once it came back, in the shop's language
-    callbackPage: (kind) => cloudflareCallbackPage(kind, (getSettingValue('store_config') || {}).defaultLanguage),
-  },
-  // Own domain (optional): the providers Afus has affiliate links with (profile.json ›
-  // domainProviders); the shop buys its domain there, for itself
-  domain: {
-    providers: Array.isArray(PROFILE.domainProviders) && PROFILE.domainProviders.length ? PROFILE.domainProviders
-      : (!app.isPackaged && process.env.AFUS_DOMAIN_PROVIDERS_TEST ? (() => { try { return JSON.parse(process.env.AFUS_DOMAIN_PROVIDERS_TEST); } catch { return []; } })() : []),
-    // The provider's page in the shop's browser (the link was checked: https, the provider's own address)
-    openExternal: (url) => shell.openExternal(url),
-  },
-  // Create Website: the shop's pictures (images folder only), the log of each step (no key)
-  publish: {
-    readImage: (name) => {
-      const file = require('./services/imageService').safeImagePath(name);
-      return file && fs.existsSync(file) ? fs.readFileSync(file) : null;
-    },
-    log: (entry) => logService.write('info', `website ${JSON.stringify(entry)}`),
-    // The shop's API is https only; plain http only for the local test server (development)
-    allowHttp: !!cloudflareTestBase(),
-  },
-});
-// Shops link: the owner's other shops (electron/shops), on the owner's Cloudflare
-const { createShopsService } = require('./shops/shopsService');
-const shops = createShopsService({
-  api: dbApi, getSetting: getSettingValue, saveSetting: saveSettingValue, codedError: catalog.codedError,
-  store: websiteSecureStore,
-  cloudflare: {
-    get client() { return website.cloudflareClient(); },
-    websiteAccess: () => website.cloudflareKeys(),
-    websiteLinked: () => website.cloudflareLinked(),
-  },
-  workerSource: fs.readFileSync(path.join(__dirname, 'shops', 'worker', 'link.mjs'), 'utf8'),
-  schemaSql: fs.readFileSync(path.join(__dirname, 'shops', 'worker', 'schema.sql'), 'utf8'),
-  blockedMode: () => (isDemo() ? 'demo' : null),
-  shopName: () => (getSettingValue('store_config') || {}).businessName || '',
-  employee: () => session.getEmployee()?.id || null,
-});
-// The website's orders come into SQLite by themselves while the program is open
-// (first a little after it starts, then when the last sync says it is time)
-function websiteOrdersTick() {
-  website.syncIfDue()
-    .then((r) => {
-      if (r?.reason && !['idle', 'later'].includes(r.reason)) logService.write('warn', `website orders sync: ${r.reason}`);
-      // New orders from the website: said at once (the owner can turn it off, Website › Settings › Messages)
-      if (r?.received > 0) notifyNewOrders(r.received);
-    })
-    .catch(() => logService.write('warn', 'website orders sync failed'))
-    .finally(() => {
-      // The own domain, when it is time to look again (its records, GitHub's certificate)
-      website.domainCheckIfDue().catch(() => logService.write('warn', 'website domain check failed'));
-      setTimeout(websiteOrdersTick, 60 * 1000).unref?.();
-    });
-}
-setTimeout(websiteOrdersTick, 20 * 1000).unref?.();
-function notifyNewOrders(n) {
-  try {
-    if (!website.view().tools?.notify || !Notification.isSupported()) return;
-    const lang = getShopSettingsForPrint().defaultLanguage;
-    const title = lang === 'fr' ? 'Nouvelle commande du site' : lang === 'en' ? 'New website order' : 'طلب جديد من الموقع';
-    const body = lang === 'fr' ? `${n} commande(s) à appeler pour confirmer.` : lang === 'en' ? `${n} order(s) to call and confirm.` : `${n} طلب جديد للاتصال والتأكيد.`;
-    const note = new Notification({ title, body, silent: false });
-    note.on('click', () => {
-      const win = BrowserWindow.getAllWindows()[0];
-      if (win) { win.show(); win.focus(); win.webContents.send('navigate', '/website-orders'); }
-    });
-    note.show();
-  } catch (e) {
-    logService.write('warn', `website notification: ${e?.message || e}`);
-  }
-}
-const { testEmailConnection, sendTestEmail, initEmailService } = require('./services/emailService');
 
 // ==========================================
 // RECEIPTS
@@ -613,10 +447,8 @@ const createCreditSale = (creditSale) => creditSales.createCreditSale(dbApi, cre
 
 // IPC handlers live in ./ipc, one file per topic.
 const ipcContext = {
-    shops,
     BRAND,
     BrowserWindow,
-    EcommerceSyncManager,
     PROFILE,
     ReceiptService,
     SyncManager,
@@ -644,11 +476,9 @@ const ipcContext = {
     getSettings,
     getShopSettingsForPrint,
     getStoreSettings,
-    githubTestBase,
     guard,
     i18n,
     initDatabase,
-    initEmailService,
     ipcGuard,
     ipcMain,
     isDemo,
@@ -672,21 +502,17 @@ const ipcContext = {
     runTransaction,
     salesStatsService,
     saveSettingValue,
-    sendTestEmail,
     session,
     shell,
     shiftService,
     shopImagesDir,
     shopT,
-    testEmailConnection,
     themeFile,
     get trialClock() { return trialClock; },
     set trialClock(value) { trialClock = value; },
     trialService,
     uuid,
-    website,
 };
-require('./ipc/website')(ipcContext);
 require('./ipc/backup')(ipcContext);
 require('./ipc/reports')(ipcContext);
 require('./ipc/catalog')(ipcContext);
@@ -697,11 +523,9 @@ require('./ipc/offers')(ipcContext);
 require('./ipc/people')(ipcContext);
 require('./ipc/stockCount')(ipcContext);
 require('./ipc/staff')(ipcContext);
-require('./ipc/email')(ipcContext);
 require('./ipc/sync')(ipcContext);
 require('./ipc/settings')(ipcContext);
 require('./ipc/app')(ipcContext);
-require('./ipc/shops')(ipcContext);
 require('./ipc/charges')(ipcContext);
 require('./ipc/commissions')(ipcContext);
 require('./ipc/figures')(ipcContext);

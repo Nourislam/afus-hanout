@@ -91,105 +91,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
         cash: (args) => ipcRenderer.invoke('dashboard:cash', args),
     },
     // Decision figures: run-out, sell-through, colour x size, dormant stock, stock worth
-    // Website Manager (the shop's website)
-    website: {
-        getState: () => ipcRenderer.invoke('website:getState'),
-        preview: () => ipcRenderer.invoke('website:preview'),
-        pageDefault: (id) => ipcRenderer.invoke('website:pageDefault', id),
-        photos: (theme) => ipcRenderer.invoke('website:photos', theme),
-        // A page of the website in a theme (HTML without script, shown in a sandboxed frame)
-        previewTheme: (args) => ipcRenderer.invoke('website:previewTheme', args),
-        create: (args) => ipcRenderer.invoke('website:create', args),
-        // Change Theme (the look only); { publish: true }: the online website made again with it
-        setTheme: (theme, options) => ipcRenderer.invoke('website:setTheme', theme, options),
-        setName: (name) => ipcRenderer.invoke('website:setName', name),
-        setDomain: (domain) => ipcRenderer.invoke('website:setDomain', domain),
-        removeDomain: () => ipcRenderer.invoke('website:removeDomain'),
-        // Own domain (optional): connect it, look again, buy one at a provider (its affiliate link)
-        domainCheck: () => ipcRenderer.invoke('website:domainCheck'),
-        domainRetry: () => ipcRenderer.invoke('website:domainRetry'),
-        domainSearch: (args) => ipcRenderer.invoke('website:domainSearch', args),
-        domainOpenBuy: (args) => ipcRenderer.invoke('website:domainOpenBuy', args),
-        // The shop's own Hostinger account: records written automatically (the key never comes back to the window)
-        domainHostingerLink: (args) => ipcRenderer.invoke('website:domainHostingerLink', args),
-        domainHostingerForget: () => ipcRenderer.invoke('website:domainHostingerForget'),
-        domainHostingerSetup: () => ipcRenderer.invoke('website:domainHostingerSetup'),
-        update: () => ipcRenderer.invoke('website:update'),
-        connect: (provider) => ipcRenderer.invoke('website:connect', provider),
-        // The shop's GitHub account (the key itself never comes to the window)
-        githubStart: () => ipcRenderer.invoke('website:githubStart'),
-        githubCancel: () => ipcRenderer.invoke('website:githubCancel'),
-        githubDisconnect: () => ipcRenderer.invoke('website:githubDisconnect'),
-        githubCheck: () => ipcRenderer.invoke('website:githubCheck'),
-        githubOpen: () => ipcRenderer.invoke('website:githubOpen'),
-        githubManage: () => ipcRenderer.invoke('website:githubManage'),
-        githubConnectToken: (token) => ipcRenderer.invoke('website:githubConnectToken', { token: String(token || '') }),
-        cloudflareConnectToken: (token) => ipcRenderer.invoke('website:cloudflareConnectToken', { token: String(token || '') }),
-        openTokenPage: (provider) => ipcRenderer.invoke('website:openTokenPage', { provider: String(provider || '') }),
-        openSignupPage: (provider) => ipcRenderer.invoke('website:openTokenPage', { provider: String(provider || ''), page: 'signup' }),
-        // Create Website / Update website (on the shop's own accounts, in the background)
-        publish: () => ipcRenderer.invoke('website:publish'),
-        // Opening hours, social pages, map link (shown on the website only)
-        setPublicInfo: (info) => ipcRenderer.invoke('website:setPublicInfo', info),
-        setFeatures: (features) => ipcRenderer.invoke('website:setFeatures', features),
-        recheck: () => ipcRenderer.invoke('website:recheck'),
-        // Changes in the shop the website does not show yet (read only)
-        changes: () => ipcRenderer.invoke('website:changes'),
-        orders: (args) => ipcRenderer.invoke('website:orders', args),
-        setSettings: (part) => ipcRenderer.invoke('website:setSettings', part),
-        blockPhone: (args) => ipcRenderer.invoke('website:blockPhone', args),
-        unblockPhone: (args) => ipcRenderer.invoke('website:unblockPhone', args),
-        blockSuggestions: () => ipcRenderer.invoke('website:blockSuggestions'),
-        confirmMessage: (args) => ipcRenderer.invoke('website:confirmMessage', args),
-        setTracking: (args) => ipcRenderer.invoke('website:setTracking', args),
-        openTracking: (url) => ipcRenderer.invoke('website:openTracking', url),
-        yalidineLink: (args) => ipcRenderer.invoke('website:yalidineLink', args),
-        yalidineForget: () => ipcRenderer.invoke('website:yalidineForget'),
-        yalidineSend: (args) => ipcRenderer.invoke('website:yalidineSend', args),
-        yalidineRefresh: (args) => ipcRenderer.invoke('website:yalidineRefresh', args),
-        stats: (args) => ipcRenderer.invoke('website:stats', args),
-        // The new-order alert was pressed: open the orders page
-        onNavigate: (callback) => {
-            const subscription = (_event, path) => { if (typeof path === 'string' && /^\/[a-z-]+$/.test(path)) callback(path); };
-            ipcRenderer.on('navigate', subscription);
-            return () => ipcRenderer.removeListener('navigate', subscription);
-        },
-        // The website's customers (by phone) and one customer's history: AFUS only
-        customers: (args) => ipcRenderer.invoke('website:customers', args),
-        // The call to the customer: what they confirmed, then Confirmed (pieces put aside)
-        confirmOrder: (args) => ipcRenderer.invoke('website:confirmOrder', args),
-        updateOrder: (args) => ipcRenderer.invoke('website:updateOrder', args),
-        orderChoices: (args) => ipcRenderer.invoke('website:orderChoices', args),
-        // The shipping label (100 x 150 mm)
-        labelHtml: (args) => ipcRenderer.invoke('website:labelHtml', args),
-        printLabel: (args) => ipcRenderer.invoke('website:printLabel', args),
-        saveLabelPdf: (args) => ipcRenderer.invoke('website:saveLabelPdf', args),
-        customerHistory: (args) => ipcRenderer.invoke('website:customerHistory', args),
-        // An order's delivery status (money received: it becomes one sale)
-        setOrderStatus: (args) => ipcRenderer.invoke('website:setOrderStatus', args),
-        // A returned parcel checked piece by piece (sellable back in stock)
-        checkReturn: (args) => ipcRenderer.invoke('website:checkReturn', args),
-        openSite: () => ipcRenderer.invoke('website:openSite'),
-        // The shop's Cloudflare account (its keys never come to the window)
-        cloudflareStart: () => ipcRenderer.invoke('website:cloudflareStart'),
-        cloudflareCancel: () => ipcRenderer.invoke('website:cloudflareCancel'),
-        cloudflareChoose: (accountId) => ipcRenderer.invoke('website:cloudflareChoose', accountId),
-        cloudflareDisconnect: () => ipcRenderer.invoke('website:cloudflareDisconnect'),
-        cloudflareCheck: () => ipcRenderer.invoke('website:cloudflareCheck'),
-        cloudflareOpen: () => ipcRenderer.invoke('website:cloudflareOpen'),
-        cloudflareManage: () => ipcRenderer.invoke('website:cloudflareManage'),
-    },
-    shops: {
-        view: () => ipcRenderer.invoke('shops:view'),
-        connectMain: (args) => ipcRenderer.invoke('shops:connectMain', args),
-        newCode: (args) => ipcRenderer.invoke('shops:newCode', args),
-        pushCatalog: () => ipcRenderer.invoke('shops:pushCatalog'),
-        list: () => ipcRenderer.invoke('shops:list'),
-        remove: (id) => ipcRenderer.invoke('shops:remove', id),
-        join: (args) => ipcRenderer.invoke('shops:join', args),
-        pullCatalog: () => ipcRenderer.invoke('shops:pullCatalog'),
-        leave: () => ipcRenderer.invoke('shops:leave'),
-    },
     insights: {
         runOut: (args) => ipcRenderer.invoke('insights:runOut', args),
         sellThrough: (args) => ipcRenderer.invoke('insights:sellThrough', args),
@@ -408,14 +309,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
         get: (fileName) => ipcRenderer.invoke('images:get', fileName),
     },
 
-    // Email
-    email: {
-        testConnection: (settings) => ipcRenderer.invoke('email:testConnection', settings),
-        sendTest: (data) => ipcRenderer.invoke('email:sendTest', data),
-        sendReceipt: (sale, email) => ipcRenderer.invoke('email:sendReceipt', sale, email),
-        sendQuotation: (data) => ipcRenderer.invoke('email:sendQuotation', data),
-        sendPurchaseOrder: (data) => ipcRenderer.invoke('email:sendPurchaseOrder', data),
-    },
 
     // Suppliers
     suppliers: {
@@ -461,7 +354,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
         getTransactions: (giftCardId) => ipcRenderer.invoke('db:giftCards:getTransactions', giftCardId),
         generateCode: () => ipcRenderer.invoke('db:giftCards:generateCode'),
         savePdf: (giftCard) => ipcRenderer.invoke('giftCards:savePdf', giftCard),
-        sendEmail: (data) => ipcRenderer.invoke('email:sendGiftCard', data),
     },
 
     // Bundles
@@ -577,8 +469,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
         create: (creditSale) => ipcRenderer.invoke('db:creditSales:create', creditSale),
         update: (creditSale) => ipcRenderer.invoke('db:creditSales:update', creditSale),
         generateInvoiceNumber: () => ipcRenderer.invoke('db:creditSales:generateInvoiceNumber'),
-        sendInvoice: (data) => ipcRenderer.invoke('creditInvoice:sendEmail', data),
-        sendReminder: (data) => ipcRenderer.invoke('creditInvoice:sendReminder', data),
     },
 
     // Credit Payments
@@ -634,43 +524,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
         openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
 
     },
-
-    // E-commerce Integrations
-    ecommerce: {
-        // Connections
-        getConnections: () => ipcRenderer.invoke('ecommerce:getConnections'),
-        addConnection: (connection) => ipcRenderer.invoke('ecommerce:addConnection', connection),
-        testConnection: (connectionId) => ipcRenderer.invoke('ecommerce:testConnection', connectionId),
-        removeConnection: (connectionId) => ipcRenderer.invoke('ecommerce:removeConnection', connectionId),
-        
-        // Sync
-        sync: (connectionId) => ipcRenderer.invoke('ecommerce:sync', connectionId),
-        syncAll: () => ipcRenderer.invoke('ecommerce:syncAll'),
-        
-        // Product Mappings
-        getMappings: (connectionId) => ipcRenderer.invoke('ecommerce:getMappings', connectionId),
-        autoMapProducts: (connectionId) => ipcRenderer.invoke('ecommerce:autoMapProducts', connectionId),
-        createMapping: (mapping) => ipcRenderer.invoke('ecommerce:createMapping', mapping),
-        deleteMapping: (mappingId) => ipcRenderer.invoke('ecommerce:deleteMapping', mappingId),
-        getUnmappedProducts: (connectionId) => ipcRenderer.invoke('ecommerce:getUnmappedProducts', connectionId),
-        
-        // Logs
-        getSyncLogs: (connectionId, limit) => ipcRenderer.invoke('ecommerce:getSyncLogs', connectionId, limit),
-        
-        // OAuth (Etsy)
-        startOAuth: (platform, apiKey) => ipcRenderer.invoke('ecommerce:oauth:start', platform, apiKey),
-        completeOAuth: (code, state, codeVerifier) => ipcRenderer.invoke('ecommerce:oauth:complete', code, state, codeVerifier),
-        
-        // Status Events
-        onSyncStatus: (callback) => {
-            const subscription = (_event, ...args) => callback(...args);
-            ipcRenderer.on('ecommerce:syncStatus', subscription);
-            return () => ipcRenderer.removeListener('ecommerce:syncStatus', subscription);
-        },
-        
-        // Webhook events (pushed in by a sync transport, if one is configured)
-
-    },
-
 });
 

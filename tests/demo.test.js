@@ -20,7 +20,6 @@ const dashboard = require('../electron/services/dashboardService');
 const salesStats = require('../electron/services/salesStatsService');
 const pinService = require('../electron/services/pinService');
 const ShiftService = require('../electron/services/shiftService');
-const { EcommerceSyncManager } = require('../electron/ecommerce/EcommerceSyncManager');
 
 const REAL_FILE = path.join(dir, BRAND.databaseFile);
 const realHash = () => crypto.createHash('sha256').update(fs.readFileSync(REAL_FILE)).digest('hex');
@@ -129,9 +128,9 @@ describe('demo shop: its own database, never the shop\'s', () => {
         expect(pinService.verifyPin(staff.find(s => s.id === 'demo-seller').pin, '3333')).toBe(true);
     });
 
-    it('every screen has something to show: add-ons, gift cards and avoirs, packs, reservations, exchanges, count, markdowns, website orders, loyalty', () => {
+    it('every screen has something to show: add-ons, gift cards and avoirs, packs, reservations, exchanges, count, markdowns, loyalty', () => {
         const features = JSON.parse(api.get("SELECT value FROM settings WHERE key = 'features'").value);
-        expect(features).toMatchObject({ giftCards: true, charges: true, commissions: true, website: true, bundles: true });
+        expect(features).toMatchObject({ giftCards: true, charges: true, commissions: true, bundles: true });
         // Both sellers sold (the employee of the month compares them), each with a rule and a goal
         const bySeller = api.all("SELECT employee_id, COUNT(*) AS n FROM sales WHERE employee_id IN ('demo-cashier', 'demo-seller') GROUP BY employee_id");
         expect(bySeller.length).toBe(2);
@@ -152,13 +151,6 @@ describe('demo shop: its own database, never the shop\'s', () => {
         expect(count('exchanges')).toBe(2);
         expect(count('stock_counts', "WHERE status = 'confirmed'")).toBe(1);
         expect(count('markdowns')).toBe(2);
-        // The website: created, nine orders at every step, two paid (two sales), one parcel back
-        expect(JSON.parse(api.get("SELECT value FROM settings WHERE key = 'website'").value).created).toBe(true);
-        expect(count('website_orders')).toBe(9);
-        expect(count('website_orders', "WHERE status = 'money_received' AND sale_id IS NOT NULL")).toBe(2);
-        expect(count('sales', "WHERE notes LIKE 'website:%'")).toBe(2);
-        expect(count('website_orders', "WHERE status = 'returned'")).toBe(1);
-        expect(count('website_orders', "WHERE status = 'new'")).toBe(2);
         // Loyalty: the customers' points are those of their tickets, less what came back
         expect(api.get('SELECT SUM(loyalty_points) AS n FROM customers').n).toBeGreaterThan(100);
         // And "Check the figures" finds nothing wrong in all of it
@@ -237,36 +229,5 @@ describe('demo shop: its own database, never the shop\'s', () => {
         init.setProfile('real');
         expect(init.getDataRoot()).toBe(dir);
         expect(() => init.setProfile('other')).toThrow();
-    });
-});
-
-describe('online store with the demo shop', () => {
-    function manager({ demoActive }) {
-        const handlers = {};
-        const m = new EcommerceSyncManager({
-            store: { runQuery: () => [], getOne: () => null, runInsert: () => ({}) },
-            adapters: {}, isEnabled: () => true, ipcMain: { handle: (channel, fn) => { handlers[channel] = fn; } },
-        });
-        m.init({ isDemo: () => demoActive });
-        return { m, call: (channel, ...args) => handlers[channel](null, ...args) };
-    }
-
-    it('nothing is sent or linked while the demo shop is open', async () => {
-        const { m, call } = manager({ demoActive: true });
-        expect(m.blockedReason()).toBe('DEMO_ACTIVE');
-        expect((await m.syncAll()).message).toMatch(/^DEMO_ACTIVE/);
-        expect((await m.syncConnection('x')).message).toMatch(/^DEMO_ACTIVE/);
-        for (const channel of ['ecommerce:addConnection', 'ecommerce:testConnection', 'ecommerce:removeConnection', 'ecommerce:autoMapProducts', 'ecommerce:createMapping', 'ecommerce:deleteMapping', 'ecommerce:oauth:start', 'ecommerce:oauth:complete', 'ecommerce:webhookEvent']) {
-            const result = await call(channel, {});
-            expect(result.success, channel).toBe(false);
-            expect(result.message, channel).toMatch(/^DEMO_ACTIVE/);
-        }
-        m.stopScheduledSync?.();
-    });
-
-    it('the real shop is not blocked', async () => {
-        const { m } = manager({ demoActive: false });
-        expect(m.blockedReason()).toBe(null);
-        m.stopScheduledSync?.();
     });
 });

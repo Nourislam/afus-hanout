@@ -1,9 +1,8 @@
 import { t } from '../i18n';
-import { translateError } from '../i18n/errors';
 import { formatDate as formatLocalDate } from '../i18n/format';
 import { formatMoney } from '../i18n/format';
 import { useState, useEffect } from 'react';
-import { Search, FileText, Banknote, Mail, Bell, Eye, CreditCard, Check, Smartphone, MessageCircle } from 'lucide-react';
+import { Search, FileText, Banknote, Bell, Eye, CreditCard, Check, Smartphone, MessageCircle } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { PageHeader } from '../components/ui/PageHeader';
 import { StatTile } from '../components/ui/StatTile';
@@ -111,26 +110,8 @@ export default function CreditSalesPage() {
     const totalPending = creditSales.filter(s => s.status === 'pending').length;
     const totalPartial = creditSales.filter(s => s.status === 'partial').length;
 
-    const handleSendInvoice = async (sale) => {
-        if (!sale.customer_email) {
-            toast.error(t('credit.noEmail'));
-            return;
-        }
-        try {
-            await window.electronAPI.creditSales.sendInvoice({
-                creditSaleId: sale.id,
-                email: sale.customer_email
-            });
-            toast.success(t('credit.invoiceSent'));
-        } catch (error) {
-            console.error('Failed to send invoice:', error);
-            toast.error(`${t('credit.invoiceFailed')} ${translateError(error)}`);
-        }
-    };
-
     // Opens WhatsApp on the customer's number with the reminder typed (nothing is sent by the program)
     const shopName = useSettingsStore(state => state.settings.businessName);
-    const features = useSettingsStore(state => state.settings.features);
     const remindOnWhatsApp = async (sale) => {
         const text = reminderMessage({
             customerName: sale.customer_name, amount: (sale.amount_due || 0) - (sale.amount_paid || 0),
@@ -141,23 +122,6 @@ export default function CreditSalesPage() {
         const result = await window.electronAPI.shell.openExternal(link).catch(() => ({ success: false }));
         if (result?.success === false) toast.error(t('whatsapp.failed'));
         else toast.success(t('whatsapp.opened'));
-    };
-
-    const handleSendReminder = async (sale) => {
-        if (!sale.customer_email) {
-            toast.error(t('credit.noEmail'));
-            return;
-        }
-        try {
-            await window.electronAPI.creditSales.sendReminder({
-                creditSaleId: sale.id,
-                email: sale.customer_email
-            });
-            toast.success(t('credit.reminderSent'));
-        } catch (error) {
-            console.error('Failed to send reminder:', error);
-            toast.error(`${t('credit.reminderFailed')} ${translateError(error)}`);
-        }
     };
 
     const handleViewDetails = async (sale) => {
@@ -176,7 +140,6 @@ export default function CreditSalesPage() {
         setShowPaymentModal(true);
     };
 
-    const emailOn = !!features?.email;
     const left = (sale) => (sale.amount_due || 0) - (sale.amount_paid || 0);
     const tiles = [
         { icon: Banknote, label: t('credit.outstanding'), value: formatCurrency(totalOutstanding), tone: 'text-amber-300', iconTone: 'bg-amber-500/15 text-amber-300' },
@@ -271,16 +234,6 @@ export default function CreditSalesPage() {
                                         {sale.status !== 'paid' && (
                                             <Button size="sm" variant="ghost" onClick={() => remindOnWhatsApp(sale)} title={t('whatsapp.remind')} aria-label={t('whatsapp.remind')} data-testid="whatsapp-remind">
                                                 <MessageCircle className="w-4 h-4 text-emerald-400" />
-                                            </Button>
-                                        )}
-                                        {emailOn && sale.customer_email && (
-                                            <Button size="sm" variant="ghost" onClick={() => handleSendInvoice(sale)} title={t('credit.sendInvoice')} aria-label={t('credit.sendInvoice')}>
-                                                <Mail className="w-4 h-4 text-sky-400" />
-                                            </Button>
-                                        )}
-                                        {emailOn && sale.customer_email && sale.status !== 'paid' && (
-                                            <Button size="sm" variant="ghost" onClick={() => handleSendReminder(sale)} title={t('credit.sendReminder')} aria-label={t('credit.sendReminder')}>
-                                                <Bell className="w-4 h-4 text-amber-400" />
                                             </Button>
                                         )}
                                     </div>

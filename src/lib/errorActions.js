@@ -6,8 +6,6 @@ export const ERROR_ACTIONS = {
     labelPrinter: { label: 'fix.labelPrinter', to: '/settings?tab=labelPrinter' },
     backup: { label: 'fix.backup', to: '/settings?tab=backup' },
     drawer: { label: 'fix.drawer', to: '/pos' },
-    websiteAccounts: { label: 'fix.websiteAccounts', to: '/website?tab=accounts' },
-    website: { label: 'fix.website', to: '/website' },
 };
 
 const BY_CODE = [
@@ -15,8 +13,6 @@ const BY_CODE = [
     [/^LABEL_/, 'labelPrinter'],
     [/^BACKUP_/, 'backup'],
     [/^(SHIFT_REQUIRED|EXPENSE_MORE_THAN_DRAWER)$/, 'drawer'],
-    [/^WEBSITE_(GITHUB|CLOUDFLARE)_/, 'websiteAccounts'],
-    [/^WEBSITE_NOT_(CREATED|PUBLISHED)$/, 'website'],
 ];
 
 /** The action for an error code, or null. */

@@ -110,13 +110,6 @@ tests/                    vitest tests (migrations, catalogue, scanner, printing
 docs/NAMING.md            naming rules for Afus products
 ```
 
-## Future online store
-
-The local application is the authoritative system. A future online store must talk to a secure
-cloud API fed by a synchronization service – it must never access the local SQLite file.
-`electron/sync/SyncManager.js` is the boundary for that; no transport is bundled, so sync is off
-and nothing leaves the computer.
-
 ## Security
 
 See [SECURITY.md](SECURITY.md).
@@ -125,7 +118,3 @@ See [SECURITY.md](SECURITY.md).
 
 MIT – see [LICENSE.txt](LICENSE.txt). Part of the code comes from earlier MIT-licensed
 open-source software; its copyright notice is kept in LICENSE.txt, as that license requires.
-
-## Shop website: GitHub and Cloudflare sign-in apps
-
-Before building copies to sell, register the AFUS sign-in apps once (GitHub OAuth App with device flow, Cloudflare OAuth client with PKCE) and put their ids in the installer profile, so each shop only creates its two free accounts and presses "Sign in": see [docs/WEBSITE-ACCOUNTS-SETUP.md](docs/WEBSITE-ACCOUNTS-SETUP.md) and run `npm run check:website-apps`.

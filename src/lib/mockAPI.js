@@ -148,12 +148,6 @@ export const mockElectronAPI = {
         get: async () => null,
     },
 
-    email: {
-        testConnection: async () => ({ success: true, message: 'Mock SMTP connected' }),
-        sendTest: async () => ({ success: true, message: 'Mock email sent' }),
-        sendReceipt: async () => ({ success: true }),
-    },
-
     giftCards: {
         getAll: async () => mockGiftCards,
         getById: async (id) => mockGiftCards.find(gc => gc.id === id),

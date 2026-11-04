@@ -21,7 +21,8 @@ describe('IPC files', () => {
         try {
             for (const f of files) require(path.join(DIR, f))(ctx);
         } finally { Module._load = load; }
-        expect(channels.length).toBeGreaterThan(300);
+        // Afus Hanout has no website, online store, shops link or e-mail channels
+        expect(channels.length).toBeGreaterThan(250);
         expect(channels.filter((c, i) => channels.indexOf(c) !== i)).toEqual([]);
         const main = fs.readFileSync(path.join(DIR, '../main.js'), 'utf8');
         for (const f of files) expect(main, f).toContain(`require('./ipc/${f.replace(/\.js$/, '')}')(ipcContext);`);

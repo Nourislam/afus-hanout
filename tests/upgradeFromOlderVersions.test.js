@@ -80,7 +80,11 @@ describe('a shop that installs the new version over an older one', () => {
             expect(now.columns).toEqual(fresh.columns);
             expect(now.indexes).toEqual(fresh.indexes);
 
-            const lost = Object.entries(before).filter(([t, n]) => api.get(`SELECT COUNT(*) AS n FROM ${t}`).n < n);
+            // Afus Hanout has no online store: those tables are removed on purpose
+            // (migration 2026_11_hanout_no_online_store); every other table keeps its rows
+            const REMOVED = /^ecommerce_/;
+            expect(api.all("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'ecommerce_%'")).toEqual([]);
+            const lost = Object.entries(before).filter(([t, n]) => !REMOVED.test(t) && api.get(`SELECT COUNT(*) AS n FROM ${t}`).n < n);
             expect(lost).toEqual([]);
 
             expect(integrity.check(api).checks.filter(c => !c.ok)).toEqual([]);

@@ -19,7 +19,6 @@ const markdowns = require('./markdownService');
 const charges = require('./chargesService');
 const commissions = require('./commissionService');
 const loyalty = require('./loyaltyService');
-const orderBook = require('../website/orders/orderBook');
 const { hashPin } = require('./pinService');
 const { nextReceiptNumber } = require('./receiptNumber');
 const CLOTHING = require('../shared/clothing.json');
@@ -159,29 +158,6 @@ const CHARGES = [
     ['phone', 1, 1000, 'الهاتف', 'Téléphone', 'Phone', null],
 ];
 
-// Orders from the shop's website, step by step ([status, days ago]); paid ones become sales
-const WEB_CUSTOMERS = [
-    ['Yasmine Brahimi', 'ياسمين براهيمي', '0551 20 30 40', '31 - Oran', 'Bir El Djir', 'home'],
-    ['Khaled Mansouri', 'خالد منصوري', '0662 41 52 63', '25 - Constantine', 'El Khroub', 'office'],
-    ['Meriem Aït Saïd', 'مريم آيت سعيد', '0770 14 25 36', '15 - Tizi Ouzou', 'Azazga', 'home'],
-    ['Farid Belaïd', 'فريد بلعيد', '0699 32 43 54', '09 - Blida', 'Boufarik', 'home'],
-    ['Sara Hamdi', 'سارة حمدي', '0556 61 72 83', '06 - Béjaïa', 'Akbou', 'office'],
-    ['Nabil Touati', 'نبيل تواتي', '0773 85 96 07', '19 - Sétif', 'El Eulma', 'home'],
-    ['Hanane Bouchama', 'حنان بوشامة', '0664 18 29 30', '16 - Alger', 'Dely Ibrahim', 'home'],
-    ['Ryad Kaci', 'رياض قاسي', '0558 47 58 69', '35 - Boumerdès', 'Thénia', 'office'],
-    ['Lina Zerrouki', 'لينا زروقي', '0697 70 81 92', '13 - Tlemcen', 'Maghnia', 'home'],
-];
-const WEB_FLOWS = [
-    { received: 9, steps: [['confirmed', 8], ['shipped', 7], ['delivered', 5], ['money_received', 4]] },
-    { received: 6, steps: [['confirmed', 6], ['shipped', 5], ['money_received', 3]] },
-    { received: 5, steps: [['confirmed', 4], ['shipped', 3], ['returned', 1]] },
-    { received: 4, steps: [['contacted', 4], ['cancelled', 3]] },
-    { received: 3, steps: [['confirmed', 2], ['shipped', 1]] },
-    { received: 2, steps: [['confirmed', 1]] },
-    { received: 1, steps: [['contacted', 1]] },
-    { received: 0, steps: [] },
-    { received: 0, steps: [] },
-];
 
 const EXPENSES = {
     ar: ['خبز وقهوة', 'تنظيف المحل', 'نقل السلع', 'أكياس', 'كهرباء صغيرة'],
@@ -364,11 +340,9 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
     });
     setSetting('ui_mode', 'full');
     // Every module a clothing shop uses, the two add-ons included (email / online stores need the internet)
-    setSetting('features', { credit: true, customers: true, promotions: true, bundles: true, giftCards: true, suppliers: true, purchaseOrders: true, email: false, ecommerce: false, website: true, charges: true, commissions: true });
+    setSetting('features', { credit: true, customers: true, promotions: true, bundles: true, giftCards: true, suppliers: true, purchaseOrders: true, charges: true, commissions: true });
     // 1 point for 100 DA, worth 1 DA (the customers' points can become an avoir)
     setSetting('loyalty', { pointValue: 1 });
-    // The shop's website, made a month ago (its orders are below)
-    setSetting('website', { created: true, name: 'afus-boutique', createdAt: at(30, 11).toISOString() });
     setSetting('setup_completed', 'true');
     setSetting('demo_shop', true);
 
@@ -541,32 +515,7 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
         return { ...card, balance: card.amount };
     });
 
-    // ---- Website orders: customers and pieces (sizes still in stock after the tickets)
-    const inStock = variantsPlan.filter(v => v.left >= 3 && v.size);
     const articleOfVariant = new Map(articles.flatMap(a => a.variants.map(v => [v, a])));
-    const webOrders = WEB_FLOWS.map((flow, i) => {
-        const [latin, ar, phone, wilaya, commune, delivery] = WEB_CUSTOMERS[i];
-        const lines = [pick(random, inStock)];
-        if (random() < 0.4) lines.push(pick(random, inStock.filter(v => v !== lines[0])));
-        return { id: `demo-web-${i + 1}`, flow, name: lang === 'ar' ? ar : latin, phone, wilaya, commune, delivery, lines: lines.map(v => ({ v, a: articleOfVariant.get(v) })) };
-    });
-    const codedError = catalog.codedError;
-    // An order arrives (no stock moves); then each step on its day, after closing (19:45)
-    const webArrive = (order, when) => {
-        const [first, ...rest] = order.name.split(' ');
-        orderBook.importOrders(api, [{
-            id: order.id, created_at: when.toISOString(), customer_name: order.name, first_name: first, last_name: rest.join(' '),
-            phone: order.phone, wilaya: order.wilaya, commune: order.commune, address: order.delivery === 'home' ? (lang === 'ar' ? 'حي 200 مسكن، عمارة 4' : 'Cité 200 logements, bât. 4') : '',
-            delivery: order.delivery, courier_company: order.delivery === 'office' ? 'Yalidine' : '', delivery_fee: order.delivery === 'office' ? 400 : 600,
-            items: order.lines.map(({ v, a }) => ({ product_id: a.id, product_name: a.name, size: v.size || '', color: v.color, quantity: 1, unit_price: a.price })),
-        }]);
-    };
-    const webStep = (order, status, daysAgo) => {
-        const when = at(daysAgo, 19, 45);
-        const logsBefore = lastLogRow(api);
-        orderBook.setStatus(api, { id: order.id, status, employeeId: admin, now: when, codedError });
-        api.run('UPDATE inventory_logs SET created_at = ? WHERE rowid > ?', [sqlTime(when), logsBefore]);
-    };
 
     // ---- Deliveries from the suppliers (two received, one paid in part, one waiting)
     const orders = [
@@ -772,13 +721,6 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
             api.run('UPDATE shifts SET closing_cash = ?, closing_count = ? WHERE id = ?', [counted, JSON.stringify(notes), shiftId]);
         }
 
-        // The website's orders of the day: new ones in the afternoon, the others move on after closing
-        if (day.daysAgo > 0) {
-            for (const order of webOrders) {
-                if (order.flow.received === day.daysAgo) webArrive(order, at(day.daysAgo, 15, 10));
-                for (const [status, daysAgo] of order.flow.steps) if (daysAgo === day.daysAgo) webStep(order, status, daysAgo);
-            }
-        }
     }
 
     // One old kridi left unpaid, so the overdue list is not empty
@@ -791,10 +733,8 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
 
     // ---- Today, after the last ticket: everything is dated `now`, after every movement written so far
     const today = sqlTime(now);
-    const usedVariants = new Set(webOrders.flatMap(o => o.lines.map(l => l.v)));
+    const usedVariants = new Set();
     const free = (n) => variantsPlan.filter(v => v.left >= n && !usedVariants.has(v));
-    // Two orders just arrived on the website (to call the customers back)
-    webOrders.filter(o => o.flow.received === 0).forEach((order, i) => webArrive(order, new Date(now.getTime() - (i ? 40 : 125) * 60000)));
 
     // Two pieces put aside with a deposit (the customer comes back to pay the rest)
     let reservations = 0;
@@ -878,7 +818,7 @@ function buildShop(api, { lang = 'ar', imagesDir, now = new Date(), seed = 20261
         sales: days.reduce((s, d) => s + d.tickets.length, 0),
         returns: returnCount,
         credits: creditCount,
-        reservations, exchanges, websiteOrders: webOrders.length,
+        reservations, exchanges,
         staff: DEMO_STAFF.map(s => ({ id: s.id, role: s.role, pin: s.pin, name: tr(s.name) })),
     };
 }

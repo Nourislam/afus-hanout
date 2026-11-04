@@ -631,6 +631,14 @@ const MIGRATIONS = [
             if (tableExists(db, 'sale_items')) addColumnIfMissing(db, 'sale_items', 'bundle_id', 'TEXT');
         },
     },
+    // ---- Afus Hanout (migrations from here on are Hanout's own) ----
+    {
+        version: '2026_11_hanout_no_online_store',
+        description: 'Afus Hanout has no online store: the Shopify/WooCommerce tables an older database may hold are removed',
+        up(db) {
+            for (const table of ['ecommerce_sync_logs', 'ecommerce_product_mappings', 'ecommerce_connections']) db.run(`DROP TABLE IF EXISTS ${table}`);
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {
