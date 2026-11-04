@@ -13,7 +13,7 @@ function filesUnder(dir) {
     return fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((entry) => {
         const rel = path.join(dir, entry.name);
         if (entry.isDirectory()) return filesUnder(rel);
-        return /\.(js|jsx|mjs|cjs|html)$/.test(entry.name) ? [rel] : [];
+        return /\.(js|jsx|mjs|cjs|ts|tsx|html)$/.test(entry.name) ? [rel] : [];
     });
 }
 // The main process: main.js and its IPC handlers (electron/ipc, one file per topic)
