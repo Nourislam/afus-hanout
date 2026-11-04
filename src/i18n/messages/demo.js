@@ -9,9 +9,6 @@ export default {
     'demo.resetText': ["Everything done in the demo shop is erased and the demo goes back to how it was at the start. Your real shop is not touched.", "Tout ce qui a été fait dans la boutique de démo est effacé et la démo revient à son état de départ. Votre vraie boutique n'est pas touchée.", "كل ما فعلته في المحل التجريبي سيُحذف ويعود العرض كما كان في البداية. محلك الحقيقي لا يتأثر."],
     'demo.resetConfirm': ["Erase and start again", "Effacer et recommencer", "احذف وأعد البداية"],
     'demo.resetDone': ["The demo shop is back to the start", "La boutique de démo est revenue au départ", "رجع المحل التجريبي إلى البداية"],
-    'demo.webBanner': ["Afus Hanout demo — try everything, nothing is saved", "Démo Afus Hanout — essayez tout, rien n'est enregistré", "تجربة أفوس حانوت — جرّب كل شيء، لا شيء يُحفظ"],
-    'demo.tour': ["Guided tour", "Visite guidée", "جولة مشروحة"],
-    'demo.order': ["Get Afus Hanout", "Obtenir Afus Hanout", "اطلب أفوس حانوت"],
     'demo.exit': ["Start my real shop", "Démarrer ma vraie boutique", "ابدأ محلك الحقيقي"],
     'demo.exitTitle': ["Leave the demo shop?", "Quitter la boutique de démo ?", "الخروج من المحل التجريبي؟"],
     'demo.exitText': ["The demo data will not be moved to your real shop: no article, sale, customer or setting is copied. You can come back to the demo later from the login screen.", "Les données de démo ne seront pas transférées vers votre vraie boutique : aucun article, vente, client ni réglage n'est copié. Vous pourrez revenir à la démo depuis l'écran de connexion.", "بيانات العرض لن تُنقل إلى محلك الحقيقي: لا تُنسخ أي سلعة أو بيع أو زبون أو إعداد. يمكنك الرجوع إلى العرض لاحقًا من شاشة الدخول."],
@@ -21,5 +18,4 @@ export default {
     'demo.loginTitle': ["Sample accounts of the demo shop", "Comptes d'exemple de la boutique de démo", "حسابات المحل التجريبي"],
     'demo.loginPin': ["PIN {pin}", "Code {pin}", "الرمز {pin}"],
     'demo.backupBlocked': ["Backups belong to your real shop: they are not available in the demo shop. Use \"Start the demo again\" to go back to the start.", "Les sauvegardes appartiennent à votre vraie boutique : elles ne sont pas disponibles dans la démo. Utilisez « Recommencer la démo » pour revenir au départ.", "النسخ الاحتياطية تخص محلك الحقيقي، وهي غير متاحة في المحل التجريبي. استعمل «إعادة العرض للبداية» للرجوع إلى البداية."],
-    'demo.backSite': ["Afus website", "Site Afus", "موقع Afus"],
 };

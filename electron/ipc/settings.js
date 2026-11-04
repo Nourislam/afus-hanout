@@ -1,7 +1,6 @@
 // IPC handlers: settings. Moved out of main.js unchanged; main.js passes what they use.
 module.exports = function register(ctx) {
     const {
-        EcommerceSyncManager,
         catalog,
         getOne,
         ipcMain,
@@ -37,8 +36,6 @@ module.exports = function register(ctx) {
       } else {
         runInsert('INSERT INTO settings (key, value) VALUES (?, ?)', [key, jsonValue]);
       }
-      // The online store module turned on or off: start or stop its scheduled sync
-      if (key === 'features') EcommerceSyncManager.refreshSchedule();
       return true;
     });
 

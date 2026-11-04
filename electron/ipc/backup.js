@@ -28,7 +28,6 @@ module.exports = function register(ctx) {
         shell,
         shopImagesDir,
         shopT,
-        website,
     } = ctx;
 
     let sqlModule = null;
@@ -120,7 +119,6 @@ module.exports = function register(ctx) {
           throw error;
         }
         refreshTrial();
-        website.moveContactToShop();
         // The pictures of the restored articles come back too (none removed)
         try { backupService.restoreImages(dir, shopImagesDir()); } catch (error) { console.error('Pictures not restored:', error); }
         // The employees may differ in the restored data: log in again
