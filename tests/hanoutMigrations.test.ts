@@ -27,3 +27,44 @@ describe('Hanout migrations', () => {
         expect(tables(db).filter(t => t.startsWith('ecommerce_'))).toEqual([]);
     });
 });
+
+describe('grocery migration (2026_11_hanout_grocery)', () => {
+    const columns = (db: SqlDb, table: string): string[] =>
+        (db.exec(`PRAGMA table_info(${table})`)[0]?.values || []).map(r => String(r[1]));
+
+    async function upgraded(): Promise<SqlDb> {
+        const db = (await createLegacyDb()) as SqlDb;
+        expect(applyMigrations(db)).toContain('2026_11_hanout_grocery');
+        return db;
+    }
+
+    it('articles know their unit, carton, scale number (PLU) and capped price', async () => {
+        const db = await upgraded();
+        expect(columns(db, 'products')).toEqual(expect.arrayContaining(['unit', 'carton_qty', 'carton_price', 'plu', 'capped_price']));
+        db.run("INSERT INTO products (id, name, price) VALUES ('milk', 'Lait', 25)");
+        const row = db.exec("SELECT unit, carton_qty, plu, capped_price FROM products WHERE id = 'milk'")[0].values[0];
+        expect(row).toEqual(['piece', null, null, null]);
+    });
+
+    it('a sale line and a returned line keep the weight of a weighed article', async () => {
+        const db = await upgraded();
+        expect(columns(db, 'sale_items')).toEqual(expect.arrayContaining(['weight_grams', 'sold_as']));
+        expect(columns(db, 'return_items')).toEqual(expect.arrayContaining(['weight_grams']));
+    });
+
+    it('two articles cannot share a scale number; articles without one are many', async () => {
+        const db = await upgraded();
+        db.run("INSERT INTO products (id, name, price, plu) VALUES ('a', 'Tomates', 120, 42)");
+        db.run("INSERT INTO products (id, name, price) VALUES ('b', 'Pain', 10), ('c', 'Sucre', 90)");
+        expect(() => db.run("INSERT INTO products (id, name, price, plu) VALUES ('d', 'Oignons', 80, 42)")).toThrow();
+    });
+
+    it('new tables: barcodes per article (piece or carton), suppliers per article, supplier names, batches, visit days', async () => {
+        const db = await upgraded();
+        expect(tables(db)).toEqual(expect.arrayContaining(['product_barcodes', 'product_suppliers', 'supplier_item_names', 'product_batches', 'supplier_visits']));
+        db.run("INSERT INTO products (id, name, price) VALUES ('milk', 'Lait', 25)");
+        db.run("INSERT INTO product_barcodes (barcode, product_id, kind) VALUES ('6130000000011', 'milk', 'carton')");
+        expect(() => db.run("INSERT INTO product_barcodes (barcode, product_id, kind) VALUES ('6130000000011', 'milk', 'piece')")).toThrow();
+        expect(() => db.run("INSERT INTO product_barcodes (barcode, product_id, kind) VALUES ('6130000000028', 'milk', 'box')")).toThrow();
+    });
+});

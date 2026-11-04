@@ -639,6 +639,75 @@ const MIGRATIONS = [
             for (const table of ['ecommerce_sync_logs', 'ecommerce_product_mappings', 'ecommerce_connections']) db.run(`DROP TABLE IF EXISTS ${table}`);
         },
     },
+    {
+        version: '2026_11_hanout_grocery',
+        description: 'Grocery articles: unit (piece or kg, stock of a kg article in grams), carton, scale number (PLU), capped price; weight of sold and returned lines; barcodes per article, suppliers per article, supplier names, batches (expiry), visit days',
+        up(db) {
+            // An article sold by weight ('kg') keeps its stock in grams and its price per kg
+            addColumnIfMissing(db, 'products', 'unit', "TEXT NOT NULL DEFAULT 'piece'");
+            // Pieces in one carton, and the carton's own price when it is cheaper than its pieces
+            addColumnIfMissing(db, 'products', 'carton_qty', 'INTEGER');
+            addColumnIfMissing(db, 'products', 'carton_price', 'REAL');
+            // The article's number in the label scale (PLU), and the official highest price
+            addColumnIfMissing(db, 'products', 'plu', 'INTEGER');
+            addColumnIfMissing(db, 'products', 'capped_price', 'REAL');
+            db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_products_plu ON products(plu) WHERE plu IS NOT NULL');
+            // A weighed line is one line of quantity 1 with its weight; 'carton' or 'weight' says how it was sold
+            addColumnIfMissing(db, 'sale_items', 'weight_grams', 'INTEGER');
+            addColumnIfMissing(db, 'sale_items', 'sold_as', 'TEXT');
+            addColumnIfMissing(db, 'return_items', 'weight_grams', 'INTEGER');
+            db.run(`
+                CREATE TABLE IF NOT EXISTS product_barcodes (
+                    barcode TEXT PRIMARY KEY,
+                    product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                    kind TEXT NOT NULL DEFAULT 'piece' CHECK (kind IN ('piece', 'carton')),
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            db.run('CREATE INDEX IF NOT EXISTS idx_product_barcodes_product ON product_barcodes(product_id)');
+            db.run(`
+                CREATE TABLE IF NOT EXISTS product_suppliers (
+                    product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                    supplier_id TEXT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+                    last_cost REAL,
+                    last_date TEXT,
+                    PRIMARY KEY (product_id, supplier_id)
+                )
+            `);
+            db.run('CREATE INDEX IF NOT EXISTS idx_product_suppliers_supplier ON product_suppliers(supplier_id)');
+            // How each supplier names an article on his invoice ("HUILE ELIO 5L" -> the shop's article)
+            db.run(`
+                CREATE TABLE IF NOT EXISTS supplier_item_names (
+                    supplier_id TEXT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+                    name_key TEXT NOT NULL,
+                    product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                    last_seen TEXT,
+                    PRIMARY KEY (supplier_id, name_key)
+                )
+            `);
+            db.run('CREATE INDEX IF NOT EXISTS idx_supplier_item_names_product ON supplier_item_names(product_id)');
+            db.run(`
+                CREATE TABLE IF NOT EXISTS product_batches (
+                    id TEXT PRIMARY KEY,
+                    product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                    expiry_date TEXT NOT NULL,
+                    quantity INTEGER NOT NULL,
+                    receiving_id TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            db.run('CREATE INDEX IF NOT EXISTS idx_product_batches_product ON product_batches(product_id)');
+            db.run('CREATE INDEX IF NOT EXISTS idx_product_batches_expiry ON product_batches(expiry_date)');
+            // The days a distributor comes by (0 = Sunday ... 6 = Saturday)
+            db.run(`
+                CREATE TABLE IF NOT EXISTS supplier_visits (
+                    supplier_id TEXT PRIMARY KEY REFERENCES suppliers(id) ON DELETE CASCADE,
+                    weekdays TEXT NOT NULL DEFAULT '[]',
+                    notes TEXT
+                )
+            `);
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {
