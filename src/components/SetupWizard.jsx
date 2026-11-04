@@ -97,7 +97,7 @@ export default function SetupWizard({ onComplete }) {
         }
     };
 
-    // Ready-made clothing categories in the chosen language (only on an empty catalogue)
+    // Ready-made grocery categories in the chosen language (only on an empty catalogue)
     const createDefaultCategories = async () => {
         const existing = await window.electronAPI.categories.getAll();
         if (existing.length > 0) return;

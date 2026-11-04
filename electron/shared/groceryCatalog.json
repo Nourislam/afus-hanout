@@ -1,0 +1,17 @@
+{
+    "categories": [
+        { "code": "grocery", "en": "Grocery", "fr": "Épicerie", "ar": "مواد غذائية", "color": "#f59e0b" },
+        { "code": "dairy", "en": "Milk and dairy", "fr": "Lait et laitages", "ar": "حليب وألبان", "color": "#3b82f6" },
+        { "code": "bread", "en": "Bread and pastry", "fr": "Pain et viennoiserie", "ar": "خبز وحلويات", "color": "#d97706" },
+        { "code": "drinks", "en": "Drinks", "fr": "Boissons", "ar": "مشروبات", "color": "#06b6d4" },
+        { "code": "vegetables", "en": "Vegetables and fruit", "fr": "Fruits et légumes", "ar": "خضر وفواكه", "color": "#22c55e" },
+        { "code": "sweets", "en": "Biscuits and sweets", "fr": "Biscuits et confiserie", "ar": "بسكويت وحلويات", "color": "#ec4899" },
+        { "code": "cleaning", "en": "Cleaning", "fr": "Entretien", "ar": "مواد التنظيف", "color": "#8b5cf6" },
+        { "code": "hygiene", "en": "Hygiene", "fr": "Hygiène", "ar": "النظافة الشخصية", "color": "#14b8a6" },
+        { "code": "canned", "en": "Tins and jars", "fr": "Conserves", "ar": "معلبات", "color": "#ef4444" },
+        { "code": "frozen", "en": "Cold and frozen", "fr": "Frais et surgelés", "ar": "مبرّدات ومجمّدات", "color": "#0ea5e9" },
+        { "code": "spices", "en": "Spices", "fr": "Épices", "ar": "توابل", "color": "#b45309" },
+        { "code": "tobacco", "en": "Tobacco and phone cards", "fr": "Tabac et recharges", "ar": "دخان وفليكسي", "color": "#64748b" }
+    ],
+    "defaultCategories": ["grocery", "dairy", "bread", "drinks", "vegetables", "sweets", "cleaning", "hygiene"]
+}

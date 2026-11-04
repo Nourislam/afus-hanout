@@ -1,7 +1,9 @@
-// Clothing reference data shared with the main process (electron/shared/clothing.json):
-// colours with stable codes, size sets, genders, Algerian seasons, suggested
-// categories and default brands. Names are shown in the interface language.
+// Reference data shared with the main process. The colours and sizes of an
+// article's variants (electron/shared/clothing.json) are kept for the variant
+// code still in the program; a new shop's categories are a grocery's
+// (electron/shared/groceryCatalog.json). Names are shown in the interface language.
 import CLOTHING from '../../electron/shared/clothing.json';
+import GROCERY from '../../electron/shared/groceryCatalog.json';
 import { currentLanguage } from '../i18n';
 
 // Built-in palette and size sets (the shop can hide some and add its own,
@@ -10,8 +12,8 @@ export const COLORS = CLOTHING.colors;
 export const SIZE_SETS = CLOTHING.sizeSets;
 export const GENDERS = CLOTHING.genders;
 export const SEASONS = CLOTHING.seasons;
-export const CATEGORY_SUGGESTIONS = CLOTHING.categories;
-export const DEFAULT_CATEGORY_CODES = CLOTHING.defaultCategories;
+export const CATEGORY_SUGGESTIONS = GROCERY.categories;
+export const DEFAULT_CATEGORY_CODES = GROCERY.defaultCategories;
 
 const name = (entry, lang) => (entry ? entry[lang] || entry.en : '');
 

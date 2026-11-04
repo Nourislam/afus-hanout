@@ -708,6 +708,22 @@ const MIGRATIONS = [
             `);
         },
     },
+    {
+        // The old seed of 2025_03 gives every new database clothing brands
+        // (Nike, Adidas...): a grocery shop starts without them. A brand an
+        // article already names is kept.
+        version: '2026_11_hanout_no_clothing_brands',
+        description: 'Remove the unused clothing brands of the old seed',
+        up(db) {
+            if (!tableExists(db, 'brands')) return;
+            const clothing = require('../shared/clothing.json');
+            const hasBrand = (db.exec('PRAGMA table_info(products)')[0]?.values || []).some(c => c[1] === 'brand');
+            for (const name of clothing.brands) {
+                const used = hasBrand && db.exec('SELECT 1 FROM products WHERE LOWER(TRIM(brand)) = LOWER(?) LIMIT 1', [name]).length > 0;
+                if (!used) db.run('DELETE FROM brands WHERE LOWER(name) = LOWER(?)', [name]);
+            }
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {

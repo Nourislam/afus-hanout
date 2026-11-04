@@ -75,7 +75,6 @@ export default {
     'backup.now': ["Now", "Maintenant", "الآن"],
     'backup.row.shopName': ["Shop", "Magasin", "المحل"],
     'backup.row.articles': ["Articles", "Articles", "السلع"],
-    'backup.row.pieces': ["Colours / sizes", "Couleurs / tailles", "الألوان / المقاسات"],
     'backup.row.sales': ["Sales", "Ventes", "المبيعات"],
     'backup.row.customers': ["Customers", "Clients", "الزبائن"],
     'backup.row.employees': ["Employees", "Employés", "العمال"],

@@ -68,3 +68,18 @@ describe('grocery migration (2026_11_hanout_grocery)', () => {
         expect(() => db.run("INSERT INTO product_barcodes (barcode, product_id, kind) VALUES ('6130000000028', 'milk', 'box')")).toThrow();
     });
 });
+
+describe('no clothing brands (2026_11_hanout_no_clothing_brands)', () => {
+    it('a new shop starts without the clothing brands of the old seed; a brand an article uses stays', async () => {
+        const clothing = require('../electron/shared/clothing.json') as { brands: string[] };
+        const db = (await createLegacyDb()) as SqlDb;
+        // An older database whose articles already name a brand of the seed
+        db.run('ALTER TABLE products ADD COLUMN brand TEXT');
+        db.run("INSERT INTO products (id, name, price, brand) VALUES ('p1', 'Chaussettes', 100, 'Nike')");
+        const applied = applyMigrations(db);
+        expect(applied).toContain('2026_11_hanout_no_clothing_brands');
+        const left = (db.exec('SELECT name FROM brands ORDER BY name')[0]?.values || []).map(r => String(r[0]));
+        expect(left).toEqual(['Nike']);
+        expect(clothing.brands.length).toBeGreaterThan(5);
+    });
+});

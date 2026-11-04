@@ -7,10 +7,9 @@ import {
 import { Button } from '../ui/Button';
 import { useT } from '../../i18n';
 import { formatDate, formatMoney } from '../../i18n/format';
-import { colorHex, colorName, sizeLabel } from '../../lib/clothing';
 import { compare, profitState, isFirstDay, daysWithoutSale, MAX_ALERTS } from '../../lib/dashboard';
 import { DASHBOARD_LINKS } from '../../lib/listFilters';
-import { Money, Section, Tile, CompareLine, MiniTabs, Row, Empty, Spinner } from './parts';
+import { Money, Section, Tile, CompareLine, Row, Empty, Spinner } from './parts';
 
 const ALERT_ICONS = { printer: Printer, drawer: Wallet, stock: Boxes, credit: CreditCard, backup: Archive, price: Tag, offer: Percent };
 const TONES = {
@@ -93,30 +92,14 @@ function FirstSteps({ steps }) {
     );
 }
 
-/** "What sells this week?": best 5 articles, colours or sizes, with the pieces left. */
+/** "What sells this week?": the best 5 articles, with the pieces left. */
 export function BestSellers({ best, onMore, title }) {
     const { t } = useT();
-    const [kind, setKind] = useState('products');
-    const rows = best?.[kind] || [];
-    const name = (row) => {
-        if (kind === 'colors') {
-            return (
-                <span className="flex items-center gap-2 min-w-0">
-                    <span className="w-3.5 h-3.5 rounded-full border border-zinc-600 flex-none" style={{ background: colorHex(row) || '#3f3f46' }} />
-                    <span className="truncate">{colorName(row)}</span>
-                </span>
-            );
-        }
-        return <span className="truncate block">{kind === 'sizes' ? sizeLabel(row.size) : row.name}</span>;
-    };
+    const rows = best?.products || [];
+    const name = (row) => <span className="truncate block">{row.name}</span>;
     return (
         <Section title={title || t('dash.selling.title')} icon={Flame} className="h-full"
             action={onMore && <button type="button" className="text-sm text-indigo-300 hover:underline whitespace-nowrap" onClick={onMore}>{t('dash.salesDetails')}</button>}>
-            <MiniTabs value={kind} onChange={setKind} tabs={[
-                { id: 'products', label: t('dash.selling.products') },
-                { id: 'colors', label: t('dash.selling.colors') },
-                { id: 'sizes', label: t('dash.selling.sizes') },
-            ]} />
             {!best ? <Spinner /> : rows.length === 0 ? <Empty>{t('dash.selling.none')}</Empty> : (
                 <ol className="divide-y divide-dark-border" data-testid="best-sellers">
                     {rows.map((row, i) => (

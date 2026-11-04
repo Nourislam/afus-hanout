@@ -2,7 +2,7 @@
 export default {
     'supplierPay.bankTransfer': ["Bank transfer / CCP", "Virement bancaire / CCP", "تحويل بنكي / CCP"],
     'supplierPay.check': ["Cheque", "Chèque", "صك"],
-    'purchaseReturn.wrongSize': ["Wrong size / colour", "Mauvaise taille / couleur", "مقاس / لون خاطئ"],
+    'purchaseReturn.wrongSize': ["Wrong article", "Mauvais article", "سلعة خاطئة"],
     'return.sellable': ["Sellable (Restock)", "Revendable (remis en stock)", "قابل للبيع (يرجع للمخزون)"],
     'return.damaged': ["Damaged", "Abîmé", "تالف"],
     'supplierPay.draft': ["Draft", "Brouillon", "مسودة"],

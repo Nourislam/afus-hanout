@@ -73,14 +73,15 @@ function runOutSoon(api, { now = Date.now(), days = 14, horizon = 7 } = {}) {
  */
 function sellThrough(api, { by = 'product', since = null } = {}) {
     const sold = netSold(api, since);
+    // Sold by weight: grams on the shelf and lines sold do not add up, left out
     const products = api.all(`
-        SELECT p.id, p.name, NULLIF(TRIM(COALESCE(p.collection, '')), '') AS collection, NULLIF(p.season, '') AS season,
-               ${PRODUCT_STOCK} AS stock
-        FROM products p WHERE p.is_active = 1
+        SELECT p.id, p.name, c.name AS category, ${PRODUCT_STOCK} AS stock
+        FROM products p LEFT JOIN categories c ON c.id = p.category_id
+        WHERE p.is_active = 1 AND COALESCE(p.unit, 'piece') <> 'kg'
     `);
     const groups = new Map();
     for (const p of products) {
-        const key = by === 'collection' ? p.collection : by === 'season' ? p.season : p.id;
+        const key = by === 'category' ? p.category : p.id;
         if (key === null || key === undefined) continue;
         const g = groups.get(key) || { key, label: by === 'product' ? p.name : key, sold: 0, stock: 0, articles: 0 };
         g.sold += sold.get(`p:${p.id}`) || 0;

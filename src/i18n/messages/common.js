@@ -5,7 +5,7 @@ export default {
     // Application identity (the shop's own name/logo is shown where available)
     // Product name: the same in every language (electron/shared/brand.json)
     'app.name': [PRODUCT_NAME, PRODUCT_NAME, PRODUCT_NAME],
-    'app.tagline': ['Software for Algerian clothing & fashion shops', 'Logiciel pour boutiques de vêtements et accessoires en Algérie', 'برنامج محلات الملابس والإكسسوارات في الجزائر'],
+    'app.tagline': ["Software for Algerian grocery shops", "Logiciel pour les épiceries et supérettes en Algérie", "برنامج الحوانيت والمحلات الغذائية في الجزائر"],
     'app.loading': ['Loading…', 'Chargement…', 'جارٍ التحميل…'],
 
     // Navigation

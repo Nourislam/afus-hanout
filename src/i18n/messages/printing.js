@@ -48,7 +48,6 @@ export default {
     'printing.customSize': ["Custom size", "Sur mesure", "مقاس خاص"],
     'printing.chosenSize': ["Chosen: {size}", "Choisi : {size}", "المختار: {size}"],
     'printing.codeHint': ["Codes the label is too small for are greyed out.", "Les codes trop grands pour cette étiquette sont grisés.", "الرموز التي لا يتسع لها هذا الملصق تظهر باهتة."],
-    'printing.codeFor': ["One code for", "Un code pour", "رمز واحد لـ"],
     'printing.tooSmallShort': ["too small here", "trop petit ici", "صغير جداً هنا"],
     'printing.tooSmall': ["Its thinnest bar would be {size} mm; scanners need at least {min} mm on this printer.", "Sa barre la plus fine ferait {size} mm ; il faut au moins {min} mm sur cette imprimante.", "أنحف خط فيه سيكون {size} مم، والقارئ يحتاج {min} مم على الأقل مع هذه الطابعة."],
     'printing.notPossible': ["This code cannot be printed on this label.", "Ce code ne peut pas être imprimé sur cette étiquette.", "لا يمكن طباعة هذا الرمز على هذا الملصق."],
