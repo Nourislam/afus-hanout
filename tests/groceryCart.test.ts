@@ -1,0 +1,72 @@
+// The sales screen's cart with grocery articles: cartons and weighed lines.
+import { describe, it, expect, beforeEach } from 'vitest';
+import { useCartStore } from '../src/stores/cartStore';
+
+const milk = { id: 'milk', name: 'Lait sachet', price: 25, stock_quantity: 60, carton_qty: 24, carton_price: 570 };
+const tomato = { id: 'tomato', name: 'Tomates', price: 120, stock_quantity: 2000, unit: 'kg' };
+const cart = () => useCartStore.getState();
+
+describe('cart with cartons and weighed lines', () => {
+    beforeEach(() => {
+        useCartStore.setState({ promotions: [], coupon: '', taxType: 'inclusive', globalTaxRate: 0, taxExempt: false, serviceCharge: 0 });
+        cart().clearCart();
+    });
+
+    it('a carton is one line of its pieces at the carton price; a second carton joins it', () => {
+        expect(cart().addCarton(milk).success).toBe(true);
+        expect(cart().items[0]).toMatchObject({ product_id: 'milk', sold_as: 'carton', cartons: 1, quantity: 24, unit_price: 25, discount: 30, total: 570 });
+        cart().addCarton(milk);
+        expect(cart().items).toHaveLength(1);
+        expect(cart().items[0]).toMatchObject({ cartons: 2, quantity: 48, discount: 60, total: 1140 });
+    });
+
+    it('pieces and cartons of the same article are two lines, and together they cannot pass the stock', () => {
+        const fewMilk = { ...milk, stock_quantity: 40 };
+        cart().addItem(fewMilk, 10);
+        cart().addCarton(fewMilk);
+        expect(cart().items).toHaveLength(2);
+        // 10 pieces + 2 cartons = 58 > 40; 40 pieces + 1 carton = 64 > 40
+        expect(cart().addCarton(fewMilk).success).toBe(false);
+        expect(cart().addItem(fewMilk, 30).success).toBe(false);
+        expect(cart().getItemCount()).toBe(34);
+    });
+
+    it('+ and − on a carton line add or take one carton', () => {
+        cart().addCarton(milk);
+        const id = cart().items[0].id;
+        cart().updateItemQuantity(id, 25);
+        expect(cart().items[0]).toMatchObject({ cartons: 2, quantity: 48, total: 1140 });
+        cart().updateItemQuantity(id, 47);
+        expect(cart().items[0]).toMatchObject({ cartons: 1, quantity: 24, total: 570 });
+    });
+
+    it('an article without a carton cannot be sold by the carton', () => {
+        expect(cart().addCarton({ id: 'x', name: 'X', price: 10, stock_quantity: 50 }).success).toBe(false);
+    });
+
+    it('a weighed line: its weight, its price for that weight, quantity 1; each weighing is its own line', () => {
+        expect(cart().addWeighed(tomato, 750).success).toBe(true);
+        cart().addWeighed(tomato, 500);
+        expect(cart().items).toHaveLength(2);
+        expect(cart().items[0]).toMatchObject({ sold_as: 'weight', weight_grams: 750, quantity: 1, unit_price: 90, total: 90 });
+        expect(cart().getTotal()).toBe(150);
+    });
+
+    it('a weighed line keeps the price read on a scale label', () => {
+        cart().addWeighed(tomato, 1000, 118.5);
+        expect(cart().items[0]).toMatchObject({ weight_grams: 1000, unit_price: 118.5, total: 118.5 });
+    });
+
+    it('the weights of an article cannot pass its stock; the quantity of a weighed line stays 1', () => {
+        cart().addWeighed(tomato, 1500);
+        expect(cart().addWeighed(tomato, 600).success).toBe(false);
+        expect(cart().updateItemQuantity(cart().items[0].id, 2).success).toBe(false);
+    });
+
+    it('an article sold by weight is not added as a piece', () => {
+        const result = cart().addItem(tomato);
+        expect(result.success).toBe(false);
+        expect(result.needsWeight).toBe(true);
+        expect(cart().items).toHaveLength(0);
+    });
+});

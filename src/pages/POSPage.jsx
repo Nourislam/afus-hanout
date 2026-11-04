@@ -19,6 +19,7 @@ import CustomerPickerModal from '../components/pos/CustomerPickerModal';
 import OpeningCashDialog from '../components/shifts/OpeningCashDialog';
 import CashExpenseDialog from '../components/shifts/CashExpenseDialog';
 import { VariantPickerModal } from '../components/pos/VariantPickerModal';
+import WeightModal, { weightLabel } from '../components/pos/WeightModal';
 import FirstSaleGuide from '../components/pos/FirstSaleGuide';
 import MyMonthLine from '../components/pos/MyMonthLine';
 import { ReserveDialog, ReservationsDialog } from '../components/pos/Reservations';
@@ -73,6 +74,8 @@ function ProductImage({ product, className = '' }) {
 
 export default function POSPage() {
     const [products, setProducts] = useState([]);
+    // An article sold by weight waiting for its weight
+    const [weighProduct, setWeighProduct] = useState(null);
     // Quick buttons: the articles sold most these 7 days (worked out by the program)
     const [quickIds, setQuickIds] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -160,6 +163,12 @@ export default function POSPage() {
 
     const addToCart = (product, variant = null, { fromScanner = false } = {}) => {
         const result = cart.addItem(product, 1, variant);
+        // Sold by weight: weigh it first
+        if (result.needsWeight) {
+            if (fromScanner) beep('ok');
+            setWeighProduct(product);
+            return false;
+        }
         if (!result.success) {
             beep('error');
             toast.error(result.message);
@@ -201,6 +210,10 @@ export default function POSPage() {
                 addToCart(result.product, result.variant, { fromScanner });
             } else if (result.needsVariant) {
                 setVariantProduct(result.product);
+            } else if (result.carton) {
+                // The carton's own barcode: one carton of the article
+                const added = cart.addCarton(result.product);
+                if (!added.success) { beep('error'); toast.error(added.message); } else if (fromScanner) beep('ok');
             } else {
                 addToCart(result.product, null, { fromScanner });
             }
@@ -567,6 +580,12 @@ export default function POSPage() {
                                                 {(item.color || item.size) ? variantLabel(item) : item.variant_label}
                                             </p>
                                         )}
+                                        {item.sold_as === 'carton' && (
+                                            <p className="text-xs text-sky-300 mt-0.5" data-testid="line-cartons">{t('pos.cartonsLine', { n: item.cartons, pieces: item.quantity })}</p>
+                                        )}
+                                        {item.sold_as === 'weight' && (
+                                            <p className="text-xs text-emerald-300 mt-0.5 tabular" data-testid="line-weight">{weightLabel(item.weight_grams)} × {money(item.price_per_kg)}/{t('pos.kg')}</p>
+                                        )}
                                         <p className="text-xs text-zinc-500 mt-0.5 tabular">
                                             {bargained && <span className="line-through me-1.5">{money(item.original_price)}</span>}
                                             <span className={bargained ? 'text-emerald-300' : ''}>{money(item.unit_price)}</span>
@@ -577,7 +596,7 @@ export default function POSPage() {
                                         <span className="font-semibold tabular text-sm">{money(item.total)}</span>
                                         <div className="flex items-center gap-1">
                                             <button onClick={() => cart.updateItemQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded-md bg-dark-secondary hover:bg-zinc-700 flex items-center justify-center" aria-label="-"><Minus className="w-3.5 h-3.5" /></button>
-                                            <span className="w-7 text-center text-sm font-semibold tabular">{item.quantity}</span>
+                                            <span className="w-7 text-center text-sm font-semibold tabular">{item.sold_as === 'carton' ? item.cartons : item.quantity}</span>
                                             <button
                                                 onClick={() => { const r = cart.updateItemQuantity(item.id, item.quantity + 1); if (r && !r.success) toast.error(r.message); }}
                                                 className="w-7 h-7 rounded-md bg-dark-secondary hover:bg-zinc-700 flex items-center justify-center" aria-label="+"
@@ -656,6 +675,15 @@ export default function POSPage() {
 
             <PaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} total={total} onComplete={handlePaymentComplete} />
 
+            <WeightModal
+                product={weighProduct}
+                onClose={() => setWeighProduct(null)}
+                onWeighed={(grams) => {
+                    const added = cart.addWeighed(weighProduct, grams);
+                    if (!added.success) { beep('error'); toast.error(added.message); return; }
+                    setWeighProduct(null);
+                }}
+            />
             <VariantPickerModal
                 isOpen={!!variantProduct}
                 product={variantProduct}
