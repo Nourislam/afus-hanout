@@ -13,9 +13,16 @@ export interface LookupResult {
     product: ArticleRow;
     carton?: boolean;
     needsVariant?: boolean;
+    /** A label of the shop's scale: its weight, and the printed price when it has one */
+    scale?: { grams: number; price?: number };
 }
 
 export interface ElectronAPI {
+    settings: {
+        get(key: string): Promise<unknown>;
+        set(args: { key: string; value: unknown }): Promise<unknown>;
+    };
+    products: { getAll(): Promise<ArticleRow[]> };
     suppliers: { getAll(): Promise<{ id: string; name: string; is_active?: number }[]> };
     catalog: {
         generateBarcodes(count: number, reserved: string[]): Promise<string[]>;

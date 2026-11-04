@@ -211,6 +211,10 @@ export default function POSPage() {
                 addToCart(result.product, result.variant, { fromScanner });
             } else if (result.needsVariant) {
                 setVariantProduct(result.product);
+            } else if (result.scale) {
+                // A label of the shop's scale: its weight, and the printed price when it has one
+                const added = cart.addWeighed(result.product, result.scale.grams, result.scale.price ?? null);
+                if (!added.success) { beep('error'); toast.error(added.message); } else if (fromScanner) beep('ok');
             } else if (result.carton) {
                 // The carton's own barcode: one carton of the article
                 const added = cart.addCarton(result.product);
