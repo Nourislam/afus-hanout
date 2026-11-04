@@ -47,3 +47,23 @@ Name, barcode, price on the first screen; the rest (category, cost, stock, carto
 
 ### Task 9: verify, review, merge
 lint, tsc, tests, build, review, PR, merge after local checks; tick phase 1 in the study.
+
+## Result (2026-11-04)
+
+Done on branch `phase-1-cleanup`:
+
+- Website, online store, shops link, e-mail and the clothing screens removed (Task 1-4). IPC handlers that still took removed names from the context are fixed; `tests/ipcContext.test.ts` fails on any name `main.js` no longer passes.
+- Migration `2026_11_hanout_grocery` (Task 5), then `2026_11_hanout_no_clothing_brands`: the clothing brands of the old 2025_03 seed are removed unless an article names one.
+- Weight, carton and official price in the catalogue, the sale and the returns (Task 6). Stock value of an article sold by weight is grams / 1000 × price everywhere (home screen, stock list, decisions, Excel).
+- Three-field article form (Task 7). The screens show kg stock and price per kg (`src/lib/units.ts`).
+- Grocery demo shop (Task 8): today's open drawer is the owner's, so the owner sells at once. A new shop gets grocery categories (`electron/shared/groceryCatalog.json`).
+- Excel: the stock file has pieces and kg columns and a PLU column; a counted file sent back reads kg; the product import takes one row per article with a «sold by» column.
+- Wording: tests refuse «boutique» (any case), «الموقع» and clothes (garments, an article's colour/size) in every interface and document text. French says «magasin».
+
+Checks: `npm run lint`, `npm run typecheck`, `npx vitest run` (81 files, 493 tests; the 3 Excel files run here with `xlsx@0.18.5` from npm in the scratch install only, `package.json` unchanged). Screens checked in the real Electron app (demo shop) in Arabic and French at 1024, 1366 and 1920: article form, sales screen with a piece, a carton and a weighed article, payment and ticket. A full sale by piece, carton and weight moves the stock by 1 piece, 4 pieces and 500 g.
+
+Left for later phases (seen while checking):
+
+- Phase 2: the ticket area is small at 1024 px; Enter in the payment window does not pay the exact amount; the ticket and the subtotal count a weight line as one piece and the printed ticket does not show the weight.
+- Phase 4: reorder suggestions use the quantity of weighed lines; the stock count screen types grams for an article sold by weight (the counted Excel file already reads kg).
+- The variant code (colour/size) stays in the program, unreachable from the article form and the import; its texts say «variant» (النوع).
