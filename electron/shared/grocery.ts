@@ -55,3 +55,34 @@ export function aboveCap(product: CapOf, unitPrice: number, grams?: number | nul
     const price = g > 0 ? (Number(unitPrice) || 0) * 1000 / g : Number(unitPrice) || 0;
     return price > Number(cap) + 0.005;
 }
+
+interface CountedLine {
+    quantity?: number | string | null;
+    weight_grams?: number | string | null;
+}
+
+/** Pieces and grams of some lines (a ticket, a cart): a weighed line is grams, not a piece. */
+export function lineCounts(lines: CountedLine[]): { pieces: number; grams: number } {
+    let pieces = 0;
+    let grams = 0;
+    for (const line of lines || []) {
+        const g = Number(line.weight_grams) || 0;
+        if (g > 0) grams += g;
+        else pieces += Number(line.quantity) || 0;
+    }
+    return { pieces, grams };
+}
+
+/** Price per kg of a weighed line from its price and its weight. */
+export function pricePerKg(linePrice: number, grams: number): number {
+    const g = Number(grams) || 0;
+    return g > 0 ? round2((Number(linePrice) || 0) * 1000 / g) : 0;
+}
+
+/** Kilograms in the language's way: 0.5 / 0,5; `fixed` keeps the grams (0.500). */
+export function kgNumber(grams: number, lang: string, fixed = false): string {
+    const kg = (Number(grams) || 0) / 1000;
+    return new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-US', {
+        minimumFractionDigits: fixed ? 3 : 0, maximumFractionDigits: 3, useGrouping: false,
+    }).format(kg);
+}

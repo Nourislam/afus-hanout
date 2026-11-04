@@ -21,6 +21,7 @@ import CashExpenseDialog from '../components/shifts/CashExpenseDialog';
 import { VariantPickerModal } from '../components/pos/VariantPickerModal';
 import WeightModal, { weightLabel } from '../components/pos/WeightModal';
 import { stockLabel, perUnit } from '../lib/units';
+import { lineCounts } from '../../electron/shared/grocery.ts';
 import FirstSaleGuide from '../components/pos/FirstSaleGuide';
 import MyMonthLine from '../components/pos/MyMonthLine';
 import { ReserveDialog, ReservationsDialog } from '../components/pos/Reservations';
@@ -355,7 +356,9 @@ export default function POSPage() {
     const manualDiscount = cart.getManualDiscount();
     const taxAmount = cart.getTaxAmount();
     const total = cart.getTotal();
-    const itemCount = cart.getItemCount();
+    // Pieces and kilograms apart: a weighed line is not a piece
+    const counts = lineCounts(cart.items);
+    const itemCount = counts.pieces + counts.grams;
 
     return (
         <div className="h-full flex overflow-hidden">
@@ -523,7 +526,11 @@ export default function POSPage() {
                         <h2 className="font-semibold flex items-center gap-2">
                             <ShoppingBag className="w-5 h-5 text-indigo-400" />
                             {t('pos.ticket')}
-                            {itemCount > 0 && <span className="badge badge-primary">{t('pos.pieces', { n: itemCount })}</span>}
+                            {itemCount > 0 && (
+                                <span className="badge badge-primary" data-testid="cart-count">
+                                    {[counts.pieces > 0 && t('pos.pieces', { n: counts.pieces }), counts.grams > 0 && weightLabel(counts.grams)].filter(Boolean).join(' + ')}
+                                </span>
+                            )}
                         </h2>
                         <Button variant="secondary" size="sm" onClick={() => setShowReservations(true)} title={t('res.list')} aria-label={t('res.list')} data-testid="pos-reservations">
                             <Bookmark className="w-4 h-4" />

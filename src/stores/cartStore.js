@@ -3,7 +3,7 @@ import { isTaxEnabled } from '../lib/tax';
 import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
 import { bestPromotion } from '../lib/promotions';
-import { isWeighed, weighedPrice, cartonDeal } from '../../electron/shared/grocery.ts';
+import { isWeighed, weighedPrice, cartonDeal, lineCounts } from '../../electron/shared/grocery.ts';
 
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 const lineTotal = (quantity, unitPrice, discount = 0) => round2(quantity * unitPrice - (discount || 0));
@@ -401,10 +401,8 @@ export const useCartStore = create((set, get) => ({
         return round2(Math.max(0, total + (Number(serviceCharge) || 0)));
     },
 
-    getItemCount: () => {
-        const { items } = get();
-        return items.reduce((sum, item) => sum + item.quantity, 0);
-    },
+    /** Pieces in the cart (a weighed line is grams, not a piece: see lineCounts). */
+    getItemCount: () => lineCounts(get().items).pieces,
 
     clearCart: () => {
         set({

@@ -50,6 +50,8 @@ const MESSAGES = {
     'receipt.exchangeNote': ['Exchange within 7 days with this receipt', 'Échange sous 7 jours avec ce ticket', 'الاستبدال خلال 7 أيام بهذه التذكرة'],
     'receipt.giftCardBalance': ['Balance', 'Solde', 'الرصيد'],
     'receipt.items': ['{n} pcs', '{n} pcs', '{n} قطعة'],
+    'receipt.kg': ['{n} kg', '{n} kg', '{n} كغ'],
+    'receipt.perKg': ['/kg', '/kg', '/كغ'],
     // Payment methods
     'pay.cash': ['Cash', 'Espèces', 'نقداً'],
     'pay.card': ['Card (CIB / Edahabia)', 'Carte (CIB / Edahabia)', 'بطاقة CIB أو الذهبية'],

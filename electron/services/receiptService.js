@@ -6,6 +6,7 @@ const { translator, formatMoney, formatDate, variantLabel, paymentLabel } = requ
 const { loadHtml, hiddenWindow, printContents } = require('./printDocument');
 const { BRAND } = require('../brand');
 const { ticketCode } = require('../shared/ticketCode.mjs');
+const { lineCounts, pricePerKg, kgNumber } = require('../shared/grocery.ts');
 
 /** QR of the ticket (scanned later for a return or an exchange), or ''. */
 function ticketQr(receiptNumber) {
@@ -166,8 +167,8 @@ class ReceiptService {
                     ${variantLabel(item, T.lang) ? ` — ${esc(variantLabel(item, T.lang))}` : ''}
                     ${item.sku ? `<br><span class="sku">SKU: ${esc(item.sku)}</span>` : ''}
                 </td>
-                <td class="item-qty">${item.quantity}</td>
-                <td class="item-price">${money(item.unit_price || item.unit_cost)}</td>
+                <td class="item-qty">${Number(item.weight_grams) > 0 ? T('receipt.kg', { n: kgNumber(item.weight_grams, T.lang, true) }) : item.quantity}</td>
+                <td class="item-price">${Number(item.weight_grams) > 0 ? `${money(pricePerKg(item.unit_price, item.weight_grams))}${T('receipt.perKg')}` : money(item.unit_price || item.unit_cost)}</td>
                 <td class="item-total">${money(item.total || item.total_cost)}</td>
             </tr>
         `).join('');
@@ -875,16 +876,22 @@ class ReceiptService {
             logo: storeSettings.shopLogoDataUri || '',
         };
 
-        const itemCount = (data.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+        // Pieces and kilograms apart: a weighed line is not a piece
+        const counts = lineCounts(data.items || []);
+        const countText = T('receipt.items', { n: counts.pieces }) + (counts.grams > 0 ? ` + ${T('receipt.kg', { n: kgNumber(counts.grams, T.lang) })}` : '');
         const itemsHtml = (data.items || []).map(item => {
             const lineDiscount = parseFloat(item.discount) || 0;
             const variant = variantLabel(item, T.lang);
+            const grams = Number(item.weight_grams) || 0;
+            const qty = grams > 0
+                ? `${T('receipt.kg', { n: kgNumber(grams, T.lang, true) })} × ${money(pricePerKg(item.unit_price, grams))}${T('receipt.perKg')}`
+                : `${esc(item.quantity)} × ${money(item.unit_price)}`;
             return `
             <div class="item">
                 <div class="item-name">${esc(item.product_name)}</div>
                 ${variant || item.sku ? `<div class="item-variant">${esc(variant)}${variant && item.sku ? ' · ' : ''}${item.sku ? `<span class="ltr">${esc(item.sku)}</span>` : ''}</div>` : ''}
                 <div class="row small">
-                    <span><span class="ltr">${esc(item.quantity)} × ${money(item.unit_price)}</span></span>
+                    <span><span class="ltr">${qty}</span></span>
                     <span class="ltr">${money(item.total)}</span>
                 </div>
                 ${lineDiscount > 0 ? `<div class="row small"><span>${T('receipt.discount')}</span><span class="ltr">-${money(lineDiscount)}</span></div>` : ''}
@@ -985,7 +992,7 @@ class ReceiptService {
     <div class="sep"></div>
     ${itemsHtml}
     <div class="sep"></div>
-    <div class="row"><span>${T('receipt.subtotal')} (${T('receipt.items', { n: itemCount })})</span><span class="ltr">${money(data.subtotal)}</span></div>
+    <div class="row"><span>${T('receipt.subtotal')} (${countText})</span><span class="ltr">${money(data.subtotal)}</span></div>
     ${data.discount_amount > 0 ? `<div class="row"><span>${T('receipt.discount')}</span><span class="ltr">-${money(data.discount_amount)}</span></div>` : ''}
     ${(data.service_charge && data.service_charge > 0) ? `<div class="row"><span>${T('receipt.serviceCharge')}</span><span class="ltr">${money(data.service_charge)}</span></div>` : ''}
     ${showTax ? `<div class="row"><span>${TAX_LABEL}</span><span class="ltr">${money(data.tax_amount)}</span></div>` : ''}
