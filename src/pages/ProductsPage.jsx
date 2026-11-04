@@ -18,7 +18,7 @@ import { translateError } from '../i18n/errors';
 
 
 import { useSettingsStore } from '../stores/settingsStore';
-import { ProductFormModal } from '../components/products/ProductFormModal';
+import ArticleFormModal from '../components/products/ArticleFormModal';
 import { lacksCost, readFilter } from '../lib/listFilters';
 import { ExportButton, ExcelIcon } from '../components/ui/ExportButton';
 
@@ -407,13 +407,12 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Product Modal */}
-                <ProductFormModal
+                <ArticleFormModal
                     isOpen={showProductModal}
                     onClose={() => setShowProductModal(false)}
                     product={editingProduct}
                     categories={categories}
                     initialValues={initialValues}
-                    onCategoriesChanged={loadData}
                     onSave={() => { loadData(); setShowProductModal(false); }}
                 />
 
