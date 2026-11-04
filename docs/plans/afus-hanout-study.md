@@ -269,10 +269,10 @@ Nov 2, 2026 · @nouri islam
 
 ### المرحلة 0: المستودع والهوية
 
-- [ ] استنساخ Boutique ورفعه إلى `afus-hanout` (الأوامر في القسم التالي)
-- [ ] الهوية حسب `docs/NAMING.md`، وسطر Afus Hanout في جدول المنتجات في المستودعين
-- [ ] TypeScript للملفات الجديدة فقط
-- [ ] `docs/AFUS-DESIGN.md` و`tests/design.test.js`
+- [x] استنساخ Boutique ورفعه إلى `afus-hanout` (الأوامر في القسم التالي)
+- [x] الهوية حسب `docs/NAMING.md`، وسطر Afus Hanout في جدول المنتجات (في afus-hanout فقط: Boutique لا يُلمس)
+- [x] TypeScript للملفات الجديدة فقط
+- [x] `docs/AFUS-DESIGN.md` و`tests/design.test.js`
 
 شرط الانتقال: البرنامجان مثبتان على حاسوب واحد، كل واحد بقاعدة بياناته، و`npm test` و`npm run lint` ناجحان.
 
