@@ -26,7 +26,6 @@ export default {
     'nav.employees': ['Employees', 'Employés', 'العمال'],
     'nav.reports': ['Reports', 'Rapports', 'التقارير'],
     'nav.settings': ['Settings', 'Paramètres', 'الإعدادات'],
-    'nav.website': ['My store', 'Ma boutique en ligne', 'متجري'],
     'nav.closeShift': ['Close shift', 'Clôturer la caisse', 'غلق الصندوق'],
     'nav.logout': ['Log out', 'Déconnexion', 'خروج'],
 
@@ -145,5 +144,4 @@ export default {
     'titlebar.synced': ['Synced', 'Synchronisé', 'متزامن'],
     'titlebar.offline': ['Offline', 'Hors ligne', 'بدون اتصال'],
     'titlebar.syncError': ['Sync error', 'Erreur de synchro', 'خطأ في المزامنة'],
-    'nav.websiteOrders': ["Website orders", "Commandes du site", "طلبات الموقع"],
 };

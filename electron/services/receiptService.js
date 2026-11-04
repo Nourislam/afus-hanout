@@ -193,7 +193,6 @@ class ReceiptService {
                             ${data.supplier_phone ? `<div class="detail"><strong>${T('doc.phone')}:</strong> <bdi dir="ltr">${esc(data.supplier_phone)}</bdi></div>` : ''}
                             ${data.supplier_email ? `<div class="detail"><strong>${T('doc.email')}:</strong> ${esc(data.supplier_email)}</div>` : ''}
                             ${data.supplier_contact_person ? `<div class="detail"><strong>${T('doc.contact')}:</strong> ${esc(data.supplier_contact_person)}</div>` : ''}
-                            ${data.supplier_website ? `<div class="detail"><strong>${T('doc.website')}:</strong> ${esc(data.supplier_website)}</div>` : ''}
                         </div>
                     </div>
                     <div class="info-box ship-to">
@@ -623,7 +622,6 @@ class ReceiptService {
                             ${settings.address ? `${esc(settings.address)}<br>` : ''}
                             ${settings.phone ? `${T('doc.phone')}: <bdi dir="ltr">${esc(settings.phone)}</bdi><br>` : ''}
                             ${settings.email ? `${T('doc.email')}: <bdi dir="ltr">${esc(settings.email)}</bdi>` : ''}
-                            ${settings.website ? `<br>${T('doc.website')}: ${esc(settings.website)}` : ''}
                             ${legal ? `<br>${legal}` : ''}
                         </div>
                     </div>

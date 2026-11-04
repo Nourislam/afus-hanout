@@ -1,10 +1,5 @@
 // [English, French, Arabic]
 export default {
-    'ecommerce.connectedStatus': ["Connected", "Connecté", "متصل"],
-    'ecommerce.disconnected': ["Disconnected", "Déconnecté", "غير متصل"],
-    'ecommerce.mappings': ["Mappings", "Liaisons", "الربط"],
-    'ecommerce.test': ["Test", "Tester", "اختبار"],
-    'ecommerce.connect': ["Connect", "Connecter", "ربط"],
     'bundles.break': ["Break", "Défaire", "تفكيك"],
     'inventory.adjustShort': ["Adjust", "Ajuster", "تعديل"],
     'po.pay': ["Pay", "Payer", "تسديد"],
@@ -19,9 +14,5 @@ export default {
     'qr.unknownCode': ["Unknown code: {code}", "Code inconnu : {code}", "رمز غير معروف: {code}"],
     'excel.missingColumns': ["Missing required columns: {fields}", "Colonnes obligatoires manquantes : {fields}", "أعمدة إجبارية ناقصة: {fields}"],
     'receive.overConfirm': ["You are receiving more than ordered for {name}. Continue?", "Vous recevez plus que commandé pour {name}. Continuer ?", "تستلم أكثر من المطلوب لـ {name}. متابعة؟"],
-    'ecommerce.savedTestFailed': ["Connection saved, but the test failed: {message}", "Connexion enregistrée, mais le test a échoué : {message}", "تم حفظ الاتصال لكن فشل الاختبار: {message}"],
-    'ecommerce.justNow': ["Just now", "À l'instant", "الآن"],
-    'ecommerce.minutesAgo': ["{n} min ago", "Il y a {n} min", "منذ {n} دقيقة"],
-    'ecommerce.hoursAgo': ["{n} h ago", "Il y a {n} h", "منذ {n} ساعة"],
     'gift.redeem': ["Purchase", "Achat", "شراء"],
 };

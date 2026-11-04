@@ -77,7 +77,5 @@ export default {
     'supplierHistory.loading': ["Loading history...", "Chargement de l'historique…", "جارٍ تحميل السجل…"],
     'supplierHistory.none': ["No history found.", "Aucun historique.", "لا يوجد سجل."],
     'quote.loadFailed': ["Failed to load quote details", "Échec du chargement du devis", "تعذّر تحميل عرض السعر"],
-    'quote.emailed': ["Quotation emailed successfully", "Devis envoyé", "تم إرسال عرض السعر"],
     'quote.createdBy': ["Created By", "Créé par", "أنشأه"],
-    'quote.emailCustomer': ["Email Customer", "Envoyer au client", "إرسال للزبون"],
 };

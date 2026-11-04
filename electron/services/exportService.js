@@ -77,11 +77,10 @@ function stockSheets(api, T) {
 function productSheets(api, T, { withCost = true } = {}) {
     const rows = api.all(`
         SELECT p.name, c.name AS category, p.brand, p.season, p.sku, p.barcode, p.price, p.cost, p.wholesale_price, p.stock_quantity,
-               COALESCE(p.show_on_website, 1) AS online,
                (SELECT COUNT(*) FROM product_variants v WHERE v.product_id = p.id AND COALESCE(v.is_active, 1) = 1) AS sizes
         FROM products p LEFT JOIN categories c ON c.id = p.category_id
         WHERE COALESCE(p.is_active, 1) = 1
-        ORDER BY c.name, p.name`).map((p, i) => ({ ...p, n: i + 1, online: p.online ? T('xl.yes') : T('xl.no'), sizes: p.sizes || '' }));
+        ORDER BY c.name, p.name`).map((p, i) => ({ ...p, n: i + 1, sizes: p.sizes || '' }));
     const columns = [
         { key: 'n', label: T('xl.col.n'), type: 'int', width: 6 },
         { key: 'category', label: T('xl.col.category'), type: 'text' },
@@ -95,7 +94,6 @@ function productSheets(api, T, { withCost = true } = {}) {
         ...(withCost ? [{ key: 'cost', label: T('xl.col.unitCost'), type: 'money' }] : []),
         { key: 'price', label: T('xl.col.unitPrice'), type: 'money' },
         { key: 'wholesale_price', label: T('xl.col.wholesale'), type: 'money' },
-        { key: 'online', label: T('xl.col.online'), type: 'text' },
     ];
     return [{ name: T('xl.products.sheet'), title: T('xl.products.title'), period: T('xl.asOf', { date: day(new Date(), T) }), columns, rows }];
 }

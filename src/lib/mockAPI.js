@@ -32,7 +32,7 @@ let mockBundles = [];
 let mockPromotions = [];
 
 const mockSettings = {
-    businessName: 'Boutique démo',
+    businessName: 'Hanout démo',
     businessAddress: 'Rue Didouche Mourad',
     businessWilaya: '16 - Alger',
     businessPhone: '0555 00 00 00',
