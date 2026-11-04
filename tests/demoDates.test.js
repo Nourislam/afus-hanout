@@ -12,7 +12,7 @@ const electronPath = require.resolve('electron');
 require.cache[electronPath] = { id: electronPath, filename: electronPath, loaded: true, exports: { app: { getPath: () => dir } } };
 const init = require('../electron/database/init');
 const api = require('../electron/database/api');
-const { seedDemoShop } = require('../electron/services/demoData');
+const { seedDemoShop } = require('../electron/services/groceryDemo.ts');
 const ShiftService = require('../electron/services/shiftService');
 
 describe('demo shop built on any day', () => {

@@ -487,6 +487,9 @@ function recomputeProductStock(api, productId) {
  * Move stock for a product or one of its variants and record it in
  * inventory_logs. `delta` is positive to add stock and negative to remove it.
  * Products that have variants must always be moved through a variant.
+ *
+ * @param {object} api
+ * @param {{ productId?: string|null, variantId?: string|null, delta: number, type: string, reason?: string|null, employeeId?: string|null }} move
  */
 function adjustStock(api, { productId, variantId = null, delta, type, reason = null, employeeId = null }) {
     const change = parseInt(delta, 10);
@@ -611,6 +614,11 @@ function productImages(row) {
  *              stock_quantity, min_stock_level, is_active }]
  *           Variants missing from the list are deactivated, never deleted, so
  *           sales history and printed labels keep pointing at a real record.
+ *
+ * @param {object} api
+ * @param {Record<string, any>} product
+ * @param {object[]} [variants]
+ * @param {{ employeeId?: string|null, isNew?: boolean }} [options]
  */
 function saveProduct(api, product, variants = [], { employeeId = null, isNew = false } = {}) {
     if (!product || !product.id) throw new Error('Product id is required');

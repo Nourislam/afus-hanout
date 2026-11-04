@@ -113,7 +113,7 @@ module.exports = function register(ctx) {
     // online store only ever sees the shop's own data.
     // ------------------------------------------------------------------
     const demoService = require('../services/demoService');
-    const { demoStaff } = require('../services/demoData');
+    const { demoStaff } = require('../services/groceryDemo.ts');
     // The demo shop is tried on the Afus website (the web demo runs this same
     // program): the installed program no longer offers it. Its data, if any,
     // stays until the owner deletes it from Settings › About
