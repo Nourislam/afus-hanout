@@ -21,6 +21,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import ArticleFormModal from '../components/products/ArticleFormModal';
 import { lacksCost, readFilter } from '../lib/listFilters';
 import { ExportButton, ExcelIcon } from '../components/ui/ExportButton';
+import { stockLabel, perUnit } from '../lib/units';
 
 export default function ProductsPage() {
     const [products, setProducts] = useState([]);
@@ -110,7 +111,7 @@ export default function ProductsPage() {
         if (product.variant_count > 0 && product.min_variant_price !== product.max_variant_price) {
             return `${formatCurrency(product.min_variant_price)} – ${formatCurrency(product.max_variant_price)}`;
         }
-        return formatCurrency(product.variant_count > 0 ? product.min_variant_price : product.price);
+        return formatCurrency(product.variant_count > 0 ? product.min_variant_price : product.price) + perUnit(product);
     };
 
     const handleDeleteProduct = async (product) => {
@@ -346,7 +347,7 @@ export default function ProductsPage() {
                                             ) : '-'}
                                         </TableCell>
                                         <TableCell className="font-medium whitespace-nowrap">{formatPrice(product)}</TableCell>
-                                        <TableCell>{product.stock_quantity}</TableCell>
+                                        <TableCell>{stockLabel(product)}</TableCell>
                                         <TableCell><StatusBadge status={getStockStatus(product)} /></TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1 flex-nowrap">

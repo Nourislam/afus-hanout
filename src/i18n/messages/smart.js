@@ -1,8 +1,8 @@
 // Reports › Shop intelligence (busy hours, occasions, what to buy). [English, French, Arabic]
 export default {
-    'smart.tab': ["Shop intelligence", "Intelligence boutique", "ذكاء المحل"],
-    'smart.rhythmTitle': ["When your shop is busy", "Quand votre boutique est animée", "متى يكون محلك مزدحمًا"],
-    'smart.rhythmHint': ["Learnt from your own tickets: plan who is in the shop, and when.", "Appris de vos propres tickets : prévoyez qui est en boutique, et quand.", "محسوب من تذاكرك أنت: خطّط من يكون في المحل ومتى."],
+    'smart.tab': ["Shop intelligence", "Intelligence du magasin", "ذكاء المحل"],
+    'smart.rhythmTitle': ["When your shop is busy", "Quand votre magasin est animé", "متى يكون محلك مزدحمًا"],
+    'smart.rhythmHint': ["Learnt from your own tickets: plan who is in the shop, and when.", "Appris de vos propres tickets : prévoyez qui est en magasin, et quand.", "محسوب من تذاكرك أنت: خطّط من يكون في المحل ومتى."],
     'smart.weeks': ["{n} weeks", "{n} semaines", "{n} أسبوعًا"],
     'smart.noSales': ["No sale in this period yet.", "Aucune vente sur cette période.", "لا توجد مبيعات في هذه الفترة بعد."],
     'smart.notEnough': ["Less than two weeks of sales: the figures will be clearer later.", "Moins de deux semaines de ventes : les chiffres seront plus clairs plus tard.", "أقل من أسبوعين من المبيعات: الأرقام ستكون أوضح لاحقًا."],

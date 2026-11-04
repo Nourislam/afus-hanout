@@ -20,6 +20,7 @@ import OpeningCashDialog from '../components/shifts/OpeningCashDialog';
 import CashExpenseDialog from '../components/shifts/CashExpenseDialog';
 import { VariantPickerModal } from '../components/pos/VariantPickerModal';
 import WeightModal, { weightLabel } from '../components/pos/WeightModal';
+import { stockLabel, perUnit } from '../lib/units';
 import FirstSaleGuide from '../components/pos/FirstSaleGuide';
 import MyMonthLine from '../components/pos/MyMonthLine';
 import { ReserveDialog, ReservationsDialog } from '../components/pos/Reservations';
@@ -441,7 +442,7 @@ export default function POSPage() {
                                     <button key={product.id} type="button" onClick={() => handleProductClick(product)} data-testid="pos-quick-pick"
                                         className="h-16 px-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-start flex flex-col justify-center min-w-0 transition-colors">
                                         <span dir="auto" className="text-sm font-semibold leading-tight line-clamp-1">{product.name}</span>
-                                        <span className="text-xs text-indigo-300 tabular">{money(product.variant_count > 0 ? product.min_variant_price : product.price)}</span>
+                                        <span className="text-xs text-indigo-300 tabular">{money(product.variant_count > 0 ? product.min_variant_price : product.price)}{perUnit(product)}</span>
                                     </button>
                                 ))}
                             </div>
@@ -469,13 +470,13 @@ export default function POSPage() {
                                         <div className="relative">
                                             <ProductImage product={product} className="aspect-[4/5] w-full" />
                                             <span className={`absolute top-1.5 end-1.5 badge ${out ? 'badge-danger' : low ? 'badge-warning' : 'bg-black/60 text-zinc-200'}`}>
-                                                {out ? t('variants.outOfStock') : product.stock_quantity}
+                                                {out ? t('variants.outOfStock') : stockLabel(product)}
                                             </span>
                                         </div>
                                         <p className="mt-2 font-medium text-sm leading-tight line-clamp-2 min-h-[2.5em]">{product.name}</p>
                                         {product.brand && <p className="text-[11px] text-zinc-500 truncate">{product.brand}</p>}
                                         <p className="mt-1 text-indigo-300 font-bold tabular">
-                                            {money(price)}{product.variant_count > 0 && product.min_variant_price !== product.max_variant_price ? '+' : ''}
+                                            {money(price)}{perUnit(product)}{product.variant_count > 0 && product.min_variant_price !== product.max_variant_price ? '+' : ''}
                                         </p>
                                         <VariantHints product={product} />
                                     </button>
@@ -499,8 +500,8 @@ export default function POSPage() {
                                                     <div className="xl:hidden mt-1"><VariantHints product={product} /></div>
                                                 </td>
                                                 <td className="hidden xl:table-cell w-48"><VariantHints product={product} /></td>
-                                                <td className="text-zinc-400 tabular whitespace-nowrap">{product.stock_quantity}</td>
-                                                <td className="text-end font-semibold text-indigo-300 tabular whitespace-nowrap">{money(price)}</td>
+                                                <td className="text-zinc-400 tabular whitespace-nowrap">{stockLabel(product)}</td>
+                                                <td className="text-end font-semibold text-indigo-300 tabular whitespace-nowrap">{money(price)}{perUnit(product)}</td>
                                             </tr>
                                         );
                                     })}

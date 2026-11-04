@@ -93,6 +93,12 @@ describe('demo shop: its own database, never the shop\'s', () => {
         expect(count('products', "WHERE unit = 'kg' AND plu IS NULL")).toBe(0);
     });
 
+    it('the owner opens the demo and sells at once: today\'s drawer is the owner\'s', () => {
+        // In a hanout the owner is at the counter: logging in as the owner never meets another person's open drawer
+        const open = api.all('SELECT employee_id FROM shifts WHERE end_time IS NULL');
+        expect(open).toEqual([{ employee_id: 'demo-admin' }]);
+    });
+
     it('the grocery is all there: by weight, by the carton, official prices, distributors\' days, Ramadan basket', () => {
         // Vegetables by weight: stock in grams, lines with their weight
         expect(count('products', "WHERE unit = 'kg'")).toBe(4);

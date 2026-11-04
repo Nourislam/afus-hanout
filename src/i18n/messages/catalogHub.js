@@ -5,7 +5,7 @@ export default {
     'settings.taxEnabledOn': ["On: TVA is computed and shown on sales, tickets and reports.", "Activée : la TVA est calculée et affichée sur les ventes, tickets et rapports.", "مفعّلة: تُحسب الرسوم وتظهر في البيع والتذاكر والتقارير."],
     'settings.taxEnabledOff': ["Off: no TVA is computed or shown anywhere.", "Désactivée : aucune TVA n'est calculée ni affichée.", "غير مفعّلة: لا تُحسب الرسوم ولا تظهر في أي مكان."],
 
-    'settings.taxCardOff': ["The currency of the shop. Turn the switch on only if your prices include a tax.", "La monnaie de la boutique. Activez l'interrupteur seulement si vos prix comprennent une taxe.", "عملة المحل. فعّل الزر فقط إذا كانت أسعارك تتضمن رسوماً."],
+    'settings.taxCardOff': ["The currency of the shop. Turn the switch on only if your prices include a tax.", "La monnaie du magasin. Activez l'interrupteur seulement si vos prix comprennent une taxe.", "عملة المحل. فعّل الزر فقط إذا كانت أسعارك تتضمن رسوماً."],
 
     // Article form
     'common.on': ["On", "Activé", "مفعّل"],

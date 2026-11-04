@@ -140,7 +140,7 @@ export default {
     'dash.st.byProduct': ["Articles", "Articles", "السلع"],
     'dash.st.byCategory': ["Categories", "Catégories", "الأصناف"],
     'dash.st.row': ["{sold} sold of {total}", "{sold} vendus sur {total}", "بِيع {sold} من {total}"],
-    'dash.st.total': ["The whole shop: {rate} %", "Toute la boutique : {rate} %", "المحل كله: {rate} %"],
+    'dash.st.total': ["The whole shop: {rate} %", "Tout le magasin : {rate} %", "المحل كله: {rate} %"],
     'dash.st.none': ["Nothing to show yet: give the articles a collection or a season", "Rien encore : donnez une collection ou une saison aux articles", "لا شيء بعد: حدّد مجموعة أو موسمًا للسلع"],
     'dash.dead.title': ["Dormant stock", "Stock dormant", "المخزون الراكد"],
     'dash.dead.none': ["Every article sold at least one piece in {days} days", "Chaque article a vendu au moins une pièce en {days} jours", "كل سلعة بيعت منها قطعة على الأقل خلال {days} يومًا"],

@@ -58,7 +58,7 @@ const MESSAGES = {
     'pay.gift_card': ['Gift card', 'Carte cadeau', 'بطاقة هدية'],
     'pay.exchange': ['Exchanged piece', 'Pièce échangée', 'قطعة مُبدّلة'],
     'pay.deposit': ['Deposit paid', 'Acompte versé', 'العربون المدفوع'],
-    'receipt.demo': ['DEMO SHOP — NOT A SALE', 'BOUTIQUE DE DÉMO — PAS UNE VENTE', 'محل تجريبي — ليست بيعًا حقيقيًا'],
+    'receipt.demo': ['DEMO SHOP — NOT A SALE', 'MAGASIN DE DÉMO — PAS UNE VENTE', 'محل تجريبي — ليست بيعًا حقيقيًا'],
     'pay.bank_transfer': ['Bank transfer', 'Virement bancaire', 'تحويل بنكي'],
     'pay.check': ['Cheque', 'Chèque', 'صك'],
     'pay.other': ['Other', 'Autre', 'أخرى'],

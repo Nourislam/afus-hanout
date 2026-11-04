@@ -1,6 +1,6 @@
 // [English, French, Arabic]
 export default {
-    'dashboard.shop': ["Whole shop", "Toute la boutique", "كل المحل"],
+    'dashboard.shop': ["Whole shop", "Tout le magasin", "كل المحل"],
     'dashboard.mine': ["My sales", "Mes ventes", "مبيعاتي"],
     'dashboard.todaySales': ["Today's sales", "Ventes du jour", "مبيعات اليوم"],
     'dashboard.todayTransactions': ["Sales today", "Tickets aujourd'hui", "عدد التذاكر اليوم"],

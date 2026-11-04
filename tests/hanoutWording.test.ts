@@ -8,7 +8,8 @@ import { MESSAGES } from '../src/i18n/messages';
 const require = createRequire(import.meta.url);
 const main = require('../electron/i18n') as { MESSAGES: Record<string, string[]> };
 
-const FORBIDDEN = /Boutique|بوتيك|الموقع/;
+// «boutique» in any case: the French texts say «magasin»
+const FORBIDDEN = /boutique|بوتيك|الموقع/i;
 // A label's size (مقاس الملصق) is not clothing: only garments and colour/size of an article
 const CLOTHING = new RegExp([
     'ملابس', 'تيشيرت', 'سروال', 'سراويل', 'جينز', 'فستان', 'فساتين', 'قميص', 'أحذية', 'نسيج', 'مقاسات', 'المقاسات',
@@ -25,7 +26,7 @@ function offending(messages: Record<string, unknown>, rule = FORBIDDEN): string[
 }
 
 describe('the shop\'s words', () => {
-    it('no "Boutique" and no website (الموقع) in the interface texts', () => {
+    it('no "Boutique" (in any case) and no website (الموقع) in the interface texts', () => {
         expect(offending(MESSAGES as Record<string, unknown>)).toEqual([]);
     });
 

@@ -7,6 +7,9 @@ import { NumPad } from '../ui/NumPad';
 import { t } from '../../i18n';
 import { formatMoney } from '../../i18n/format';
 import { weighedPrice } from '../../../electron/shared/grocery.ts';
+import { weightLabel } from '../../lib/units';
+
+export { weightLabel };
 
 export interface Weighable { id: string; name: string; price: number }
 
@@ -21,9 +24,6 @@ const QUICK_GRAMS = [250, 500, 1000, 2000];
 
 const gramsOf = (kg: string): number => Math.round((parseFloat(kg) || 0) * 1000);
 
-export function weightLabel(grams: number): string {
-    return grams < 1000 ? `${grams} ${t('pos.g')}` : `${(grams / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 })} ${t('pos.kg')}`;
-}
 
 export default function WeightModal({ product, onClose, onWeighed }: Props) {
     const [kg, setKg] = useState('');

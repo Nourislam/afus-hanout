@@ -72,7 +72,7 @@ export default {
     'count.title': ["Stock count", "Inventaire", "جرد المخزون"],
     'count.intro': ["Count what is really on the shelves. The stock changes only when you confirm, with a reason.", "Comptez ce qui est vraiment en rayon. Le stock ne change qu'à la validation, avec un motif.", "اعدُد ما هو موجود فعلًا في الرفوف. لا يتغير المخزون إلا عند التأكيد مع ذكر السبب."],
     'count.scope': ["What do you count?", "Que comptez-vous ?", "ماذا تجرد؟"],
-    'count.wholeShop': ["The whole shop", "Toute la boutique", "كل المحل"],
+    'count.wholeShop': ["The whole shop", "Tout le magasin", "كل المحل"],
     'count.start': ["Start the count", "Commencer l'inventaire", "بدء الجرد"],
     'count.history': ["Last counts", "Derniers inventaires", "آخر عمليات الجرد"],
     'count.noHistory': ["No count yet", "Aucun inventaire pour l'instant", "لا يوجد جرد بعد"],

@@ -60,7 +60,7 @@ export default {
     'pos.printed': ["Receipt sent to printer", "Ticket envoyé à l'imprimante", "أُرسلت التذكرة إلى الطابعة"],
     'pos.codeNotFound': ["Code not found", "Code introuvable", "رمز غير معروف"],
     'pos.codeNotFoundText': ["No product or variant uses this code:", "Aucun article n'utilise ce code :", "لا توجد سلعة تستعمل هذا الرمز:"],
-    'pos.codeNotFoundHint': ["Check that the label belongs to this shop. If it is a new item, create it and assign this code.", "Vérifiez que l'étiquette appartient à cette boutique. Si c'est un nouvel article, créez-le avec ce code.", "تأكد أن الملصق تابع لهذا المحل. إذا كانت سلعة جديدة، أنشئها بهذا الرمز."],
+    'pos.codeNotFoundHint': ["Check that the label belongs to this shop. If it is a new item, create it and assign this code.", "Vérifiez que l'étiquette appartient à ce magasin. Si c'est un nouvel article, créez-le avec ce code.", "تأكد أن الملصق تابع لهذا المحل. إذا كانت سلعة جديدة، أنشئها بهذا الرمز."],
     'pos.searchInstead': ["Search instead", "Rechercher", "البحث بدلاً من ذلك"],
     'pos.createWithCode': ["Create product with this code", "Créer un article avec ce code", "إنشاء سلعة بهذا الرمز"],
     'pos.heldTitle': ["Held Transactions", "Ventes en attente", "المبيعات المعلقة"],

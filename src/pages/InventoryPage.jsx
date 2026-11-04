@@ -22,6 +22,7 @@ import { PERMISSIONS } from '../lib/permissions';
 import StockCountModal from '../components/inventory/StockCountModal';
 import { MissingCodes } from '../components/inventory/MissingCodes';
 import { ExportButton } from '../components/ui/ExportButton';
+import { stockLabel } from '../lib/units';
 
 export default function InventoryPage() {
     const [products, setProducts] = useState([]);
@@ -248,7 +249,7 @@ export default function InventoryPage() {
                                             product.stock_quantity <= product.min_stock_level ? 'text-amber-400' :
                                                 'text-green-400'
                                             }`}>
-                                            {product.stock_quantity}
+                                            {stockLabel(product)}
                                         </span>
                                     </TableCell>
                                     <TableCell className="hidden xl:table-cell text-zinc-400">{product.min_stock_level}</TableCell>

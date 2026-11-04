@@ -251,7 +251,10 @@ function buildShop(api: Api, { lang = 'ar', imagesDir, now = new Date(), seed = 
     const admin = DEMO_STAFF[0].id;
     const cashier = DEMO_STAFF[1].id;
     const weekendSeller = DEMO_STAFF[2].id;
-    const sellerOf = (daysAgo: number) => ([4, 6].includes(new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysAgo).getDay()) ? weekendSeller : cashier);
+    // Today the owner is at the counter (the drawer left open is the owner's: whoever tries
+    // the demo as the owner sells at once); the other days, the cashier or the weekend seller
+    const sellerOf = (daysAgo: number) => (daysAgo === 0 ? admin
+        : [4, 6].includes(new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysAgo).getDay()) ? weekendSeller : cashier);
 
     commissions.saveRule(api, { employee_id: cashier, kind: 'percent', rate: 1, monthly_goal: 900000 });
     commissions.saveRule(api, { employee_id: weekendSeller, kind: 'percent', rate: 1, monthly_goal: 400000 });

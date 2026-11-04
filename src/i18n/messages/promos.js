@@ -95,7 +95,7 @@ export default {
     // Quick starts (only fill the form)
     'promo.preset.title': ["Quick start", "Démarrage rapide", "بداية سريعة"],
     'promo.preset.season': ["Seasonal sale", "Soldes de saison", "تخفيضات الموسم"],
-    'promo.preset.seasonHint': ["Whole shop, from today for 30 days", "Toute la boutique, dès aujourd'hui pour 30 jours", "كل المحل، من اليوم لمدة 30 يومًا"],
+    'promo.preset.seasonHint': ["Whole shop, from today for 30 days", "Tout le magasin, dès aujourd'hui pour 30 jours", "كل المحل، من اليوم لمدة 30 يومًا"],
     'promo.preset.seasonName': ["Seasonal sale", "Soldes", "تخفيضات الموسم"],
     'promo.preset.category': ["By category", "Par catégorie", "حسب الصنف"],
     'promo.preset.categoryHint': ["Choose the categories, e.g. all the drinks", "Choisissez les catégories, ex. toutes les boissons", "اختر الأصناف، مثلاً كل المشروبات"],
