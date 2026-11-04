@@ -9,7 +9,7 @@ const ipc = (message) => new Error(`Error invoking remote method 'x': Error: ${m
 describe('error messages say what to do', () => {
     it('each code is translated with the action to take, in the three languages', () => {
         for (const code of ['PRINT_FAILED', 'BACKUP_DISK_FULL', 'BACKUP_NO_ACCESS', 'RESTORE_FAILED', 'LOGIN_REQUIRED',
-            'COUNT_CODE_UNKNOWN', 'EXCHANGE_CREDIT_SALE', 'SALE_NOT_COUNTED', 'DISCOUNT_NEEDS_MANAGER', 'EXPENSE_MORE_THAN_DRAWER', 'IMPORT_EXISTS']) {
+            'COUNT_CODE_UNKNOWN', 'EXCHANGE_CREDIT_SALE', 'SALE_NOT_COUNTED', 'DISCOUNT_NEEDS_MANAGER', 'EXPENSE_MORE_THAN_DRAWER', 'IMPORT_EXISTS', 'PRICE_ABOVE_CAP']) {
             for (const lang of ['en', 'fr', 'ar']) {
                 const text = translate(lang, `errors.${code}`);
                 expect(text, `${code} ${lang}`).not.toBe(`errors.${code}`);

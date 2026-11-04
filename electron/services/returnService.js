@@ -9,6 +9,7 @@
 const catalog = require('./catalogService');
 const { NOT_COUNTED } = require('./saleStatus');
 const { lineRefund } = require('../shared/refund.mjs');
+const { stockUnits } = require('../shared/grocery.ts');
 const loyalty = require('./loyaltyService');
 
 /** Pieces of a sale line that can still come back (earlier returns taken off). */
@@ -41,7 +42,7 @@ function checkLines(api, sale, data) {
     const asked = new Map();
     return items.map(item => {
         const saleItem = item.sale_item_id
-            ? api.get('SELECT id, sale_id, product_id, variant_id, product_name, variant_label, quantity FROM sale_items WHERE id = ?', [item.sale_item_id])
+            ? api.get('SELECT id, sale_id, product_id, variant_id, product_name, variant_label, quantity, weight_grams FROM sale_items WHERE id = ?', [item.sale_item_id])
             : null;
         if (!saleItem || saleItem.sale_id !== sale.id) throw catalog.codedError('RETURN_LINE_UNKNOWN', { receipt: sale.receipt_number });
         const quantity = Number(item.quantity);
@@ -90,16 +91,17 @@ function createReturn(api, data) {
         const productId = saleItem.product_id;
 
         api.run(`
-            INSERT INTO return_items (id, return_id, sale_item_id, product_id, variant_id, quantity, refund_amount, condition)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `, [api.uuid(), data.id, item.sale_item_id, productId ?? null, variantId, lines[i].quantity, item.refund_amount, item.condition ?? null]);
+            INSERT INTO return_items (id, return_id, sale_item_id, product_id, variant_id, quantity, refund_amount, condition, weight_grams)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [api.uuid(), data.id, item.sale_item_id, productId ?? null, variantId, lines[i].quantity, item.refund_amount, item.condition ?? null, saleItem.weight_grams || null]);
 
         // Restock if sellable
         if (item.condition === 'sellable' && productId && api.get('SELECT id FROM products WHERE id = ?', [productId])) {
             catalog.adjustStock(api, {
                 productId,
                 variantId,
-                delta: lines[i].quantity,
+                // A weighed line (quantity 1) gives back its grams
+                delta: stockUnits({ quantity: lines[i].quantity, weight_grams: saleItem.weight_grams }),
                 type: 'return',
                 reason: `Return: ${data.return_number}`,
                 employeeId: data.employee_id || null,

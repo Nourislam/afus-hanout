@@ -55,6 +55,10 @@ const COLOR_CODES = {
  * Normalize a scanned or typed identifier: trim, drop control characters and
  * upper-case it. Identifiers are matched case-insensitively.
  */
+function tableExists(api, table) {
+    return !!api.get("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", [table]);
+}
+
 function normalizeCode(code) {
     if (code === null || code === undefined) return '';
     // eslint-disable-next-line no-control-regex
@@ -773,6 +777,15 @@ function lookupCode(api, code, { articleScope = false } = {}) {
             return { type: 'product', product, needsVariant: true, variants };
         }
         return { type: 'product', product };
+    }
+
+    // Another barcode of the article: one more piece code, or its carton's code
+    const extra = tableExists(api, 'product_barcodes')
+        ? api.get('SELECT product_id, kind FROM product_barcodes WHERE UPPER(barcode) = ?', [normalized])
+        : null;
+    if (extra) {
+        const product = api.get(productSelect, [extra.product_id]);
+        if (product && product.is_active) return extra.kind === 'carton' ? { type: 'product', product, carton: true } : { type: 'product', product };
     }
     return null;
 }
