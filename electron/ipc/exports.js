@@ -8,6 +8,7 @@ module.exports = function register(ctx) {
     const { EXPORTS } = require('../services/exportService');
     const { buildWorkbook } = require('../services/excelReport');
     const { translator } = require('../i18n');
+    const { BRAND } = require('../brand');
 
     const safeName = (text) => String(text || '').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
     const today = () => {
@@ -26,7 +27,7 @@ module.exports = function register(ctx) {
       const withCost = employee?.role === 'admin';
       const sheets = def.sheets(dbApi, T, { ...args, withCost });
       const buffer = await buildWorkbook({ shop, T, by: employee?.name || null, sheets, logoDataUri: shop.shopLogoDataUri });
-      const fileName = `${safeName(T(def.file, def.fileArgs ? def.fileArgs(dbApi, T, args) : undefined))} - ${safeName(shop.businessName || 'Afus Boutique')} - ${today()}.xlsx`;
+      const fileName = `${safeName(T(def.file, def.fileArgs ? def.fileArgs(dbApi, T, args) : undefined))} - ${safeName(shop.businessName || BRAND.productName)} - ${today()}.xlsx`;
       return { buffer, fileName, rows: sheets[0]?.rows.length || 0 };
     }
 

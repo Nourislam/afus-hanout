@@ -17,6 +17,7 @@
  * Percent values are fractions (0.25 = 25 %).
  */
 const ExcelJS = require('exceljs');
+const { BRAND } = require('../brand');
 
 const NAVY = 'FF1F3A5F';
 const NAVY_TEXT = 'FF1F3A5F';
@@ -56,7 +57,7 @@ function shopHeader(shop = {}, T) {
     const legal = [
         ['legal.rc', shop.businessRc], ['legal.nif', shop.businessTaxId], ['legal.nis', shop.businessNis], ['legal.ai', shop.businessAi],
     ].filter(([, v]) => v && String(v).trim()).map(([k, v]) => `${T(k)}: ${ltr(v)}`).join('   |   ');
-    return { name: shop.businessName || 'Afus Boutique', lines: [place, contact, legal].filter(Boolean) };
+    return { name: shop.businessName || BRAND.productName, lines: [place, contact, legal].filter(Boolean) };
 }
 
 /**
@@ -246,7 +247,7 @@ function addTableSheet(workbook, sheet, ctx) {
         margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.6, header: 0.2, footer: 0.3 },
         printTitlesRow: `${headerRow}:${headerRow}`, horizontalCentered: true,
     };
-    ws.headerFooter = { oddFooter: `&L&8${head.name.replace(/&/g, '&&')}&C&8${T('xl.page')} &P / &N&R&8Afus Boutique` };
+    ws.headerFooter = { oddFooter: `&L&8${head.name.replace(/&/g, '&&')}&C&8${T('xl.page')} &P / &N&R&8${BRAND.productName}` };
     return ws;
 }
 
@@ -257,7 +258,7 @@ function addTableSheet(workbook, sheet, ctx) {
  */
 async function buildWorkbook({ shop = {}, T, by = null, sheets, logoDataUri = null, now = new Date() }) {
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Afus Boutique';
+    workbook.creator = BRAND.productName;
     workbook.company = shop.businessName || '';
     workbook.title = sheets[0]?.title || '';
     workbook.created = now;

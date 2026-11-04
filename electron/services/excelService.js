@@ -5,6 +5,7 @@
  */
 
 const XLSX = require('xlsx');
+const { BRAND } = require('../brand');
 
 // Row problems are sent as "CODE|{json}" and shown in the shop's language
 const coded = (code, params = {}) => `${code}|${JSON.stringify(params)}`;
@@ -448,7 +449,7 @@ class ExcelService {
         const rtl = at === 2;
         const fields = [...mapping.required, ...mapping.optional];
         const wb = new ExcelJS.Workbook();
-        wb.creator = 'Afus Boutique';
+        wb.creator = BRAND.productName;
         const ws = wb.addWorksheet(String((HEADERS.name && { products: ['Articles', 'Articles', 'السلع'], customers: ['Customers', 'Clients', 'الزبائن'], employees: ['Employees', 'Employés', 'العمال'], suppliers: ['Suppliers', 'Fournisseurs', 'الموردون'] }[dataType]?.[at]) || dataType), {
             views: [{ rightToLeft: rtl, state: 'frozen', ySplit: 1 }],
         });
