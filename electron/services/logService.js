@@ -1,6 +1,6 @@
 /**
  * The program's own log, for support: one text file a day in
- * <data folder>/logs (afus-boutique-2026-10-10.log), the last 14 days kept.
+ * <data folder>/logs (afus-<product>-2026-10-10.log), the last 14 days kept.
  * Errors and warnings of the main process and of the window are written
  * there, and a crash is recorded before the program closes.
  *
