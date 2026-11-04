@@ -10,20 +10,20 @@ const stock = require('./stockService');
 const { salesJournal } = require('./accountingService');
 const partners = require('./partnersService');
 const { countedSale } = require('./saleStatus');
-const { colorName, sizeLabel, formatDate } = require('../i18n');
+const { formatDate } = require('../i18n');
 
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100 + 0;
 const day = (value, T) => (value ? formatDate(value, T.lang, false) : '');
 const period = (range, T) => (range?.startDate && range?.endDate ? `${day(range.startDate, T)} — ${day(range.endDate, T)}` : '');
 
-/** Stock, size by size: name, QR, codes, quantity, unit prices and totals (owner). */
+/** Stock, article by article: name, codes, pieces or kg, unit prices and totals (owner). */
 function stockSheets(api, T) {
     const lines = stock.stockLines(api);
     const totals = stock.stockTotals(lines);
+    // Pieces and kilograms in their own columns: their totals mean something
     const rows = lines.map((l, i) => ({
-        n: i + 1, category: l.category, name: l.name, brand: l.brand,
-        color: colorName({ color: l.color, color_code: l.color_code }, T.lang), size: sizeLabel(l.size, T.lang),
-        qr: l.qr, sku: l.sku, barcode: l.barcode, quantity: l.quantity,
+        n: i + 1, category: l.category, name: l.name, sku: l.sku, barcode: l.barcode, plu: l.plu,
+        pieces: l.unit === 'kg' ? null : l.quantity, kg: l.unit === 'kg' ? l.quantity / 1000 : null,
         unit_cost: l.unit_cost, unit_price: l.unit_price, cost_value: l.cost_value, retail_value: l.retail_value, margin_value: l.margin_value,
     }));
     const notes = [T('xl.stock.note')];
@@ -33,6 +33,7 @@ function stockSheets(api, T) {
         summary: [
             { label: T('xl.stock.kArticles'), value: totals.articles, type: 'int' },
             { label: T('xl.stock.kPieces'), value: totals.pieces, type: 'int' },
+            ...(totals.kg > 0 ? [{ label: T('xl.stock.kKg'), value: totals.kg, type: 'kg' }] : []),
             { label: T('xl.stock.kCost'), value: totals.cost },
             { label: T('xl.stock.kRetail'), value: totals.retail },
             { label: T('xl.stock.kMargin'), value: totals.margin },
@@ -41,18 +42,17 @@ function stockSheets(api, T) {
             { key: 'n', label: T('xl.col.n'), type: 'int', width: 6 },
             { key: 'category', label: T('xl.col.category'), type: 'text' },
             { key: 'name', label: T('xl.col.article'), type: 'text' },
-            { key: 'brand', label: T('xl.col.brand'), type: 'text' },
-            { key: 'color', label: T('xl.col.color'), type: 'text' },
-            { key: 'size', label: T('xl.col.size'), type: 'text' },
-            { key: 'qr', label: T('xl.col.qr'), type: 'code' },
             { key: 'sku', label: T('xl.col.sku'), type: 'code' },
             { key: 'barcode', label: T('xl.col.barcode'), type: 'code' },
-            { key: 'quantity', label: T('xl.col.quantity'), type: 'int', total: 'sum' },
+            // The scale's number of an article sold by weight (its code when it has no barcode)
+            { key: 'plu', label: T('xl.col.plu'), type: 'code', width: 7 },
+            { key: 'pieces', label: T('xl.col.pieces'), type: 'int', total: 'sum' },
+            { key: 'kg', label: T('xl.col.kg'), type: 'kg', total: 'sum' },
             { key: 'unit_cost', label: T('xl.col.unitCost'), type: 'money' },
             { key: 'unit_price', label: T('xl.col.unitPrice'), type: 'money' },
-            // Formulas: a quantity changed in the file changes its totals
-            { key: 'cost_value', label: T('xl.col.costValue'), type: 'money', total: 'sum', formula: (c) => `MAX(0,${c('quantity')})*${c('unit_cost')}` },
-            { key: 'retail_value', label: T('xl.col.retailValue'), type: 'money', total: 'sum', formula: (c) => `MAX(0,${c('quantity')})*${c('unit_price')}` },
+            // Formulas: a quantity changed in the file changes its totals (one of pieces / kg is empty)
+            { key: 'cost_value', label: T('xl.col.costValue'), type: 'money', total: 'sum', formula: (c) => `MAX(0,${c('pieces')}+${c('kg')})*${c('unit_cost')}` },
+            { key: 'retail_value', label: T('xl.col.retailValue'), type: 'money', total: 'sum', formula: (c) => `MAX(0,${c('pieces')}+${c('kg')})*${c('unit_price')}` },
             { key: 'margin_value', label: T('xl.col.margin'), type: 'money', total: 'sum', formula: (c) => `${c('retail_value')}-${c('cost_value')}` },
         ],
         rows, notes,
@@ -63,6 +63,7 @@ function stockSheets(api, T) {
             { key: 'category', label: T('xl.col.category'), type: 'text' },
             { key: 'articles', label: T('xl.col.articles'), type: 'int', total: 'sum' },
             { key: 'pieces', label: T('xl.col.pieces'), type: 'int', total: 'sum' },
+            { key: 'kg', label: T('xl.col.kg'), type: 'kg', total: 'sum' },
             { key: 'cost', label: T('xl.col.costValue'), type: 'money', total: 'sum' },
             { key: 'retail', label: T('xl.col.retailValue'), type: 'money', total: 'sum' },
             { key: 'margin', label: T('xl.col.margin'), type: 'money', total: 'sum', formula: (c) => `${c('retail')}-${c('cost')}` },
@@ -76,21 +77,24 @@ function stockSheets(api, T) {
 /** The articles and their prices (one line per article). */
 function productSheets(api, T, { withCost = true } = {}) {
     const rows = api.all(`
-        SELECT p.name, c.name AS category, p.brand, p.season, p.sku, p.barcode, p.price, p.cost, p.wholesale_price, p.stock_quantity,
-               (SELECT COUNT(*) FROM product_variants v WHERE v.product_id = p.id AND COALESCE(v.is_active, 1) = 1) AS sizes
+        SELECT p.name, c.name AS category, p.sku, p.barcode, p.price, p.cost, p.wholesale_price, p.stock_quantity, p.unit, p.carton_qty
         FROM products p LEFT JOIN categories c ON c.id = p.category_id
         WHERE COALESCE(p.is_active, 1) = 1
-        ORDER BY c.name, p.name`).map((p, i) => ({ ...p, n: i + 1, sizes: p.sizes || '' }));
+        ORDER BY c.name, p.name`).map((p, i) => ({
+        ...p, n: i + 1,
+        pieces: p.unit === 'kg' ? null : p.stock_quantity, kg: p.unit === 'kg' ? (Number(p.stock_quantity) || 0) / 1000 : null,
+        unit: T(p.unit === 'kg' ? 'xl.unit.kg' : 'xl.unit.piece'), carton_qty: Number(p.carton_qty) > 1 ? p.carton_qty : null,
+    }));
     const columns = [
         { key: 'n', label: T('xl.col.n'), type: 'int', width: 6 },
         { key: 'category', label: T('xl.col.category'), type: 'text' },
         { key: 'name', label: T('xl.col.article'), type: 'text' },
-        { key: 'brand', label: T('xl.col.brand'), type: 'text' },
-        { key: 'season', label: T('xl.col.season'), type: 'text' },
         { key: 'sku', label: T('xl.col.sku'), type: 'code' },
         { key: 'barcode', label: T('xl.col.barcode'), type: 'code' },
-        { key: 'sizes', label: T('xl.col.sizes'), type: 'int' },
-        { key: 'stock_quantity', label: T('xl.col.pieces'), type: 'int', total: 'sum' },
+        { key: 'unit', label: T('xl.col.soldBy'), type: 'text' },
+        { key: 'carton_qty', label: T('xl.col.cartonQty'), type: 'int' },
+        { key: 'pieces', label: T('xl.col.pieces'), type: 'int', total: 'sum' },
+        { key: 'kg', label: T('xl.col.kg'), type: 'kg', total: 'sum' },
         ...(withCost ? [{ key: 'cost', label: T('xl.col.unitCost'), type: 'money' }] : []),
         { key: 'price', label: T('xl.col.unitPrice'), type: 'money' },
         { key: 'wholesale_price', label: T('xl.col.wholesale'), type: 'money' },
@@ -121,23 +125,22 @@ function journalSheets(api, T, range) {
 function salesLineSheets(api, T, range, { withCost = true } = {}) {
     const rows = api.all(`
         SELECT s.created_at AS date, s.receipt_number AS ticket, e.name AS employee, c.name AS customer,
-               si.product_name AS name, v.color, v.color_code, v.size, si.sku, si.quantity, si.unit_price, COALESCE(si.discount, 0) AS discount,
+               si.product_name AS name, si.weight_grams, si.sku, si.quantity, si.unit_price, COALESCE(si.discount, 0) AS discount,
                si.total, ROUND(si.quantity * COALESCE(si.unit_cost, 0), 2) AS cost
         FROM sale_items si JOIN sales s ON s.id = si.sale_id
-        LEFT JOIN product_variants v ON v.id = si.variant_id
         LEFT JOIN employees e ON e.id = s.employee_id
         LEFT JOIN customers c ON c.id = s.customer_id
         WHERE datetime(s.created_at) BETWEEN datetime(?) AND datetime(?) AND ${countedSale('s')}
         ORDER BY s.created_at, s.receipt_number`, [range?.startDate, range?.endDate])
-        .map(r => ({ ...r, color: colorName(r, T.lang), size: sizeLabel(r.size, T.lang), profit: r2(r.total - r.cost) }));
+        .map(r => ({ ...r, kg: Number(r.weight_grams) > 0 ? r.weight_grams / 1000 : null, profit: r2(r.total - r.cost) }));
     const columns = [
         { key: 'date', label: T('xl.col.date'), type: 'date' },
         { key: 'ticket', label: T('xl.col.ticket'), type: 'code' },
         { key: 'employee', label: T('xl.col.employee'), type: 'text' },
         { key: 'customer', label: T('xl.col.customer'), type: 'text' },
         { key: 'name', label: T('xl.col.article'), type: 'text' },
-        { key: 'color', label: T('xl.col.color'), type: 'text' },
-        { key: 'size', label: T('xl.col.size'), type: 'text' },
+        // Sold by weight: the weight of the line (quantity 1, price for that weight)
+        { key: 'kg', label: T('xl.col.kg'), type: 'kg', total: 'sum' },
         { key: 'sku', label: T('xl.col.sku'), type: 'code' },
         { key: 'quantity', label: T('xl.col.quantity'), type: 'int', total: 'sum' },
         { key: 'unit_price', label: T('xl.col.unitPrice'), type: 'money' },

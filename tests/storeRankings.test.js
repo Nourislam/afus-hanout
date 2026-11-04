@@ -41,11 +41,10 @@ describe('New products: added to AFUS in the last 7 days', () => {
 
     it('however the article was added (product form, Excel import), and the date format of either', () => {
         const report = api.transaction(() => productImport.importProducts(api, [
-            { row: 2, name: 'Robe importée', color: 'Rouge', size: 'M', stock_quantity: 4, price: 2500, cost: 1200 },
-            { row: 3, name: 'Robe importée', color: 'Rouge', size: 'L', stock_quantity: 2, price: 2500, cost: 1200 },
+            { row: 2, name: 'Café importé', stock_quantity: 6, price: 400, cost: 320 },
         ]));
         expect(report.rejected, JSON.stringify(report.rejected)).toEqual([]);
-        const imported = api.get("SELECT id FROM products WHERE name = 'Robe importée'");
+        const imported = api.get("SELECT id FROM products WHERE name = 'Café importé'");
         expect(imported).toBeTruthy();
         api.run("UPDATE products SET created_at = ? WHERE id = 'belt'", [new Date(NOW - 3 * DAY).toISOString()]); // ISO text
         const list = ids(newProducts(api, { now: NOW + 1000 }));

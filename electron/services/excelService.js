@@ -14,11 +14,10 @@ const coded = (code, params = {}) => `${code}|${JSON.stringify(params)}`;
 const FIELD_MAPPINGS = {
     products: {
         required: ['name', 'price'],
-        // One row per size/colour: rows with the same name make one article
-        optional: ['color', 'size', 'stock_quantity', 'cost', 'sku', 'barcode', 'category', 'brand', 'description', 'min_stock_level', 'tax_rate'],
+        // One row per article; «kg» in the sold-by column for an article sold by weight
+        optional: ['unit', 'stock_quantity', 'cost', 'sku', 'barcode', 'category', 'brand', 'description', 'min_stock_level', 'tax_rate'],
         aliases: {
-            'couleur': 'color', 'colour': 'color', 'اللون': 'color', 'لون': 'color',
-            'taille': 'size', 'pointure': 'size', 'المقاس': 'size', 'مقاس': 'size', 'القياس': 'size',
+            'يُباع بـ': 'unit', 'يباع ب': 'unit', 'يباع بـ': 'unit', 'الوحدة': 'unit', 'vendu à': 'unit', 'vendu a': 'unit', 'vendu au': 'unit', 'unité': 'unit', 'unite': 'unit', 'sold by': 'unit',
             // French and Arabic column names used in Algerian shops
             'nom': 'name', 'désignation': 'name', 'designation': 'name', 'article': 'name', 'produit': 'name',
             'الاسم': 'name', 'السلعة': 'name', 'المنتج': 'name',
@@ -118,8 +117,7 @@ const FIELD_MAPPINGS = {
 const HEADERS = {
     name: ['Name', 'Nom', 'الاسم'],
     price: ['Selling price', 'Prix de vente', 'سعر البيع'],
-    color: ['Colour', 'Couleur', 'اللون'],
-    size: ['Size', 'Taille', 'المقاس'],
+    unit: ['Sold by', 'Vendu à', 'يُباع بـ'],
     stock_quantity: ['Stock quantity', 'Quantité en stock', 'الكمية'],
     cost: ['Purchase price', "Prix d'achat", 'سعر الشراء'],
     sku: ['SKU / reference', 'Référence (SKU)', 'المرجع (SKU)'],
@@ -160,14 +158,13 @@ const HOW = {
 };
 const HOW_FIELD = {
     name: ['Name of the article / person', "Nom de l'article / de la personne", 'اسم السلعة / الشخص'],
-    price: ['Selling price in dinars, e.g. 3500', 'Prix de vente en dinars, ex. 3500', 'سعر البيع بالدينار، مثال 3500'],
-    color: ['Colour, e.g. Noir', 'Couleur, ex. Noir', 'اللون، مثال أسود'],
-    size: ['Size, e.g. 40 or M', 'Taille, ex. 40 ou M', 'المقاس، مثال 40 أو M'],
-    stock_quantity: ['Pieces in stock now', 'Pièces en stock maintenant', 'عدد القطع الموجودة الآن'],
-    cost: ['Purchase price of one piece', "Prix d'achat d'une pièce", 'سعر شراء القطعة الواحدة'],
+    price: ['Selling price in dinars, e.g. 120 (per kg for an article sold by weight)', 'Prix de vente en dinars, ex. 120 (au kg pour un article vendu au poids)', 'سعر البيع بالدينار، مثال 120 (للكيلوغرام في السلعة التي تُباع بالوزن)'],
+    unit: ['Empty = by the piece; kg = by weight', 'Vide = à la pièce ; kg = au poids', 'فارغ = بالقطعة؛ كغ = بالوزن'],
+    stock_quantity: ['Pieces in stock now (kg for an article sold by weight, e.g. 12.5)', 'Pièces en stock maintenant (kg pour un article au poids, ex. 12,5)', 'عدد القطع الموجودة الآن (بالكيلوغرام للسلعة الموزونة، مثال 12.5)'],
+    cost: ['Purchase price of one piece (or one kg)', "Prix d'achat d'une pièce (ou d'un kg)", 'سعر شراء القطعة الواحدة (أو الكيلوغرام)'],
     sku: ['Empty: the program makes one', 'Vide : le programme en crée une', 'اتركه فارغًا: البرنامج يصنعه'],
     barcode: ['Barcode printed on the article (optional)', "Code-barres imprimé sur l'article (facultatif)", 'الباركود المطبوع على السلعة (اختياري)'],
-    category: ['e.g. Jeans, Robes', 'ex. Jeans, Robes', 'مثال سراويل، فساتين'],
+    category: ['e.g. Grocery, Dairy', 'ex. Épicerie, Laitages', 'مثال مواد غذائية، ألبان'],
     brand: ['Brand (optional)', 'Marque (facultatif)', 'الماركة (اختياري)'],
     description: ['A short text (optional)', 'Un court texte (facultatif)', 'نص قصير (اختياري)'],
     min_stock_level: ['Below this number the program warns', 'Sous ce nombre le programme prévient', 'تحت هذا العدد ينبّهك البرنامج'],
@@ -382,6 +379,11 @@ class ExcelService {
         // Convert to string first
         value = String(value).trim();
 
+        // A stock in kg may be written the French way: 12,5
+        if (field === 'stock_quantity' && /^-?\d+,\d+$/.test(value.replace(/\s/g, ''))) {
+            return parseFloat(value.replace(/\s/g, '').replace(',', '.'));
+        }
+
         // Number fields
         const numberFields = ['price', 'cost', 'stock_quantity', 'min_stock_level', 'tax_rate', 'loyalty_points'];
         if (numberFields.includes(field)) {
@@ -497,15 +499,13 @@ class ExcelService {
         const say = (...texts) => texts[at] ?? texts[1];
         switch (dataType) {
             case 'products': {
-                // name, price, colour, size, quantity, cost, sku, barcode, category, brand, description, min stock, tax.
-                // One row per size/colour; the rows with the same name make one article (SKU made by the program when empty)
-                const jean = say('Slim jeans', 'Jean slim', 'سروال جينز');
-                const jeans = say('Jeans', 'Jeans', 'سراويل');
+                // name, price, sold by, quantity, cost, sku, barcode, category, brand, description, min stock, tax.
+                // One row per article (SKU made by the program when empty); kg = sold by weight
+                const grocery = say('Grocery', 'Épicerie', 'مواد غذائية');
                 return [
-                    [jean, 3000, say('Black', 'Noir', 'أسود'), '38', 4, 1800, '', '', jeans, '', '', 2, 0],
-                    [jean, 3000, say('Black', 'Noir', 'أسود'), '40', 2, 1800, '', '', jeans, '', '', 2, 0],
-                    [jean, 3500, say('Blue', 'Bleu', 'أزرق'), '44', 1, 1800, '', '', jeans, '', '', 2, 0],
-                    [say('Leather belt', 'Ceinture cuir', 'حزام جلد'), 800, '', '', 10, 300, 'CEIN-001', '', say('Accessories', 'Accessoires', 'إكسسوارات'), '', '', 3, 0],
+                    [say('Semolina 1 kg', 'Semoule 1 kg', 'سميد 1 كغ'), 120, '', 24, 100, '', '', grocery, '', '', 5, 0],
+                    [say('Oil 5 L', 'Huile 5 L', 'زيت 5 ل'), 650, '', 6, 610, '', '', grocery, '', '', 2, 0],
+                    [say('Tomatoes', 'Tomates', 'طماطم'), 120, 'kg', 12.5, 80, '', '', say('Vegetables', 'Légumes', 'خضر'), '', '', 5, 0],
                 ];
             }
             case 'customers':
@@ -513,7 +513,7 @@ class ExcelService {
             case 'employees':
                 return [[say('Karim', 'Karim', 'كريم'), '1234', '', 'cashier']];
             case 'suppliers':
-                return [[say('Textile Oran', 'Textile Oran', 'نسيج وهران'), say('Mohamed', 'Mohamed', 'محمد'), '0550 11 22 33', '', say('Oran', 'Oran', 'وهران'), '']];
+                return [[say('Oran wholesale', 'Grossiste Oran', 'جملة وهران'), say('Mohamed', 'Mohamed', 'محمد'), '0550 11 22 33', '', say('Oran', 'Oran', 'وهران'), '']];
             default:
                 return [];
         }
@@ -532,9 +532,14 @@ const CODE_HEADERS = [
     ['رمز qr', 'code qr', 'qr code', 'qr', 'qr_code'],
     ['المرجع (sku)', 'référence (sku)', 'reference (sku)', 'sku', 'المرجع', 'référence', 'reference', 'réf', 'ref'],
     ['الباركود', 'code-barres', 'barcode', 'code barre', 'ean'],
+    // An article sold by weight without a barcode: its scale number
+    ['plu'],
 ];
+const PLU_AT = CODE_HEADERS.length - 1;
 const TOTAL_ROW = /^(المجموع|total|totaux)(\s|$)/i;
-const QUANTITY_HEADERS = ['الكمية', 'quantité', 'quantite', 'quantity', 'qty', 'qté', 'counted', 'compté', 'المعدود'];
+const QUANTITY_HEADERS = ['الكمية', 'quantité', 'quantite', 'quantity', 'qty', 'qté', 'counted', 'compté', 'المعدود', 'القطع', 'pièces', 'pieces'];
+// Kilograms of an article sold by weight (the shop's stock file has both columns)
+const WEIGHT_HEADERS = ['الوزن (كغ)', 'poids (kg)', 'weight (kg)', 'الوزن', 'poids', 'weight', 'kg', 'كغ'];
 module.exports.readCountedSheet = function readCountedSheet(buffer) {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     for (const name of workbook.SheetNames) {
@@ -542,20 +547,22 @@ module.exports.readCountedSheet = function readCountedSheet(buffer) {
         const data = XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, raw: true, defval: '' });
         for (let h = 0; h < Math.min(40, data.length); h++) {
             const headers = (data[h] || []).map(v => String(v).trim().toLowerCase());
-            const quantityAt = headers.findIndex(v => QUANTITY_HEADERS.includes(v));
-            const codeAt = CODE_HEADERS.map(names => headers.findIndex(v => names.includes(v))).filter(i => i >= 0);
-            if (quantityAt < 0 || !codeAt.length) continue;
+            const quantityAt = [headers.findIndex(v => QUANTITY_HEADERS.includes(v)), headers.findIndex(v => WEIGHT_HEADERS.includes(v))].filter(i => i >= 0);
+            const codeAt = CODE_HEADERS.map(names => headers.findIndex(v => names.includes(v)));
+            if (!quantityAt.length || !codeAt.some(i => i >= 0)) continue;
             const rows = [];
             for (let r = h + 1; r < data.length; r++) {
                 const line = data[r] || [];
-                const code = codeAt.map(i => String(line[i] ?? '').trim()).find(Boolean) || '';
-                const quantity = String(line[quantityAt] ?? '').replace(/[\s\u00a0\u202f,]/g, '');
+                const which = codeAt.findIndex(i => i >= 0 && String(line[i] ?? '').trim());
+                const code = which >= 0 ? String(line[codeAt[which]]).trim() : '';
+                // Pieces, or else the kilograms (one of the two is empty)
+                const quantity = quantityAt.map(i => String(line[i] ?? '').replace(/[\s\u00a0\u202f]/g, '').replace(',', '.')).find(Boolean) || '';
                 // Nothing written in the quantity: not counted (its stock is kept)
                 if (!quantity) continue;
                 // The totals row of the shop's own file: not a line
                 if (!code && line.some(v => TOTAL_ROW.test(String(v).trim()))) continue;
                 // A line without a code is kept: the import says which row could not be matched
-                rows.push({ row: r + 1, code, quantity });
+                rows.push(which === PLU_AT ? { row: r + 1, code, quantity, plu: true } : { row: r + 1, code, quantity });
             }
             return { rows, found: true, sheet: name };
         }

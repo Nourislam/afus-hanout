@@ -853,6 +853,17 @@ function lookupCode(api, code, { articleScope = false } = {}) {
     return null;
 }
 
+/** The article sold by weight that has this PLU (the scale's number for it). */
+function lookupPlu(api, plu) {
+    const n = parseInt(String(plu ?? '').trim(), 10);
+    if (!(n > 0) || String(n) !== String(plu ?? '').trim().replace(/^0+(?=\d)/, '')) return null;
+    const product = api.get(`
+        SELECT p.*, c.name AS category_name, c.color AS category_color
+        FROM products p LEFT JOIN categories c ON c.id = p.category_id
+        WHERE p.plu = ? AND p.is_active = 1`, [n]);
+    return product ? { type: 'product', product } : null;
+}
+
 /** Point a variant's QR code at its current SKU (used after a SKU change). */
 function regenerateQrCode(api, variantId) {
     const variant = api.get('SELECT * FROM product_variants WHERE id = ?', [variantId]);
@@ -897,6 +908,7 @@ function getLowStock(api) {
 
 module.exports = {
     coded,
+    lookupPlu,
     codedError,
     normalizeCode,
     validateIdentifier,

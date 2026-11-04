@@ -9,8 +9,15 @@
  * `api` is the { all, get, run, transaction, uuid } database adapter.
  */
 const catalog = require('./catalogService');
+const { isWeighed } = require('../shared/grocery.ts');
 
 const err = (code, params = {}) => catalog.codedError(code, params);
+
+/** Kilograms written in a counted file (4.5 or 4,5) as grams; NaN when it is not a number. */
+function countedGrams(kg) {
+    const n = Number(String(kg ?? '').trim().replace(',', '.'));
+    return Number.isFinite(n) && String(kg ?? '').trim() !== '' ? Math.round(n * 1000) : NaN;
+}
 
 function getCount(api, countId) {
     const count = api.get(`
@@ -119,13 +126,14 @@ function importCounted(api, countId, rows) {
     let set = 0;
     // One transaction: the file is written to disk once, not once per line
     api.transaction(() => {
-        for (const { row, code, quantity } of rows) {
+        for (const { row, code, quantity, plu } of rows) {
             const problem = (error, params = {}) => problems.push({ row, code, error, params });
             if (!code) { problem('COUNT_NO_CODE'); continue; }
-            const value = parseInt(quantity, 10);
-            if (!Number.isInteger(value) || value < 0) { problem('COUNT_QUANTITY'); continue; }
-            const found = catalog.lookupCode(api, code);
+            const found = plu ? catalog.lookupPlu(api, code) : catalog.lookupCode(api, code);
             if (!found) { problem('COUNT_CODE_UNKNOWN', { code }); continue; }
+            // Sold by weight: the file says kilograms, the stock is in grams
+            const value = isWeighed(found.product) ? countedGrams(quantity) : Number(quantity);
+            if (!Number.isInteger(value) || value < 0) { problem('COUNT_QUANTITY'); continue; }
             if (found.needsVariant) { problem('COUNT_NEEDS_VARIANT', { product: found.product.name }); continue; }
             if (count.category_id && found.product.category_id !== count.category_id) {
                 problem('COUNT_OUT_OF_SCOPE', { product: found.product.name, category: count.category_name || '' }); continue;

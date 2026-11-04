@@ -12,7 +12,7 @@
  *     their value saved too so every viewer shows it;
  *   - right to left in Arabic; A4, fitted to the page width, page numbers.
  *
- * Columns: { key, label, type: 'text' | 'code' | 'int' | 'money' | 'percent' | 'date', width?,
+ * Columns: { key, label, type: 'text' | 'code' | 'int' | 'kg' | 'money' | 'percent' | 'date', width?,
  *            total?: 'sum', formula?: (cell) => 'G9*H9' (cell(key) = this row's address) }
  * Percent values are fractions (0.25 = 25 %).
  */
@@ -43,6 +43,8 @@ function numberFormat(type, { currency, decimals }) {
     const n = decimals ? '#,##0.00' : '#,##0';
     if (type === 'money') return `${n} "${currency}";-${n} "${currency}";"-"`;
     if (type === 'int') return '#,##0;-#,##0;"-"';
+    // Kilograms to the gram
+    if (type === 'kg') return '#,##0.000;-#,##0.000;"-"';
     if (type === 'percent') return '0.0%;-0.0%;"-"';
     if (type === 'date') return 'dd/mm/yyyy hh:mm';
     return '@';
@@ -177,7 +179,7 @@ function addTableSheet(workbook, sheet, ctx) {
             const raw = row[col.key];
             if (col.formula) cell.value = { formula: col.formula(at), result: raw ?? 0 };
             else if (col.type === 'date') cell.value = localDate(raw);
-            else if (['int', 'money', 'percent'].includes(col.type)) cell.value = raw === null || raw === undefined || raw === '' ? null : Number(raw) || 0;
+            else if (['int', 'kg', 'money', 'percent'].includes(col.type)) cell.value = raw === null || raw === undefined || raw === '' ? null : Number(raw) || 0;
             // Codes stay text: a barcode never turns into 6.13E+12
             else cell.value = raw === null || raw === undefined ? '' : String(raw);
             cell.numFmt = numberFormat(col.type, { currency, decimals: decimals[col.key] });
@@ -199,7 +201,8 @@ function addTableSheet(workbook, sheet, ctx) {
             const letter = colLetter(i + 1);
             if (col.total === 'sum') {
                 const result = sheet.rows.reduce((s, row) => s + (Number(row[col.key]) || 0), 0);
-                cell.value = { formula: `SUBTOTAL(109,${letter}${first}:${letter}${lastData})`, result: Math.round(result * 100) / 100 };
+                const places = col.type === 'kg' ? 1000 : 100;
+                cell.value = { formula: `SUBTOTAL(109,${letter}${first}:${letter}${lastData})`, result: Math.round(result * places) / places };
                 cell.numFmt = numberFormat(col.type, { currency, decimals: decimals[col.key] });
             } else if (i === labelAt) {
                 cell.value = `${T('xl.total')} (${sheet.rows.length})`;
@@ -230,7 +233,7 @@ function addTableSheet(workbook, sheet, ctx) {
     columns.forEach((col, i) => {
         const longest = Math.max(textLength(col.label) * 0.9, ...sheet.rows.slice(0, 500).map(row => {
             const v = row[col.key];
-            if (['int', 'money', 'percent'].includes(col.type)) return String(Math.round(Number(v) || 0)).length * 1.35 + (col.type === 'money' ? 5 : 1);
+            if (['int', 'kg', 'money', 'percent'].includes(col.type)) return String(Math.round(Number(v) || 0)).length * 1.35 + (col.type === 'money' ? 5 : 1);
             return textLength(v);
         }));
         ws.getColumn(i + 1).width = col.width || Math.min(48, Math.max(col.type === 'code' ? 12 : 9, Math.ceil(longest) + 3));
