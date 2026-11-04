@@ -11,6 +11,8 @@ export default {
     'errors.field.qr': ["QR code", "Code QR", "رمز QR"],
     'errors.field.barcode': ["Barcode", "Code-barres", "الباركود"],
     'errors.field.code': ["Code", "Code", "الرمز"],
+    'errors.field.plu': ["Scale number (PLU)", "Numéro balance (PLU)", "رقم الميزان (PLU)"],
+    'errors.field.carton_barcode': ["Carton barcode", "Code-barres du carton", "باركود الكرطونة"],
     'errors.ID_REQUIRED': ["{field} is required", "{field} est obligatoire", "{field} إجباري"],
     'errors.ID_TOO_LONG': ["{field} must be at most {max} characters", "{field} : {max} caractères maximum", "{field}: {max} حرفاً كحد أقصى"],
     'errors.ID_INVALID_CHARS': ["{field} may only contain A-Z, 0-9, \"-\", \"_\" and \".\" (\"{value}\")", "{field} : uniquement A-Z, 0-9, « - », « _ » et « . » (« {value} »)", "{field}: فقط الحروف A-Z والأرقام 0-9 و«-» و«_» و«.» («{value}»)"],

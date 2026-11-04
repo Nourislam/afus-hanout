@@ -151,7 +151,64 @@ function findIdentifierOwner(api, code, { excludeVariantId = null, excludeProduc
     `, [normalized, normalized, excludeProductId, excludeProductId]);
     if (product) return { type: 'product', ...product };
 
+    // Another barcode of an article (its carton's code...)
+    if (tableExists(api, 'product_barcodes')) {
+        const extra = api.get(`
+            SELECT b.product_id, b.kind, p.name AS product_name FROM product_barcodes b
+            LEFT JOIN products p ON p.id = b.product_id
+            WHERE UPPER(b.barcode) = ? AND (? IS NULL OR b.product_id <> ?)
+            LIMIT 1
+        `, [normalized, excludeProductId, excludeProductId]);
+        if (extra) return { type: 'barcode', ...extra };
+    }
+
     return null;
+}
+
+/** Grocery fields of the article form, checked before anything is written. */
+function checkGroceryFields(api, product) {
+    const cap = Number(product.capped_price);
+    if (cap > 0 && Number(product.price) > cap + 0.005) {
+        throw codedError('PRICE_ABOVE_CAP', { product: String(product.name).trim(), cap });
+    }
+    const plu = parseInt(product.plu, 10);
+    if (plu > 0 && api.get('SELECT id FROM products WHERE plu = ? AND id <> ?', [plu, product.id])) {
+        const owner = api.get('SELECT name FROM products WHERE plu = ? AND id <> ?', [plu, product.id]);
+        throw codedError('ID_TAKEN', { field: 'plu', value: String(plu), owner: owner.name });
+    }
+    const cartonCode = normalizeCode(product.carton_barcode);
+    if (cartonCode) {
+        const owner = findIdentifierOwner(api, cartonCode, { excludeProductId: product.id });
+        if (owner) throw codedError('ID_TAKEN', { field: 'carton_barcode', value: cartonCode, owner: describeOwner(owner) });
+    }
+}
+
+/** Grocery fields of the article, written when the form sends them. */
+function saveGroceryFields(api, product) {
+    const set = (column, value) => api.run(`UPDATE products SET ${column} = ? WHERE id = ?`, [value, product.id]);
+    if (product.unit !== undefined) set('unit', product.unit === 'kg' ? 'kg' : 'piece');
+    let cartonQty = null;
+    if (product.carton_qty !== undefined) {
+        const qty = parseInt(product.carton_qty, 10);
+        cartonQty = qty >= 2 ? qty : null;
+        set('carton_qty', cartonQty);
+        const price = Number(product.carton_price);
+        set('carton_price', cartonQty && price > 0 ? price : null);
+    }
+    if (product.plu !== undefined) {
+        const plu = parseInt(product.plu, 10);
+        set('plu', plu > 0 ? plu : null);
+    }
+    if (product.capped_price !== undefined) {
+        const cap = Number(product.capped_price);
+        set('capped_price', cap > 0 ? cap : null);
+    }
+    if (product.carton_barcode !== undefined && tableExists(api, 'product_barcodes')) {
+        api.run("DELETE FROM product_barcodes WHERE product_id = ? AND kind = 'carton'", [product.id]);
+        const code = normalizeCode(product.carton_barcode);
+        const hasCarton = cartonQty !== null || (product.carton_qty === undefined && api.get('SELECT carton_qty FROM products WHERE id = ?', [product.id])?.carton_qty);
+        if (code && hasCarton) api.run("INSERT INTO product_barcodes (barcode, product_id, kind) VALUES (?, ?, 'carton')", [code, product.id]);
+    }
 }
 
 function describeOwner(owner) {
@@ -575,16 +632,17 @@ function saveProduct(api, product, variants = [], { employeeId = null, isNew = f
     const productBarcode = normalizeCode(product.barcode) || null;
     if (productSku) {
         const owner = findIdentifierOwner(api, productSku, { excludeProductId: product.id });
-        if (owner && !(owner.type === 'variant' && owner.product_id === product.id)) {
+        if (owner && !(['variant', 'barcode'].includes(owner.type) && owner.product_id === product.id)) {
             throw codedError('ID_TAKEN', { field: 'sku', value: productSku, owner: describeOwner(owner) });
         }
     }
     if (productBarcode) {
         const owner = findIdentifierOwner(api, productBarcode, { excludeProductId: product.id });
-        if (owner && !(owner.type === 'variant' && owner.product_id === product.id)) {
+        if (owner && !(['variant', 'barcode'].includes(owner.type) && owner.product_id === product.id)) {
             throw codedError('ID_TAKEN', { field: 'barcode', value: productBarcode, owner: describeOwner(owner) });
         }
     }
+    checkGroceryFields(api, product);
 
     const errors = validateVariants(api, product.id, prepared);
     if (errors.length) {
@@ -633,11 +691,8 @@ function saveProduct(api, product, variants = [], { employeeId = null, isNew = f
             const wholesale = Number(product.wholesale_price);
             api.run('UPDATE products SET wholesale_price = ? WHERE id = ?', [wholesale > 0 ? wholesale : null, product.id]);
         }
-        // On the shop's website or not, when the form sends it (a new article is shown)
-        if (product.show_on_website !== undefined) {
-            const shown = !(product.show_on_website === false || product.show_on_website === 0);
-            api.run('UPDATE products SET show_on_website = ? WHERE id = ?', [shown ? 1 : 0, product.id]);
-        }
+        // Unit, carton, scale number, official price (grocery fields), when the form sends them
+        saveGroceryFields(api, product);
 
         // Simple product: stock is kept on the product itself
         if (!hasVariants) {
