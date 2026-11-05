@@ -1,5 +1,6 @@
 // IPC handlers: sales. Moved out of main.js unchanged; main.js passes what they use.
 const { stockUnits, weighedPrice, aboveCap, isWeighed, BARIDI_PAY_MIN } = require('../shared/grocery.ts');
+const { SHOP_DAY_SQL } = require('../shared/shopDay.ts');
 
 module.exports = function register(ctx) {
     const {
@@ -309,12 +310,12 @@ module.exports = function register(ctx) {
     });
 
     ipcMain.handle('db:sales:getToday', (_, params = {}) => {
-      // "Today" in the shop's local time (timestamps are stored in UTC)
+      // "Today" in the shop's local time (timestamps are stored in UTC), the shop day from 04:00
       let query = `
     SELECT s.*, e.name as employee_name
     FROM sales s
     LEFT JOIN employees e ON s.employee_id = e.id
-    WHERE date(s.created_at, 'localtime') = date('now', 'localtime')
+    WHERE date(s.created_at, 'localtime', ${SHOP_DAY_SQL}) = date('now', 'localtime', ${SHOP_DAY_SQL})
   `;
       const queryParams = [];
 

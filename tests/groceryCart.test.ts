@@ -116,7 +116,7 @@ describe('cart with cartons and weighed lines', () => {
         cart().clearCart();
         expect(cart().items).toHaveLength(0);
         cart().restore(before);
-        expect(cart().items.map(i => i.sold_as)).toEqual(['carton', 'weight']);
+        expect(cart().items.map((i: { sold_as?: string }) => i.sold_as)).toEqual(['carton', 'weight']);
         expect(cart().customer).toMatchObject({ id: 'c1' });
         expect(cart().discount).toBe(10);
     });

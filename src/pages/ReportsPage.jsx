@@ -22,6 +22,7 @@ import MarkdownManager from '../components/reports/MarkdownManager';
 import ShopIntelligence from '../components/reports/ShopIntelligence';
 import NetProfit from '../components/reports/NetProfit';
 import { ExportMenu } from '../components/ui/ExportButton';
+import { shopDayStart, shopDayEnd } from '../../electron/shared/shopDay.ts';
 
 // Built on each render so the labels follow the interface language
 const dateRanges = () => [
@@ -81,10 +82,10 @@ export default function ReportsPage() {
 
         switch (dateRange) {
             case 'today':
-                return { startDate: getDateString(startOfDay(now)), endDate: getDateString(endOfDay(now)) };
+                return { startDate: getDateString(shopDayStart(now)), endDate: getDateString(shopDayEnd(now)) };
             case 'yesterday': {
                 const yesterday = subDays(now, 1);
-                return { startDate: getDateString(startOfDay(yesterday)), endDate: getDateString(endOfDay(yesterday)) };
+                return { startDate: getDateString(shopDayStart(yesterday)), endDate: getDateString(shopDayEnd(yesterday)) };
             }
             case 'week':
                 return { startDate: getDateString(startOfWeek(now, { weekStartsOn: 1 })), endDate: getDateString(endOfWeek(now, { weekStartsOn: 1 })) };

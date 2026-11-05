@@ -126,10 +126,11 @@ describe('plain words and dates', () => {
         const r = dashboardRanges(NOW);
         const local = (s) => new Date(`${s.replace(' ', 'T')}Z`);
         expect(local(r.periods.today.previous.endDate).getTime()).toBe(NOW.getTime() - 24 * 3600 * 1000);
-        expect(local(r.periods.week.current.startDate).getTime()).toBe(new Date(2026, 9, 3).getTime()); // Saturday
+        // The shop's day starts at 04:00 (a sale at 00:30 is the evening's): the week on Saturday 04:00
+        expect(local(r.periods.week.current.startDate).getTime()).toBe(new Date(2026, 9, 3, 4).getTime());
         expect(r.today).toBe('2026-10-05');
         expect(r.tomorrow).toBe('2026-10-06');
-        expect(local(r.periods.month.previous.startDate).getTime()).toBe(new Date(2026, 8, 1).getTime());
+        expect(local(r.periods.month.previous.startDate).getTime()).toBe(new Date(2026, 8, 1, 4).getTime());
     });
 
     it('greets by the time of day and counts the days without sale', () => {

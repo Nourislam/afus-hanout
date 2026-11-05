@@ -1,4 +1,5 @@
 // IPC handlers: reports. Moved out of main.js unchanged; main.js passes what they use.
+const { SHOP_DAY_SQL } = require('../shared/shopDay.ts');
 module.exports = function register(ctx) {
     const {
         backupFolder,
@@ -26,7 +27,7 @@ module.exports = function register(ctx) {
     ipcMain.handle('db:reports:salesByDate', (_, { startDate, endDate, employeeId }) => {
       let query = `
     SELECT 
-      date(s.created_at, 'localtime') as date,
+      date(s.created_at, 'localtime', ${SHOP_DAY_SQL}) as date,
       COUNT(s.id) as transactions,
       SUM(s.total) as revenue,
       SUM(s.tax_amount) as tax,
@@ -47,7 +48,7 @@ module.exports = function register(ctx) {
       }
 
       query += `
-    GROUP BY date(s.created_at, 'localtime')
+    GROUP BY date(s.created_at, 'localtime', ${SHOP_DAY_SQL})
     ORDER BY date ASC
   `;
 
