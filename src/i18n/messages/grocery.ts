@@ -98,6 +98,12 @@ const messages: Record<string, [string, string, string]> = {
     'change.balanceOf': ["{name} has {amount} of change kept", "{name} a {amount} de monnaie gardée", "لـ{name} رصيد صرف {amount}"],
     'change.use': ["Use it", "L'utiliser", "استعمله"],
     'pay.changeBalance': ["Change kept", "Monnaie gardée", "رصيد الصرف"],
+    // Services (flexy…)
+    'cart.needsAmount': ["Type the amount of this service", "Tapez le montant de ce service", "اكتب مبلغ هذه الخدمة"],
+    'pos.addLine': ["Add", "Ajouter", "أضف"],
+    'article.service': ["Service (flexy…)", "Service (flexy…)", "خدمة (فليكسي…)"],
+    'article.margin': ["Your margin (%)", "Votre marge (%)", "ربحك (%)"],
+    'article.serviceHint': ["The amount is typed at the till; no stock. A flexy at 5 %: 1000 DA sold earns 50 DA", "Le montant se tape à la caisse ; pas de stock. Un flexy à 5 % : 1000 DA vendus rapportent 50 DA", "المبلغ يُكتب في الصندوق؛ بلا مخزون. فليكسي بـ 5٪: بيع 1000 دج يربحك 50 دج"],
 };
 
 export default messages;

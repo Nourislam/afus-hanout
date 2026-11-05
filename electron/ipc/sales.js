@@ -1,5 +1,5 @@
 // IPC handlers: sales. Moved out of main.js unchanged; main.js passes what they use.
-const { stockUnits, weighedPrice, aboveCap, isWeighed, BARIDI_PAY_MIN } = require('../shared/grocery.ts');
+const { stockUnits, weighedPrice, aboveCap, isWeighed, isService, serviceCost, BARIDI_PAY_MIN } = require('../shared/grocery.ts');
 const { SHOP_DAY_SQL } = require('../shared/shopDay.ts');
 const changeBalance = require('../services/changeBalanceService');
 
@@ -60,7 +60,7 @@ module.exports = function register(ctx) {
         if (sale.reservation_id) reservations.completeForSale(dbApi, sale);
 
         for (const item of sale.items) {
-          const product = getOne('SELECT id, name, cost, has_variants, stock_quantity, unit, capped_price FROM products WHERE id = ?', [item.product_id]);
+          const product = getOne('SELECT id, name, cost, has_variants, stock_quantity, unit, capped_price, service_margin FROM products WHERE id = ?', [item.product_id]);
           // Not an article: a pack (its own column, product_id only ever points at an article)
           const bundle = product ? null : getOne('SELECT * FROM bundles WHERE id = ?', [item.product_id]);
           const variant = item.variant_id
@@ -88,7 +88,9 @@ module.exports = function register(ctx) {
               if (item.sold_as === 'weight') item.sold_as = null;
             }
           }
-          if (product) {
+          // A service (flexy…) has no stock to check or move
+          const service = product && !variant && isService(product);
+          if (product && !service) {
             const available = variant ? (variant.stock_quantity || 0) : (product.stock_quantity || 0);
             // A weighed line takes its grams, any other line its quantity
             if (stockUnits(item) > available) {
@@ -108,8 +110,9 @@ module.exports = function register(ctx) {
           // (a weighed line costs its weight at the cost per kg)
           let unitCost = 0;
           if (variant && variant.cost !== null && variant.cost !== undefined) unitCost = variant.cost;
+          else if (service) unitCost = serviceCost(item.unit_price, product.service_margin);
           else if (product) unitCost = Number(item.weight_grams) > 0 ? weighedPrice(product.cost || 0, item.weight_grams) : (product.cost || 0);
-          const soldAs = ['carton', 'weight'].includes(item.sold_as) ? item.sold_as : null;
+          const soldAs = service ? 'service' : ['carton', 'weight'].includes(item.sold_as) ? item.sold_as : null;
 
           runInsert(`
         INSERT INTO sale_items (id, sale_id, product_id, bundle_id, variant_id, variant_label, sku, product_name, quantity, unit_price, discount, tax_amount, total, unit_cost, weight_grams, sold_as)
@@ -120,6 +123,7 @@ module.exports = function register(ctx) {
           item.product_name, item.quantity, item.unit_price, item.discount || 0, item.tax_amount || 0, item.total, unitCost,
           Number(item.weight_grams) > 0 ? Math.round(item.weight_grams) : null, soldAs]);
 
+          if (service) continue;
           if (product) {
             // Regular product or one variant of it
             catalog.adjustStock(dbApi, {

@@ -114,3 +114,13 @@ export function thousandKey(typed: string): string {
 
 /** Change at or above this is given back (coins of 5 DA and more are common); under it, it may be kept for the customer. */
 export const CHANGE_KEEP_MAX = 5;
+
+/** A service (flexy, bill payment…): sold at the amount typed, no stock. */
+export function isService(product: UnitOf): boolean {
+    return product.unit === 'service';
+}
+
+/** What a service costs the shop: the amount less its margin (%). */
+export function serviceCost(amount: number, marginPercent: number): number {
+    return round2((Number(amount) || 0) * (1 - (Number(marginPercent) || 0) / 100));
+}

@@ -753,6 +753,14 @@ const MIGRATIONS = [
             db.run('CREATE INDEX IF NOT EXISTS idx_change_balance_customer ON change_balance_moves(customer_id)');
         },
     },
+    {
+        // Flexy and other services: unit 'service', the shop's margin in %
+        version: '2026_11_hanout_services',
+        description: 'Margin of an article sold as a service',
+        up(db) {
+            addColumnIfMissing(db, 'products', 'service_margin', 'REAL');
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {

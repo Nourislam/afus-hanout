@@ -152,6 +152,16 @@ describe('change under 5 DA kept for the customer', () => {
     });
 });
 
+describe('a service (flexy)', () => {
+    it('sold at the amount typed: no stock needed or moved, its cost is the amount less the margin', () => {
+        api.run("INSERT INTO products (id, name, price, cost, stock_quantity, unit, service_margin) VALUES ('flexy', 'Flexy', 0, 0, 0, 'service', 5)");
+        const sale = sell([{ product_id: 'flexy', product_name: 'Flexy', quantity: 1, unit_price: 500, discount: 0, total: 500, sold_as: 'service' }]);
+        expect(stock('flexy')).toBe(0);
+        expect(api.get('SELECT unit_cost, sold_as FROM sale_items WHERE sale_id = ?', [sale.id])).toEqual({ unit_cost: 475, sold_as: 'service' });
+        expect(api.get("SELECT COUNT(*) AS n FROM inventory_logs WHERE product_id = 'flexy'").n).toBe(0);
+    });
+});
+
 describe('selling by the carton', () => {
     it('the carton barcode is found as one carton of the article', () => {
         const found = catalog.lookupCode(api, '6130000000028');

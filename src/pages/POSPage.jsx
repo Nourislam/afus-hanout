@@ -20,6 +20,7 @@ import OpeningCashDialog from '../components/shifts/OpeningCashDialog';
 import CashExpenseDialog from '../components/shifts/CashExpenseDialog';
 import { VariantPickerModal } from '../components/pos/VariantPickerModal';
 import WeightModal, { weightLabel } from '../components/pos/WeightModal';
+import ServiceAmountModal from '../components/pos/ServiceAmountModal';
 import { stockLabel, perUnit } from '../lib/units';
 import { lineCounts, centimesLabel } from '../../electron/shared/grocery.ts';
 import FirstSaleGuide from '../components/pos/FirstSaleGuide';
@@ -64,6 +65,9 @@ function VariantHints({ product }) {
     );
 }
 
+// A service (flexy…) has no stock: it is always there
+const inStock = (product) => product.unit === 'service' || product.stock_quantity > 0;
+
 const UNDO_MS = 10000;
 
 function ProductImage({ product, className = '' }) {
@@ -80,6 +84,8 @@ export default function POSPage() {
     const [products, setProducts] = useState([]);
     // An article sold by weight waiting for its weight
     const [weighProduct, setWeighProduct] = useState(null);
+    // A service (flexy…): its amount is typed
+    const [serviceProduct, setServiceProduct] = useState(null);
     // Quick buttons: the articles sold most these 7 days (worked out by the program)
     const [quickIds, setQuickIds] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -173,6 +179,10 @@ export default function POSPage() {
             setWeighProduct(product);
             return false;
         }
+        if (result.needsAmount) {
+            setServiceProduct(product);
+            return false;
+        }
         if (!result.success) {
             beep('error');
             toast.error(result.message);
@@ -264,14 +274,14 @@ export default function POSPage() {
         });
     }, [products, selectedCategory, selectedBrand, searchQuery]);
 
-    const quickPicks = useMemo(() => quickIds.map(id => products.find(p => String(p.id) === String(id) && !p.is_bundle)).filter(p => p && p.stock_quantity > 0), [quickIds, products]);
+    const quickPicks = useMemo(() => quickIds.map(id => products.find(p => String(p.id) === String(id) && !p.is_bundle)).filter(p => p && inStock(p)), [quickIds, products]);
     const showQuick = quickPicks.length > 0 && !searchQuery.trim() && selectedCategory === 'all' && !selectedBrand;
     // Bread, vegetables, loose goods: no barcode to scan, a big button with its picture
     // (the best sellers first). A weighed one opens the weight window.
     const noBarcode = useMemo(() => {
         const rank = new Map(quickIds.map((id, i) => [String(id), i]));
         return products
-            .filter(p => !p.is_bundle && !(p.variant_count > 0) && !String(p.barcode || '').trim() && p.stock_quantity > 0)
+            .filter(p => !p.is_bundle && !(p.variant_count > 0) && !String(p.barcode || '').trim() && inStock(p))
             .sort((a, b) => (rank.get(String(a.id)) ?? 99) - (rank.get(String(b.id)) ?? 99) || a.name.localeCompare(b.name))
             .slice(0, 12);
     }, [products, quickIds]);
@@ -504,7 +514,7 @@ export default function POSPage() {
                     ) : view === 'grid' ? (
                         <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(156px, 1fr))' }}>
                             {filteredProducts.map(product => {
-                                const out = product.stock_quantity <= 0;
+                                const out = !inStock(product);
                                 const low = !out && product.stock_quantity <= product.min_stock_level;
                                 const price = product.variant_count > 0 ? product.min_variant_price : product.price;
                                 return (
@@ -535,7 +545,7 @@ export default function POSPage() {
                             <table className="table">
                                 <tbody>
                                     {filteredProducts.map(product => {
-                                        const out = product.stock_quantity <= 0;
+                                        const out = !inStock(product);
                                         const price = product.variant_count > 0 ? product.min_variant_price : product.price;
                                         return (
                                             <tr key={product.id} className={`cursor-pointer ${out ? 'opacity-45' : ''}`} onClick={() => !out && handleProductClick(product)}>
@@ -742,6 +752,15 @@ export default function POSPage() {
                     const added = cart.addWeighed(weighProduct, grams);
                     if (!added.success) { beep('error'); toast.error(added.message); return; }
                     setWeighProduct(null);
+                }}
+            />
+            <ServiceAmountModal
+                product={serviceProduct}
+                onClose={() => setServiceProduct(null)}
+                onAmount={(amount) => {
+                    const added = cart.addService(serviceProduct, amount);
+                    if (!added.success) { beep('error'); toast.error(added.message); return; }
+                    setServiceProduct(null);
                 }}
             />
             <VariantPickerModal

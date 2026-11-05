@@ -31,6 +31,7 @@ export interface Article {
     carton_qty?: number | null;
     carton_price?: number | null;
     carton_barcode?: string | null;
+    service_margin?: number | null;
     plu?: number | null;
     capped_price?: number | null;
     image_path?: string | null;
@@ -52,6 +53,8 @@ interface Form {
     name: string; barcode: string; price: string;
     cost: string; stock: string; minStock: string; wholesale: string;
     categoryId: string; supplierId: string; byWeight: boolean;
+    /** A service (flexy…): amount typed at the till, the shop's margin in %, no stock */
+    service: boolean; margin: string;
     cartonQty: string; cartonPrice: string; cartonBarcode: string;
     plu: string; capped: string; images: string[];
 }
@@ -78,6 +81,7 @@ function formOf(product?: Article | null, initial?: Partial<Article>): Form {
         minStock: p.min_stock_level ? text(weighed ? Number(p.min_stock_level) / 1000 : p.min_stock_level) : '',
         wholesale: p.wholesale_price ? text(p.wholesale_price) : '',
         categoryId: text(p.category_id), supplierId: text(p.supplier_id), byWeight: weighed,
+        service: p.unit === 'service', margin: p.service_margin !== undefined && p.service_margin !== null ? text(p.service_margin) : '',
         cartonQty: p.carton_qty ? text(p.carton_qty) : '', cartonPrice: p.carton_price ? text(p.carton_price) : '',
         cartonBarcode: text(p.carton_barcode), plu: p.plu ? text(p.plu) : '', capped: p.capped_price ? text(p.capped_price) : '',
         images: [p.image_path, ...galleryOf(product)].filter((x): x is string => !!x).slice(0, MAX_IMAGES),
@@ -123,7 +127,8 @@ export default function ArticleFormModal({ isOpen, onClose, onSave, product = nu
 
     const save = async () => {
         if (!form.name.trim()) { setErrors([t('article.nameRequired')]); nameRef.current?.focus(); return; }
-        if (!(num(form.price) > 0)) { setErrors([t('article.priceRequired')]); return; }
+        // A service has no price of its own: its amount is typed at the till
+        if (!form.service && !(num(form.price) > 0)) { setErrors([t('article.priceRequired')]); return; }
         setSaving(true);
         setErrors([]);
         const id = product?.id || uuid();
@@ -139,7 +144,8 @@ export default function ArticleFormModal({ isOpen, onClose, onSave, product = nu
             wholesale_price: num(form.wholesale) || null,
             category_id: form.categoryId || null,
             supplier_id: form.supplierId || null,
-            unit: form.byWeight ? 'kg' : 'piece',
+            unit: form.service ? 'service' : form.byWeight ? 'kg' : 'piece',
+            service_margin: form.service ? num(form.margin) : null,
             carton_qty: form.byWeight ? '' : form.cartonQty,
             carton_price: num(form.cartonPrice) || null,
             carton_barcode: form.byWeight ? '' : form.cartonBarcode.trim(),
@@ -200,10 +206,18 @@ export default function ArticleFormModal({ isOpen, onClose, onSave, product = nu
                             <div>
                                 <p className="form-label">{t('article.soldBy')}</p>
                                 <div className="segmented" role="radiogroup">
-                                    <button type="button" className={form.byWeight ? '' : 'active'} aria-pressed={!form.byWeight} onClick={() => set('byWeight', false)} data-testid="article-by-piece">{t('article.byPiece')}</button>
-                                    <button type="button" className={form.byWeight ? 'active' : ''} aria-pressed={form.byWeight} onClick={() => set('byWeight', true)} data-testid="article-by-weight">{t('article.byWeight')}</button>
+                                    <button type="button" className={!form.byWeight && !form.service ? 'active' : ''} aria-pressed={!form.byWeight && !form.service} onClick={() => setForm(f => ({ ...f, byWeight: false, service: false }))} data-testid="article-by-piece">{t('article.byPiece')}</button>
+                                    <button type="button" className={form.byWeight ? 'active' : ''} aria-pressed={form.byWeight} onClick={() => setForm(f => ({ ...f, byWeight: true, service: false }))} data-testid="article-by-weight">{t('article.byWeight')}</button>
+                                    <button type="button" className={form.service ? 'active' : ''} aria-pressed={form.service} onClick={() => setForm(f => ({ ...f, byWeight: false, service: true }))} data-testid="article-service">{t('article.service')}</button>
                                 </div>
                             </div>
+                            {form.service && (
+                                <div className="space-y-1">
+                                    <Input className="ltr tabular" inputMode="decimal" label={t('article.margin')} value={form.margin}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => set('margin', e.target.value)} data-testid="article-margin" />
+                                    <p className="form-hint">{t('article.serviceHint')}</p>
+                                </div>
+                            )}
                             <div className="grid gap-x-4 gap-y-3 fit-grid-sm">
                                 <Input className="ltr tabular" inputMode="decimal" label={form.byWeight ? t('article.stockKg') : t('article.stock')} value={form.stock}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => set('stock', e.target.value)} data-testid="article-stock" />
@@ -216,7 +230,7 @@ export default function ArticleFormModal({ isOpen, onClose, onSave, product = nu
                                 <Select label={t('article.category')} value={form.categoryId} options={categoryOptions} onChange={(v: string) => set('categoryId', v)} />
                                 <Select label={t('article.supplier')} value={form.supplierId} options={supplierOptions} onChange={(v: string) => set('supplierId', v)} />
                             </div>
-                            {form.byWeight ? (
+                            {form.service ? null : form.byWeight ? (
                                 <Input className="ltr tabular" inputMode="numeric" label={t('article.plu')} value={form.plu}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => set('plu', e.target.value.replace(/\D/g, ''))} data-testid="article-plu" />
                             ) : (

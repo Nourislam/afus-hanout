@@ -15,6 +15,8 @@ export function weightLabel(grams: number): string {
 
 /** The stock of an article as the shop reads it: 24, or "32 kg" for one sold by weight. */
 export function stockLabel(product: Stocked): string {
+    // A service (flexy…) has no stock
+    if (product.unit === 'service') return '—';
     const n = Number(product.stock_quantity) || 0;
     return product.unit === 'kg' ? weightLabel(n) : String(n);
 }

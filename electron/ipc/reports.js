@@ -219,7 +219,7 @@ module.exports = function register(ctx) {
     SELECT p.*, s.id as supplier_id, s.name as supplier_name 
     FROM products p 
     LEFT JOIN suppliers s ON p.supplier_id = s.id 
-    WHERE p.stock_quantity <= p.min_stock_level AND p.is_active = 1
+    WHERE p.stock_quantity <= p.min_stock_level AND p.is_active = 1 AND COALESCE(p.unit, 'piece') <> 'service'
     ORDER BY s.name, p.name
   `);
     });
