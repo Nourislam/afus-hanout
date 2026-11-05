@@ -91,3 +91,23 @@ export function kgNumber(grams: number, lang: string, fixed = false): string {
 
 /** Baridi Pay (Algérie Poste, since June 2025): no payment under 100 DA. */
 export const BARIDI_PAY_MIN = 100;
+
+const THOUSAND: Record<string, string> = { ar: 'ألف', fr: 'mille', en: 'thousand' };
+
+/**
+ * An amount as people say it in centimes: 250 DA = «25 ألف» (25 thousand
+ * centimes, 1 DA = 100 centimes). Empty under 10 DA.
+ */
+export function centimesLabel(amount: number, lang: string): string {
+    const da = Number(amount) || 0;
+    if (da < 10) return '';
+    const thousands = Math.round(da * 10) / 100;
+    return `${thousands.toLocaleString('en-US', { maximumFractionDigits: 2, useGrouping: false })} ${THOUSAND[lang] || THOUSAND.en}`;
+}
+
+/** The «ألف» key on a number pad: what was typed was thousands of centimes (25 → 250 DA). */
+export function thousandKey(typed: string): string {
+    const n = Number(String(typed || '').trim());
+    if (!String(typed || '').trim() || !Number.isFinite(n)) return '';
+    return String(Math.round(n * 10 * 100) / 100);
+}

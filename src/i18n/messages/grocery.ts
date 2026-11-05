@@ -57,6 +57,11 @@ const messages: Record<string, [string, string, string]> = {
     'scale.notLabel': ["Not a label of this scale: check the first two digits and the number of PLU digits", "Pas une étiquette de cette balance : vérifiez les deux premiers chiffres et le nombre de chiffres du PLU", "ليس ملصقاً لهذا الميزان: راجع أول رقمين وعدد أرقام PLU"],
     'scale.saved': ["Scale settings saved", "Réglages de la balance enregistrés", "حُفظ إعداد الميزان"],
     'pos.noBarcode': ["Without a barcode", "Sans code-barres", "بلا باركود"],
+    'pos.thousandKey': ["×1000 c.", "mille", "ألف"],
+    'posControls.display.title': ["How amounts are said", "Comment se disent les montants", "كيف تُقال المبالغ"],
+    'posControls.display.text': ["For the shops where prices are said in centimes", "Pour les magasins où l'on dit les prix en centimes", "للمحلات التي تُقال فيها الأسعار بالسنتيم"],
+    'posControls.showCentimes': ["Prices in centimes too", "Prix en centimes aussi", "الأسعار بالسنتيم أيضاً"],
+    'posControls.showCentimesHint': ["«25 ألف» under 250 DA, and a «ألف» key on the pad: 25 then ألف = 250 DA", "« 25 mille » sous 250 DA, et une touche « mille » : 25 puis mille = 250 DA", "«25 ألف» تحت 250 دج، وزر «ألف» في لوحة الأرقام: 25 ثم ألف = 250 دج"],
 };
 
 export default messages;

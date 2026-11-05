@@ -9,10 +9,10 @@ import { Modal, ModalBody, ModalFooter } from '../ui/Modal';
 import { NumPad } from '../ui/NumPad';
 import { DatePicker } from '../ui/DatePicker';
 import { paymentLabel, quickCashAmounts, cashReceived, baridiPayProblem } from '../../lib/payments';
-import { BARIDI_PAY_MIN } from '../../../electron/shared/grocery.ts';
-import { methodAllowed } from '../../lib/posControls';
+import { BARIDI_PAY_MIN, centimesLabel } from '../../../electron/shared/grocery.ts';
+import { methodAllowed, resolvePosControls } from '../../lib/posControls';
 import { formatMoney } from '../../i18n/format';
-import { t } from '../../i18n';
+import { t, currentLanguage } from '../../i18n';
 
 /**
  * Payment: cash (amount received, change), card CIB/Edahabia, Baridi Pay,
@@ -22,6 +22,8 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
     const features = useSettingsStore(state => state.settings.features);
     // Card, transfer and kridi can be turned off by the owner (Settings › Sales screen)
     const posControls = useSettingsStore(state => state.settings.pos_controls);
+    const showCentimes = resolvePosControls(posControls).showCentimes;
+    const lang = currentLanguage();
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [smsReceived, setSmsReceived] = useState(false);
     const [cashAmount, setCashAmount] = useState('');
@@ -256,6 +258,8 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                         <div className="min-w-0">
                             <p className="text-sm text-zinc-400">{splitPayments.length > 0 ? t('pos.remaining') : t('pos.totalAmount')}</p>
                             <p className="text-4xl font-bold leading-tight">{amountBox(remainingDue, 'text-accent-primary')}</p>
+                            {/* As people say it: 250 DA = «25 ألف» */}
+                            {showCentimes && centimesLabel(remainingDue, lang) && <p className="text-lg text-zinc-300 font-semibold" data-testid="pay-centimes">{centimesLabel(remainingDue, lang)}</p>}
                         </div>
                         {splitPayments.length > 0 && (
                             <div className="flex flex-wrap gap-1.5">
@@ -292,6 +296,7 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                                 <div className="rounded-xl bg-dark-tertiary border border-dark-border px-4 h-16 flex items-center justify-end">
                                     <span className="text-3xl font-bold">{amountBox(parseFloat(cashAmount) || 0)}</span>
                                 </div>
+                                {showCentimes && centimesLabel(parseFloat(cashAmount) || 0, lang) && <p className="text-sm text-zinc-400 text-end">{centimesLabel(parseFloat(cashAmount) || 0, lang)}</p>}
                                 {/* Quick amounts: exact, then the next round notes */}
                                 <div className="grid grid-cols-2 gap-2">
                                     <button type="button"
@@ -313,7 +318,7 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                                     </span>
                                 </div>
                             </div>
-                            <NumPad value={cashAmount} onChange={setCashAmount} onEnter={handlePayment} />
+                            <NumPad value={cashAmount} onChange={setCashAmount} onEnter={handlePayment} thousand={showCentimes} />
                         </div>
                     )}
 

@@ -21,7 +21,7 @@ import CashExpenseDialog from '../components/shifts/CashExpenseDialog';
 import { VariantPickerModal } from '../components/pos/VariantPickerModal';
 import WeightModal, { weightLabel } from '../components/pos/WeightModal';
 import { stockLabel, perUnit } from '../lib/units';
-import { lineCounts } from '../../electron/shared/grocery.ts';
+import { lineCounts, centimesLabel } from '../../electron/shared/grocery.ts';
 import FirstSaleGuide from '../components/pos/FirstSaleGuide';
 import MyMonthLine from '../components/pos/MyMonthLine';
 import { ReserveDialog, ReservationsDialog } from '../components/pos/Reservations';
@@ -29,9 +29,9 @@ import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
 import { colorHex, colorName, sortSizes, variantLabel } from '../lib/clothing';
 import { formatMoney } from '../i18n/format';
 import { parseTicketCode } from '../lib/ticketCode';
-import { canDiscount as canRoleDiscount } from '../lib/posControls';
+import { canDiscount as canRoleDiscount, resolvePosControls } from '../lib/posControls';
 import { formatDate as formatLocalDate } from '../i18n/format';
-import { t } from '../i18n';
+import { t, currentLanguage } from '../i18n';
 import { beep } from '../lib/sound';
 import { withManagerApproval } from '../lib/approval';
 
@@ -677,6 +677,10 @@ export default function POSPage() {
                             <span className="font-semibold">{t('pos.total')}</span>
                             <span className="text-2xl font-bold tabular">{money(total)}</span>
                         </div>
+                        {/* As people say it: 250 DA = «25 ألف» */}
+                        {resolvePosControls(posControls).showCentimes && centimesLabel(total, currentLanguage()) && (
+                            <p className="text-end text-sm text-zinc-400 font-semibold" data-testid="cart-centimes">{centimesLabel(total, currentLanguage())}</p>
+                        )}
                     </div>
 
                     {cart.reservation && (

@@ -1,7 +1,12 @@
 import { t } from '../../i18n';
+import { thousandKey } from '../../../electron/shared/grocery.ts';
 import { Delete, CornerDownLeft } from 'lucide-react';
 
-export function NumPad({ value, onChange, onEnter, maxLength = 10 }) {
+/**
+ * Number pad. `thousand` adds the «ألف» key: what was typed was thousands of
+ * centimes (25 then ألف = 250 DA), the way people say prices.
+ */
+export function NumPad({ value, onChange, onEnter, maxLength = 10, thousand = false }) {
     const handleNumber = (num) => {
         if (value.length < maxLength) {
             onChange(value + num);
@@ -60,10 +65,15 @@ export function NumPad({ value, onChange, onEnter, maxLength = 10 }) {
             <button
                 type="button"
                 onClick={handleClear}
-                className="numpad-btn col-span-2 text-lg"
+                className={`numpad-btn text-lg ${thousand ? '' : 'col-span-2'}`}
             >
                 {t('qr.clear')}
             </button>
+            {thousand && (
+                <button type="button" onClick={() => onChange(thousandKey(value))} className="numpad-btn text-lg font-bold" data-testid="numpad-thousand">
+                    {t('pos.thousandKey')}
+                </button>
+            )}
             <button
                 type="button"
                 onClick={onEnter}
