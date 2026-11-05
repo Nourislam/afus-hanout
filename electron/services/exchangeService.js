@@ -52,6 +52,8 @@ function previewExchange(api, input, tax = {}) {
     const product = api.get('SELECT * FROM products WHERE id = ?', [variant ? variant.product_id : input.new_product_id]);
     if (!product || !product.is_active || (variant && !variant.is_active)) throw catalog.codedError('VARIANT_GONE', { product: label });
     if (product.has_variants && !variant) throw catalog.codedError('VARIANT_REQUIRED', { product: product.name });
+    // An article sold by weight is weighed on a ticket, not handed out by an exchange
+    if (product.unit === 'kg') throw catalog.codedError('WEIGHT_REQUIRED', { product: product.name });
     if ((variant ? variant.id : null) === (line.variant_id || null) && product.id === line.product_id) {
         throw catalog.codedError('EXCHANGE_SAME_PIECE', {});
     }

@@ -45,13 +45,15 @@ export function cartonDeal(product: CartonOf, cartons = 1): CartonDeal | null {
 export interface CapOf { capped_price?: number | null }
 
 /**
- * A price above the official (capped) price. For a weighed line, the price
- * per kg is compared. Half a centime of tolerance for the rounding.
+ * A price above the official (capped) price. A weighed line is compared with
+ * the capped price of its weight, rounded like the line itself (comparing per
+ * kg would grow the centime of rounding at small weights). Half a centime of
+ * tolerance.
  */
 export function aboveCap(product: CapOf, unitPrice: number, grams?: number | null): boolean {
     const cap = product.capped_price;
     if (cap === null || cap === undefined || !(Number(cap) > 0)) return false;
     const g = Number(grams) || 0;
-    const price = g > 0 ? (Number(unitPrice) || 0) * 1000 / g : Number(unitPrice) || 0;
-    return price > Number(cap) + 0.005;
+    const allowed = g > 0 ? weighedPrice(Number(cap), g) : Number(cap);
+    return (Number(unitPrice) || 0) > allowed + 0.005;
 }

@@ -1,5 +1,5 @@
 // IPC handlers: sales. Moved out of main.js unchanged; main.js passes what they use.
-const { stockUnits, weighedPrice, aboveCap } = require('../shared/grocery.ts');
+const { stockUnits, weighedPrice, aboveCap, isWeighed } = require('../shared/grocery.ts');
 
 module.exports = function register(ctx) {
     const {
@@ -70,6 +70,18 @@ module.exports = function register(ctx) {
           // or a cart opened before another sale cannot take more than the stock.
           // Lines are read after the previous ones were taken off, so two lines of
           // the same piece add up.
+          // The units come from the article, not from the window: an article sold
+          // by weight is one line of its grams; any other article ignores a weight
+          if (product) {
+            if (isWeighed(product)) {
+              if (!(Number(item.weight_grams) > 0) || Number(item.quantity) !== 1) {
+                throw catalog.codedError('WEIGHT_REQUIRED', { product: product.name });
+              }
+            } else if (item.weight_grams || item.sold_as === 'weight') {
+              item.weight_grams = null;
+              if (item.sold_as === 'weight') item.sold_as = null;
+            }
+          }
           if (product) {
             const available = variant ? (variant.stock_quantity || 0) : (product.stock_quantity || 0);
             // A weighed line takes its grams, any other line its quantity

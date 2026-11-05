@@ -82,6 +82,22 @@ describe('selling by weight', () => {
     });
 });
 
+describe('the main process checks the units, not the window', () => {
+    it('an article sold by weight without its weight is refused (it would move grams as pieces)', () => {
+        const before = stock('tomato');
+        expect(() => sell([{ product_id: 'tomato', product_name: 'Tomates', quantity: 2, unit_price: 120, discount: 0, total: 240 }]))
+            .toThrow(/WEIGHT_REQUIRED/);
+        expect(stock('tomato')).toBe(before);
+    });
+
+    it('a weight sent with an article sold by the piece is ignored: its pieces leave the stock', () => {
+        api.run("INSERT INTO products (id, name, price, cost, stock_quantity) VALUES ('salt', 'Sel', 30, 20, 10)");
+        const sale = sell([{ product_id: 'salt', product_name: 'Sel', quantity: 2, unit_price: 30, discount: 0, total: 60, weight_grams: 900, sold_as: 'weight' }]);
+        expect(stock('salt')).toBe(8);
+        expect(api.get('SELECT weight_grams, sold_as FROM sale_items WHERE sale_id = ?', [sale.id])).toEqual({ weight_grams: null, sold_as: null });
+    });
+});
+
 describe('selling by the carton', () => {
     it('the carton barcode is found as one carton of the article', () => {
         const found = catalog.lookupCode(api, '6130000000028');
