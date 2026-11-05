@@ -13,9 +13,9 @@ describe('karni statement on WhatsApp', () => {
         const text = statementText({ name: 'أمين', shop: 'حانوت النور', lines, owed: 1590, lang: 'ar' });
         expect(text.split('\n')[0]).toBe('السلام عليكم أمين، نتمنى أنكم بخير.');
         expect(text).toContain('حانوت النور');
-        expect(text).toMatch(/02\/11\/2026[^\n]*1[\s  ]?250/);
+        expect(text).toMatch(/02\/11\/2026[^\n]*1[\s\u202f\u00a0]?250/);
         expect(text).toMatch(/04\/11\/2026[^\n]*340/);
-        expect(text).toMatch(/الباقي[^\n]*1[\s  ]?590/);
+        expect(text).toMatch(/الباقي[^\n]*1[\s\u202f\u00a0]?590/);
         expect(text.trim().split('\n').pop()).toContain('شكراً');
     });
 
