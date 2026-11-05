@@ -52,7 +52,8 @@ export function cashReceived(typed, due) {
 
 /** Why a Baridi Pay payment cannot be finished yet (a text key), or null. */
 export function baridiPayProblem(amount, smsReceived) {
-    if ((Number(amount) || 0) < BARIDI_PAY_MIN) return 'pay.baridiMin';
+    // To the centime: 128.20 − 28.20 is 100 DA, not 99.999…
+    if (Math.round((Number(amount) || 0) * 100) / 100 < BARIDI_PAY_MIN) return 'pay.baridiMin';
     if (!smsReceived) return 'pay.baridiSms';
     return null;
 }

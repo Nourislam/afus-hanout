@@ -65,6 +65,7 @@ const messages: Record<string, [string, string, string]> = {
     'pos.undo': ["Undo", "Annuler", "تراجع"],
     'pos.cleared': ["Ticket emptied", "Ticket vidé", "أُفرغت التذكرة"],
     'pos.lineRemoved': ["«{name}» removed", "« {name} » retiré", "أُزيلت «{name}»"],
+    'pos.undoTooLate': ["The ticket changed since: nothing to undo", "Le ticket a changé depuis : rien à annuler", "تغيّرت التذكرة بعدها: لا شيء للتراجع عنه"],
 };
 
 export default messages;

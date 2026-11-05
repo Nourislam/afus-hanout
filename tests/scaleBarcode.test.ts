@@ -81,4 +81,16 @@ describe('a scale label at the till', async () => {
         api.run("UPDATE products SET unit = 'piece' WHERE id = 'tomato'");
         expect(catalog.lookupScaleLabel(api, ean('210004201250'), DEFAULT_SCALE_FORMAT)).toBeNull();
     });
+
+    it('a price label of an article at its official price is never refused: the weight is rounded up', async () => {
+        const api = await shop();
+        api.run("UPDATE products SET price = 180, capped_price = 180 WHERE id = 'tomato'");
+        const format: ScaleFormat = { ...DEFAULT_SCALE_FORMAT, value: 'price', decimals: 0 };
+        const { aboveCap } = await import('../electron/shared/grocery');
+        for (let price = 10; price <= 1000; price++) {
+            const body = `2100042${String(price).padStart(5, '0')}`;
+            const found = catalog.lookupScaleLabel(api, ean(body), format);
+            expect(aboveCap({ capped_price: 180 }, found.scale.price, found.scale.grams), `${price} DA`).toBe(false);
+        }
+    });
 });

@@ -47,6 +47,8 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
 
     const paidAmount = splitPayments.reduce((sum, p) => sum + p.amount, 0);
     const remainingDue = total - paidAmount;
+    // The SMS confirms one amount: when the amount changes, it must be ticked again
+    useEffect(() => { setSmsReceived(false); }, [remainingDue]);
 
     // Auto-complete if fully paid (handled in render/effect, or check in addPayment)
 
@@ -54,6 +56,10 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
 
     useEffect(() => {
         if (isOpen) {
+            // Each opening starts again in cash: a Baridi Pay SMS ticked before a Cancel never pays another amount
+            setPaymentMethod('cash');
+            setCashAmount('');
+            setSmsReceived(false);
             // Reservation picked up: its deposit is already paid
             const reservation = useCartStore.getState().reservation;
             setSplitPayments(reservation && reservation.deposit > 0

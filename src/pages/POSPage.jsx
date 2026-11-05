@@ -235,7 +235,12 @@ export default function POSPage() {
     const undoable = (action, message) => {
         const before = cart.snapshot();
         action();
-        toast.info(message, UNDO_MS, { label: 'pos.undo', run: () => cart.restore(before) });
+        // Only the ticket this action left: after a scan, a sale or a hold, nothing comes back
+        const after = useCartStore.getState().items;
+        toast.info(message, UNDO_MS, {
+            label: 'pos.undo',
+            run: () => { if (!useCartStore.getState().restore(before, after)) toast.warning(t('pos.undoTooLate')); },
+        });
     };
 
     const handleProductClick = (product) => {
@@ -570,7 +575,7 @@ export default function POSPage() {
                         <Button variant="secondary" size="sm" onClick={() => setShowReservations(true)} title={t('res.list')} aria-label={t('res.list')} data-testid="pos-reservations">
                             <Bookmark className="w-4 h-4" />
                         </Button>
-                        <Button variant="secondary" size="sm" onClick={() => setShowHeldModal(true)} title={`${t('pos.fittingRoom')} (F9)`}>
+                        <Button variant="secondary" size="sm" onClick={() => setShowHeldModal(true)} title={`${t('pos.fittingRoom')} (F9)`} aria-label={`${t('pos.fittingRoom')} (F9)`}>
                             {/* Icon only on a narrow screen: the ticket header stays on one line */}
                             <History className="w-4 h-4" /> <span className="hidden xl:inline">{t('pos.fittingRoom')}</span>
                             {heldTransactions.length > 0 && <span className="badge bg-amber-500/20 text-amber-300">{heldTransactions.length}</span>}

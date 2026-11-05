@@ -45,7 +45,7 @@ module.exports = function register(ctx) {
       // A "deposit" payment only comes from a reservation picked up
       if (!sale.reservation_id && (sale.payments || []).some(p => p.method === 'deposit')) throw catalog.codedError('RESERVATION_NOT_FOUND', {});
       // Baridi Pay (stored as 'transfer'): Algérie Poste refuses less than 100 DA
-      if ((sale.payments || []).some(p => p.method === 'transfer' && Number(p.amount) < BARIDI_PAY_MIN)) {
+      if ((sale.payments || []).some(p => p.method === 'transfer' && Math.round((Number(p.amount) || 0) * 100) / 100 < BARIDI_PAY_MIN)) {
         throw catalog.codedError('BARIDI_MIN', { min: BARIDI_PAY_MIN });
       }
       runTransaction(() => {

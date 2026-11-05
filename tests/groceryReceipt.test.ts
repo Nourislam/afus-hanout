@@ -36,6 +36,11 @@ describe('a weighed line on the documents', () => {
         expect(fr).toContain('(2 pcs + 0,5 kg)');
     });
 
+    it('a ticket of weighed lines only says its kilograms, not «0 pcs»', () => {
+        const onlyKg = { ...SALE, items: [SALE.items[1]] };
+        expect(service.generateHtml(onlyKg, { defaultLanguage: 'fr' })).toContain('(0,5 kg)');
+    });
+
     it('the A4 invoice: the weight in the quantity column, the price per kg', () => {
         const html = service.generateHtml(SALE, { defaultLanguage: 'fr', type: 'invoice' });
         expect(html).toMatch(/<td class="item-qty">0,500 kg<\/td>/);

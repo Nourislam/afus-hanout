@@ -432,8 +432,14 @@ export const useCartStore = create((set, get) => ({
         return { items, customer, reservation, discount, discountType, serviceCharge, taxExempt, notes, coupon };
     },
 
-    restore: (snapshot) => {
-        if (snapshot) set({ ...snapshot, lastAddedId: null });
+    /**
+     * Put back a snapshot, only if the ticket is still what the action left
+     * (`expectedItems`): after a scan, a sale or a hold, «تراجع» does nothing.
+     */
+    restore: (snapshot, expectedItems) => {
+        if (!snapshot || get().items !== expectedItems) return false;
+        set({ ...snapshot, lastAddedId: null });
+        return true;
     },
 
     clearCart: () => {

@@ -195,3 +195,31 @@ export function daysWithoutSale(row, now = new Date()) {
     const time = new Date(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text) ? `${text.replace(' ', 'T')}Z` : text).getTime();
     return Number.isNaN(time) ? null : Math.max(0, Math.floor((now.getTime() - time) / DAY));
 }
+
+/**
+ * Every hour (or day) of the period, even without sales, so the bars keep
+ * their place. Hours run in the shop day's order (from the morning past
+ * midnight, from 09h or the first sale); days from the period's first shop
+ * day to today's.
+ */
+export function chartBuckets(rows, period, bucket, now = new Date()) {
+    const byKey = new Map(rows.map(r => [r.bucket, r]));
+    const item = (key, label) => ({ key, label, total: byKey.get(key)?.total || 0, count: byKey.get(key)?.count || 0 });
+    if (bucket === 'hour') {
+        const order = (h) => (h - SHOP_DAY_STARTS_AT + 24) % 24;
+        const first = Math.min(order(9), ...rows.map(r => order(Number(r.bucket))));
+        const out = [];
+        for (let o = first; o <= order(now.getHours()); o++) {
+            const key = String((o + SHOP_DAY_STARTS_AT) % 24).padStart(2, '0');
+            out.push(item(key, `${key}h`));
+        }
+        return out;
+    }
+    const out = [];
+    const start = shopDayStart(new Date(`${period.startDate.replace(' ', 'T')}Z`));
+    const last = localDate(shopDayStart(now));
+    for (const day = new Date(start.getFullYear(), start.getMonth(), start.getDate()); localDate(day) <= last; day.setDate(day.getDate() + 1)) {
+        out.push(item(localDate(day), null));
+    }
+    return out;
+}

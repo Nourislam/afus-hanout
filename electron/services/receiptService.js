@@ -878,7 +878,10 @@ class ReceiptService {
 
         // Pieces and kilograms apart: a weighed line is not a piece
         const counts = lineCounts(data.items || []);
-        const countText = T('receipt.items', { n: counts.pieces }) + (counts.grams > 0 ? ` + ${T('receipt.kg', { n: kgNumber(counts.grams, T.lang) })}` : '');
+        const countText = [
+            (counts.pieces > 0 || counts.grams === 0) && T('receipt.items', { n: counts.pieces }),
+            counts.grams > 0 && T('receipt.kg', { n: kgNumber(counts.grams, T.lang) }),
+        ].filter(Boolean).join(' + ');
         const itemsHtml = (data.items || []).map(item => {
             const lineDiscount = parseFloat(item.discount) || 0;
             const variant = variantLabel(item, T.lang);

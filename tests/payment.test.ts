@@ -15,5 +15,7 @@ describe('paying', () => {
         expect(baridiPayProblem(75, true)).toBe('pay.baridiMin');
         expect(baridiPayProblem(150, false)).toBe('pay.baridiSms');
         expect(baridiPayProblem(150, true)).toBeNull();
+        // 128.20 − 28.20 left after a gift card is 100 DA, not 99.999…
+        expect(baridiPayProblem(128.2 - 28.2, true)).toBeNull();
     });
 });

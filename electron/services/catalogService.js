@@ -883,7 +883,8 @@ function lookupScaleLabel(api, code, format) {
     if ('grams' in reading) return { ...found, scale: { grams: reading.grams } };
     const perKg = Number(found.product.price) || 0;
     if (!(perKg > 0)) return null;
-    return { ...found, scale: { grams: Math.round(reading.price / perKg * 1000), price: reading.price } };
+    // Rounded up: the printed price is never above the price of the weight (nor the official price)
+    return { ...found, scale: { grams: Math.ceil(reading.price / perKg * 1000 - 1e-9), price: reading.price } };
 }
 
 /** Point a variant's QR code at its current SKU (used after a SKU change). */

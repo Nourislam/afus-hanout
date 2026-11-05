@@ -5,6 +5,7 @@
  */
 const catalog = require('./catalogService');
 const { countedSale } = require('./saleStatus');
+const { SHOP_DAY_SQL } = require('../shared/shopDay.ts');
 
 function salesFilter({ startDate, endDate, employeeId }) {
     let where = `s.created_at BETWEEN ? AND ? AND ${countedSale('s')}`;
@@ -270,13 +271,14 @@ function creditMoves(api, { startDate, endDate }) {
 }
 
 /**
- * Sales per hour (one day) or per day (week, month), in the shop's local time.
+ * Sales per hour (one day) or per shop day (week, month), in the shop's local time.
  * offsetMinutes: minutes to add to the stored time to get the local time.
  */
 function salesSeries(api, range, bucket = 'day', offsetMinutes = 0) {
     const { where, params } = salesFilter(range);
     const shift = `${offsetMinutes >= 0 ? '+' : ''}${Math.round(offsetMinutes)} minutes`;
-    const key = bucket === 'hour' ? "strftime('%H', datetime(s.created_at, ?))" : "date(datetime(s.created_at, ?))";
+    // A day is the shop's day (04:00 to 04:00); an hour is the clock's
+    const key = bucket === 'hour' ? "strftime('%H', datetime(s.created_at, ?))" : `date(datetime(s.created_at, ?), ${SHOP_DAY_SQL})`;
     return api.all(`
         SELECT ${key} AS bucket, COUNT(*) AS count, COALESCE(SUM(s.total), 0) AS total
         FROM sales s WHERE ${where}
