@@ -7,6 +7,8 @@
  *                                       may go alone (%); above it a manager
  *                                       types their PIN. 100 = no limit.
  *   payCard / payTransfer / payCredit   payment methods offered
+ *   showCentimes                        amounts also said in centimes («25 ألف»
+ *                                       under 250 DA) and the «ألف» key
  * The owner (administrator) always has the discount, managers have no limit.
  * The discount is on: the button shows and the cashier uses it alone. Off:
  * the button is hidden and the main process refuses it.
@@ -18,6 +20,7 @@ export const DEFAULT_POS_CONTROLS = {
     payCard: true,
     payTransfer: true,
     payCredit: true,
+    showCentimes: false,
 };
 
 export function resolvePosControls(saved) {

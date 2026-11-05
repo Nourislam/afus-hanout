@@ -1,6 +1,7 @@
 // Payment methods used in Algerian shops. The stored value never changes;
 // only the label follows the interface language.
 import { t } from '../i18n';
+import { BARIDI_PAY_MIN } from '../../electron/shared/grocery.ts';
 
 const LABEL_KEYS = {
     cash: 'pay.cash',
@@ -41,4 +42,18 @@ export function quickCashAmounts(total, count = 3) {
         if (v > total) values.add(v);
     }
     return [...values].sort((a, b) => a - b).slice(0, count);
+}
+
+/** Cash handed over: nothing typed means the exact amount (one key to finish the sale). */
+export function cashReceived(typed, due) {
+    const text = String(typed ?? '').trim();
+    return text === '' ? due : parseFloat(text) || 0;
+}
+
+/** Why a Baridi Pay payment cannot be finished yet (a text key), or null. */
+export function baridiPayProblem(amount, smsReceived) {
+    // To the centime: 128.20 − 28.20 is 100 DA, not 99.999…
+    if (Math.round((Number(amount) || 0) * 100) / 100 < BARIDI_PAY_MIN) return 'pay.baridiMin';
+    if (!smsReceived) return 'pay.baridiSms';
+    return null;
 }

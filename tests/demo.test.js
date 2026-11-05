@@ -88,8 +88,9 @@ describe('demo shop: its own database, never the shop\'s', () => {
         // Stock: some articles sold out or running low, none negative
         expect(count('products', 'WHERE stock_quantity = 0')).toBeGreaterThan(0);
         expect(count('products', 'WHERE stock_quantity < 0')).toBe(0);
-        // Every article sold by the piece has its own barcode; the weighed ones a scale number
-        expect(count('products', "WHERE unit = 'piece' AND (barcode IS NULL OR barcode = '')")).toBe(0);
+        // Every packed article has its barcode; the bread has none (sold from its picture
+        // button), the weighed ones a scale number
+        expect(api.all("SELECT id FROM products WHERE unit = 'piece' AND (barcode IS NULL OR barcode = '')").map(r => r.id)).toEqual(['demo-prd-bread']);
         expect(count('products', "WHERE unit = 'kg' AND plu IS NULL")).toBe(0);
     });
 

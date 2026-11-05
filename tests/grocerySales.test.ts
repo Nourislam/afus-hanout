@@ -98,6 +98,25 @@ describe('the main process checks the units, not the window', () => {
     });
 });
 
+describe('Baridi Pay', () => {
+    const pay = (method: string, amount: number) => {
+        n += 1;
+        const id = `bp${n}`;
+        return call('db:sales:create', {
+            id, receipt_number: `T-${id}`, employee_id: 'boss', subtotal: amount, discount_amount: 0, tax_amount: 0, total: amount,
+            items: [{ id: `${id}-0`, product_id: 'water', product_name: 'Eau', quantity: amount / 15, unit_price: 15, discount: 0, total: amount }],
+            payments: [{ id: `${id}-p`, method, amount }],
+        });
+    };
+
+    it('refuses less than 100 DA (Algérie Poste\'s minimum); 100 DA or more is paid', () => {
+        api.run("INSERT INTO products (id, name, price, cost, stock_quantity) VALUES ('water', 'Eau', 15, 10, 100)");
+        expect(() => pay('transfer', 75)).toThrow(/BARIDI_MIN/);
+        expect(pay('transfer', 105)).toBeTruthy();
+        expect(pay('cash', 15)).toBeTruthy();
+    });
+});
+
 describe('selling by the carton', () => {
     it('the carton barcode is found as one carton of the article', () => {
         const found = catalog.lookupCode(api, '6130000000028');

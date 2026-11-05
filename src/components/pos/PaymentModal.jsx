@@ -8,20 +8,24 @@ import { Input } from '../ui/Input';
 import { Modal, ModalBody, ModalFooter } from '../ui/Modal';
 import { NumPad } from '../ui/NumPad';
 import { DatePicker } from '../ui/DatePicker';
-import { paymentLabel, quickCashAmounts } from '../../lib/payments';
-import { methodAllowed } from '../../lib/posControls';
+import { paymentLabel, quickCashAmounts, cashReceived, baridiPayProblem } from '../../lib/payments';
+import { BARIDI_PAY_MIN, centimesLabel } from '../../../electron/shared/grocery.ts';
+import { methodAllowed, resolvePosControls } from '../../lib/posControls';
 import { formatMoney } from '../../i18n/format';
-import { t } from '../../i18n';
+import { t, currentLanguage } from '../../i18n';
 
 /**
- * Payment: cash (amount received, change), card CIB/Edahabia, BaridiMob/CCP,
+ * Payment: cash (amount received, change), card CIB/Edahabia, Baridi Pay,
  * customer credit and gift cards, with split payments.
  */
 export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
     const features = useSettingsStore(state => state.settings.features);
     // Card, transfer and kridi can be turned off by the owner (Settings › Sales screen)
     const posControls = useSettingsStore(state => state.settings.pos_controls);
+    const showCentimes = resolvePosControls(posControls).showCentimes;
+    const lang = currentLanguage();
     const [paymentMethod, setPaymentMethod] = useState('cash');
+    const [smsReceived, setSmsReceived] = useState(false);
     const [cashAmount, setCashAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const [customers, setCustomers] = useState([]);
@@ -43,6 +47,8 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
 
     const paidAmount = splitPayments.reduce((sum, p) => sum + p.amount, 0);
     const remainingDue = total - paidAmount;
+    // The SMS confirms one amount: when the amount changes, it must be ticked again
+    useEffect(() => { setSmsReceived(false); }, [remainingDue]);
 
     // Auto-complete if fully paid (handled in render/effect, or check in addPayment)
 
@@ -50,6 +56,10 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
 
     useEffect(() => {
         if (isOpen) {
+            // Each opening starts again in cash: a Baridi Pay SMS ticked before a Cancel never pays another amount
+            setPaymentMethod('cash');
+            setCashAmount('');
+            setSmsReceived(false);
             // Reservation picked up: its deposit is already paid
             const reservation = useCartStore.getState().reservation;
             setSplitPayments(reservation && reservation.deposit > 0
@@ -126,7 +136,8 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
         return formatMoney(amount);
     };
 
-    const cashValue = parseFloat(cashAmount) || 0;
+    // Nothing typed = the exact amount: the big button or Enter finishes the sale
+    const cashValue = cashReceived(cashAmount, remainingDue);
     const change = cashValue - remainingDue;
 
     const filteredCustomers = customers.filter(c =>
@@ -178,6 +189,13 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
             return;
         }
 
+        // Baridi Pay: 100 DA at least, and the SMS of Algérie Poste arrived
+        const baridi = paymentMethod === 'transfer' ? baridiPayProblem(remainingDue, smsReceived) : null;
+        if (baridi) {
+            toast.error(t(baridi));
+            return;
+        }
+
         if (paymentMethod === 'credit') {
             if (!selectedCustomer) {
                 toast.error(t('pos.selectCustomerCredit'));
@@ -217,6 +235,7 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
     const resetForm = () => {
         setCashAmount('');
         setPaymentMethod('cash');
+        setSmsReceived(false);
         setSelectedCustomer(null);
         setCreditInfo(null);
         setGiftCardCode('');
@@ -245,6 +264,8 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                         <div className="min-w-0">
                             <p className="text-sm text-zinc-400">{splitPayments.length > 0 ? t('pos.remaining') : t('pos.totalAmount')}</p>
                             <p className="text-4xl font-bold leading-tight">{amountBox(remainingDue, 'text-accent-primary')}</p>
+                            {/* As people say it: 250 DA = «25 ألف» */}
+                            {showCentimes && centimesLabel(remainingDue, lang) && <p className="text-lg text-zinc-300 font-semibold" data-testid="pay-centimes">{centimesLabel(remainingDue, lang)}</p>}
                         </div>
                         {splitPayments.length > 0 && (
                             <div className="flex flex-wrap gap-1.5">
@@ -281,6 +302,7 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                                 <div className="rounded-xl bg-dark-tertiary border border-dark-border px-4 h-16 flex items-center justify-end">
                                     <span className="text-3xl font-bold">{amountBox(parseFloat(cashAmount) || 0)}</span>
                                 </div>
+                                {showCentimes && centimesLabel(parseFloat(cashAmount) || 0, lang) && <p className="text-sm text-zinc-400 text-end">{centimesLabel(parseFloat(cashAmount) || 0, lang)}</p>}
                                 {/* Quick amounts: exact, then the next round notes */}
                                 <div className="grid grid-cols-2 gap-2">
                                     <button type="button"
@@ -302,7 +324,7 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                                     </span>
                                 </div>
                             </div>
-                            <NumPad value={cashAmount} onChange={setCashAmount} onEnter={handlePayment} />
+                            <NumPad value={cashAmount} onChange={setCashAmount} onEnter={handlePayment} thousand={showCentimes} />
                         </div>
                     )}
 
@@ -489,6 +511,14 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                                     ? <CreditCard className="w-20 h-20 mx-auto mb-4 text-zinc-600" />
                                     : <Smartphone className="w-20 h-20 mx-auto mb-4 text-zinc-600" />}
                                 <p className="text-zinc-400">{paymentMethod === 'card' ? t('pos.cardReady') : t('pos.transferReady')}</p>
+                                {paymentMethod === 'transfer' && (remainingDue < BARIDI_PAY_MIN
+                                    ? <p className="mt-3 text-amber-300 font-semibold" data-testid="baridi-min">{t('pay.baridiMin')}</p>
+                                    : (
+                                        <label className="mt-4 inline-flex items-center gap-3 text-lg cursor-pointer" data-testid="baridi-sms">
+                                            <input type="checkbox" className="w-6 h-6" checked={smsReceived} onChange={(e) => setSmsReceived(e.target.checked)} />
+                                            {t('pay.smsReceived')}
+                                        </label>
+                                    ))}
                             </div>
                         </div>
                     )}
@@ -504,6 +534,7 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                     onClick={handlePayment}
                     disabled={
                         (paymentMethod === 'cash' && cashValue < remainingDue) ||
+                        (paymentMethod === 'transfer' && !!baridiPayProblem(remainingDue, smsReceived)) ||
                         (paymentMethod === 'credit' && !canProcessCredit()) ||
                         (paymentMethod === 'gift_card' && !giftCardBalance)
                     }

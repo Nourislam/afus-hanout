@@ -106,7 +106,7 @@ describe('message modules', () => {
         expect(stockReasonLabel('Received shipment')).toBe('Réception de marchandise');
         expect(stockReasonLabel('damaged')).toBe('Abîmé');
         expect(stockReasonLabel('Custom text')).toBe('Custom text');
-        expect(paymentLabel('transfer')).toBe('Virement (BaridiMob / CCP)');
+        expect(paymentLabel('transfer')).toBe('Baridi Pay (Algérie Poste)');
         expect(translateError('EXCEL_MISSING|{"field":"price"}')).toBe('Valeur manquante : Prix de vente');
         useLanguageStore.setState({ lang: 'ar' });
         expect(paymentLabel('cash')).toBe('نقداً');

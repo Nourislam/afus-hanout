@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Percent, CreditCard, Smartphone, FileText, Wallet, Star } from 'lucide-react';
+import { Percent, CreditCard, Smartphone, FileText, Wallet, Star, Coins } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
@@ -13,6 +13,7 @@ import { Switch } from './ModulesSettings';
 const ROWS = [
     { group: 'discount', icon: Percent, keys: [{ key: 'discountCashier', icon: Percent }, { key: 'discountManager', icon: Percent }] },
     { group: 'payment', icon: Wallet, keys: [{ key: 'payCard', icon: CreditCard }, { key: 'payTransfer', icon: Smartphone }, { key: 'payCredit', icon: FileText, module: 'credit' }] },
+    { group: 'display', icon: Coins, keys: [{ key: 'showCentimes', icon: Coins }] },
 ];
 
 /**

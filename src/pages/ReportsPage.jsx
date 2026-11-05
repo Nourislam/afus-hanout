@@ -9,7 +9,6 @@ import { Card } from '../components/ui/Card';
 import { Tabs } from '../components/ui/Tabs';
 import { PageHeader } from '../components/ui/PageHeader';
 import { toast } from '../components/ui/Toast';
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subMonths } from 'date-fns';
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { paymentLabel } from '../lib/payments';
 import { useVizColors, methodColor } from '../lib/vizColors';
@@ -22,6 +21,7 @@ import MarkdownManager from '../components/reports/MarkdownManager';
 import ShopIntelligence from '../components/reports/ShopIntelligence';
 import NetProfit from '../components/reports/NetProfit';
 import { ExportMenu } from '../components/ui/ExportButton';
+import { reportRange } from '../lib/reportRanges';
 
 // Built on each render so the labels follow the interface language
 const dateRanges = () => [
@@ -72,34 +72,9 @@ export default function ReportsPage() {
         loadReportData();
     }, [dateRange]);
 
-    const getDateString = (date) => {
-        return date.toISOString().replace('T', ' ').slice(0, 19);
-    };
 
-    const getDateRange = () => {
-        const now = new Date();
-
-        switch (dateRange) {
-            case 'today':
-                return { startDate: getDateString(startOfDay(now)), endDate: getDateString(endOfDay(now)) };
-            case 'yesterday': {
-                const yesterday = subDays(now, 1);
-                return { startDate: getDateString(startOfDay(yesterday)), endDate: getDateString(endOfDay(yesterday)) };
-            }
-            case 'week':
-                return { startDate: getDateString(startOfWeek(now, { weekStartsOn: 1 })), endDate: getDateString(endOfWeek(now, { weekStartsOn: 1 })) };
-            case 'last7':
-                return { startDate: getDateString(startOfDay(subDays(now, 7))), endDate: getDateString(endOfDay(now)) };
-            case 'month':
-                return { startDate: getDateString(startOfMonth(now)), endDate: getDateString(endOfMonth(now)) };
-            case 'last30':
-                return { startDate: getDateString(startOfDay(subDays(now, 30))), endDate: getDateString(endOfDay(now)) };
-            case 'last3months':
-                return { startDate: getDateString(startOfMonth(subMonths(now, 2))), endDate: getDateString(endOfDay(now)) };
-            default:
-                return { startDate: getDateString(startOfMonth(now)), endDate: getDateString(endOfMonth(now)) };
-        }
-    };
+    // Every period on the shop's day, 04:00 to 04:00 (lib/reportRanges.js)
+    const getDateRange = () => reportRange(dateRange);
 
     const loadReportData = async () => {
         setLoading(true);

@@ -99,7 +99,8 @@ describe('home screen figures', () => {
         sell(api, 's2', '2026-10-05 23:30:00', [{ product_id: 'belt', name: 'Ceinture', qty: 1, total: 800 }]);
         const day = { startDate: '2026-10-05 00:00:00', endDate: '2026-10-06 23:59:59' };
         expect(dashboard.salesSeries(api, day, 'hour', 60).map(r => [r.bucket, r.total])).toEqual([['00', 800], ['11', 6800]]);
-        expect(dashboard.salesSeries(api, day, 'day', 60).map(r => [r.bucket, r.count])).toEqual([['2026-10-05', 1], ['2026-10-06', 1]]);
+        // Per day: the shop's day (04:00 to 04:00), so 00:30 on the 6th is the 5th's evening
+        expect(dashboard.salesSeries(api, day, 'day', 60).map(r => [r.bucket, r.count])).toEqual([['2026-10-05', 2]]);
     });
 
     // Customer returns: what counts is what the customer kept

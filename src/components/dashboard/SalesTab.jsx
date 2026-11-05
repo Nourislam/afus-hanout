@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Banknote, Receipt, Undo2, BarChart3 } from 'lucide-react';
 import { useT } from '../../i18n';
 import { formatDate, formatMoney, formatNumber } from '../../i18n/format';
-import { compare, localDate } from '../../lib/dashboard';
+import { compare, chartBuckets } from '../../lib/dashboard';
 import { Money, Section, Tile, CompareLine, MiniTabs, Spinner, Empty } from './parts';
 import { BestSellers } from './TodayTab';
 import { useVizColors } from '../../lib/vizColors';
@@ -11,26 +11,9 @@ import { useVizColors } from '../../lib/vizColors';
 const safe = async (promise, fallback) => { try { return (await promise) ?? fallback; } catch { return fallback; } };
 const AGAINST = { today: 'yesterday', week: 'lastWeek', month: 'lastMonth' };
 
-/** Every hour (or day) of the period, even without sales, so the bars keep their place. */
+/** The chart's bars (lib/dashboard chartBuckets), with each day's short date as its label. */
 function fillBuckets(rows, period, bucket, now = new Date()) {
-    const byKey = new Map(rows.map(r => [r.bucket, r]));
-    const out = [];
-    if (bucket === 'hour') {
-        const first = Math.min(9, ...rows.map(r => Number(r.bucket)));
-        for (let h = first; h <= now.getHours(); h++) {
-            const key = String(h).padStart(2, '0');
-            out.push({ key, label: `${key}h`, total: byKey.get(key)?.total || 0, count: byKey.get(key)?.count || 0 });
-        }
-        return out;
-    }
-    const start = new Date(`${period.startDate.replace(' ', 'T')}Z`);
-    const day = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    if (start.getHours() !== 0) day.setDate(day.getDate() + 1);
-    for (; day <= now; day.setDate(day.getDate() + 1)) {
-        const key = localDate(day);
-        out.push({ key, label: formatDate(new Date(day), 'short'), total: byKey.get(key)?.total || 0, count: byKey.get(key)?.count || 0 });
-    }
-    return out;
+    return chartBuckets(rows, period, bucket, now).map(b => (b.label ? b : { ...b, label: formatDate(new Date(`${b.key}T12:00:00`), 'short') }));
 }
 
 const shortMoney = (n) => (n >= 1000 ? `${formatNumber(Math.round(n / 100) / 10)}k` : formatNumber(n));

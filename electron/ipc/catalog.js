@@ -1,4 +1,5 @@
 // IPC handlers: catalog. Moved out of main.js unchanged; main.js passes what they use.
+const { scaleFormat } = require('../shared/scaleBarcode.ts');
 module.exports = function register(ctx) {
     const {
         SyncManager,
@@ -185,7 +186,9 @@ module.exports = function register(ctx) {
 
     ipcMain.handle('catalog:lookupCode', (_, code) => {
       // With one code per article, scanning sells a piece without asking colour/size
-      return catalog.lookupCode(dbApi, code, { articleScope: getLabelSettings().codeScope === 'article' });
+      return catalog.lookupCode(dbApi, code, { articleScope: getLabelSettings().codeScope === 'article' })
+        // Not an article's code: maybe a label of the shop's scale (Settings › Scale barcode)
+        || catalog.lookupScaleLabel(dbApi, code, scaleFormat(getSettingValue('scale_barcode')));
     });
 
     ipcMain.handle('catalog:searchVariants', (_, { query, limit }) => {

@@ -139,7 +139,7 @@ describe('the other files', () => {
         }
         expect(cell(totalRow, 'المبلغ مع الرسم').value.result).toBe(journal.totals.amount_ttc);
         // Paid in every way = the TTC total
-        const paid = ['نقدًا', 'بطاقة (CIB / الذهبية)', 'تحويل / بريدي موب', 'كريدي', 'بطاقة هدية / رصيد', 'أخرى'].reduce((s, l) => s + (cell(totalRow, l).value.result ?? 0), 0); // a 0 is read back as nothing
+        const paid = ['نقدًا', 'بطاقة (CIB / الذهبية)', 'بريدي باي', 'كريدي', 'بطاقة هدية / رصيد', 'أخرى'].reduce((s, l) => s + (cell(totalRow, l).value.result ?? 0), 0); // a 0 is read back as nothing
         expect(Math.abs(paid - journal.totals.amount_ttc)).toBeLessThan(0.05);
         expect(labels).toContain('البائع');
     });

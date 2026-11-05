@@ -21,6 +21,7 @@ import CashExpenseDialog from '../components/shifts/CashExpenseDialog';
 import { VariantPickerModal } from '../components/pos/VariantPickerModal';
 import WeightModal, { weightLabel } from '../components/pos/WeightModal';
 import { stockLabel, perUnit } from '../lib/units';
+import { lineCounts, centimesLabel } from '../../electron/shared/grocery.ts';
 import FirstSaleGuide from '../components/pos/FirstSaleGuide';
 import MyMonthLine from '../components/pos/MyMonthLine';
 import { ReserveDialog, ReservationsDialog } from '../components/pos/Reservations';
@@ -28,9 +29,9 @@ import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
 import { colorHex, colorName, sortSizes, variantLabel } from '../lib/clothing';
 import { formatMoney } from '../i18n/format';
 import { parseTicketCode } from '../lib/ticketCode';
-import { canDiscount as canRoleDiscount } from '../lib/posControls';
+import { canDiscount as canRoleDiscount, resolvePosControls } from '../lib/posControls';
 import { formatDate as formatLocalDate } from '../i18n/format';
-import { t } from '../i18n';
+import { t, currentLanguage } from '../i18n';
 import { beep } from '../lib/sound';
 import { withManagerApproval } from '../lib/approval';
 
@@ -62,6 +63,8 @@ function VariantHints({ product }) {
         </div>
     );
 }
+
+const UNDO_MS = 10000;
 
 function ProductImage({ product, className = '' }) {
     return (
@@ -211,6 +214,10 @@ export default function POSPage() {
                 addToCart(result.product, result.variant, { fromScanner });
             } else if (result.needsVariant) {
                 setVariantProduct(result.product);
+            } else if (result.scale) {
+                // A label of the shop's scale: its weight, and the printed price when it has one
+                const added = cart.addWeighed(result.product, result.scale.grams, result.scale.price ?? null);
+                if (!added.success) { beep('error'); toast.error(added.message); } else if (fromScanner) beep('ok');
             } else if (result.carton) {
                 // The carton's own barcode: one carton of the article
                 const added = cart.addCarton(result.product);
@@ -222,6 +229,18 @@ export default function POSPage() {
             console.error('Code lookup failed:', error);
             toast.error(t('pos.lookupFailed'));
         }
+    };
+
+    // No confirmation during a sale: do it at once, with «تراجع» for 10 seconds
+    const undoable = (action, message) => {
+        const before = cart.snapshot();
+        action();
+        // Only the ticket this action left: after a scan, a sale or a hold, nothing comes back
+        const after = useCartStore.getState().items;
+        toast.info(message, UNDO_MS, {
+            label: 'pos.undo',
+            run: () => { if (!useCartStore.getState().restore(before, after)) toast.warning(t('pos.undoTooLate')); },
+        });
     };
 
     const handleProductClick = (product) => {
@@ -247,6 +266,16 @@ export default function POSPage() {
 
     const quickPicks = useMemo(() => quickIds.map(id => products.find(p => String(p.id) === String(id) && !p.is_bundle)).filter(p => p && p.stock_quantity > 0), [quickIds, products]);
     const showQuick = quickPicks.length > 0 && !searchQuery.trim() && selectedCategory === 'all' && !selectedBrand;
+    // Bread, vegetables, loose goods: no barcode to scan, a big button with its picture
+    // (the best sellers first). A weighed one opens the weight window.
+    const noBarcode = useMemo(() => {
+        const rank = new Map(quickIds.map((id, i) => [String(id), i]));
+        return products
+            .filter(p => !p.is_bundle && !(p.variant_count > 0) && !String(p.barcode || '').trim() && p.stock_quantity > 0)
+            .sort((a, b) => (rank.get(String(a.id)) ?? 99) - (rank.get(String(b.id)) ?? 99) || a.name.localeCompare(b.name))
+            .slice(0, 12);
+    }, [products, quickIds]);
+    const showNoBarcode = noBarcode.length > 0 && !searchQuery.trim() && !selectedBrand && selectedCategory === 'all';
 
     const countByCategory = useMemo(() => {
         const counts = {};
@@ -351,7 +380,9 @@ export default function POSPage() {
     const manualDiscount = cart.getManualDiscount();
     const taxAmount = cart.getTaxAmount();
     const total = cart.getTotal();
-    const itemCount = cart.getItemCount();
+    // Pieces and kilograms apart: a weighed line is not a piece
+    const counts = lineCounts(cart.items);
+    const itemCount = counts.pieces + counts.grams;
 
     return (
         <div className="h-full flex overflow-hidden">
@@ -433,7 +464,23 @@ export default function POSPage() {
                 )}
 
                 <div className="flex-1 overflow-y-auto p-5">
-                    {/* Sold most this week: one press each (the articles without a barcode too) */}
+                    {/* Without a barcode: one press on its picture */}
+                    {showNoBarcode && (
+                        <div className="mb-4" data-testid="pos-no-barcode">
+                            <p className="text-xs font-semibold text-zinc-400 mb-2">{t('pos.noBarcode')}</p>
+                            <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(104px, 1fr))' }}>
+                                {noBarcode.map(product => (
+                                    <button key={product.id} type="button" onClick={() => handleProductClick(product)} data-testid="pos-no-barcode-item"
+                                        className="min-h-[96px] p-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 flex flex-col items-center gap-1 transition-colors">
+                                        <ProductImage product={product} className="w-14 h-14 rounded-lg" />
+                                        <span dir="auto" className="text-sm font-semibold leading-tight line-clamp-1 text-center w-full">{product.name}</span>
+                                        <span className="text-xs text-emerald-300 tabular">{money(product.price)}{perUnit(product)}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {/* Sold most this week: one press each */}
                     {showQuick && (
                         <div className="mb-4" data-testid="pos-quick-picks">
                             <p className="text-xs font-semibold text-zinc-400 mb-2">{t('pos.quickPicks')}</p>
@@ -519,13 +566,18 @@ export default function POSPage() {
                         <h2 className="font-semibold flex items-center gap-2">
                             <ShoppingBag className="w-5 h-5 text-indigo-400" />
                             {t('pos.ticket')}
-                            {itemCount > 0 && <span className="badge badge-primary">{t('pos.pieces', { n: itemCount })}</span>}
+                            {itemCount > 0 && (
+                                <span className="badge badge-primary" data-testid="cart-count">
+                                    {[counts.pieces > 0 && t('pos.pieces', { n: counts.pieces }), counts.grams > 0 && weightLabel(counts.grams)].filter(Boolean).join(' + ')}
+                                </span>
+                            )}
                         </h2>
                         <Button variant="secondary" size="sm" onClick={() => setShowReservations(true)} title={t('res.list')} aria-label={t('res.list')} data-testid="pos-reservations">
                             <Bookmark className="w-4 h-4" />
                         </Button>
-                        <Button variant="secondary" size="sm" onClick={() => setShowHeldModal(true)} title="F9">
-                            <History className="w-4 h-4" /> {t('pos.fittingRoom')}
+                        <Button variant="secondary" size="sm" onClick={() => setShowHeldModal(true)} title={`${t('pos.fittingRoom')} (F9)`} aria-label={`${t('pos.fittingRoom')} (F9)`}>
+                            {/* Icon only on a narrow screen: the ticket header stays on one line */}
+                            <History className="w-4 h-4" /> <span className="hidden xl:inline">{t('pos.fittingRoom')}</span>
                             {heldTransactions.length > 0 && <span className="badge bg-amber-500/20 text-amber-300">{heldTransactions.length}</span>}
                         </Button>
                     </div>
@@ -548,7 +600,8 @@ export default function POSPage() {
                             <span className="text-zinc-500">{t('pos.addCustomer')}</span>
                         )}
                     </button>
-                    {features?.commissions === true && <MyMonthLine refreshKey={lastSale?.id} />}
+                    {/* On a short screen the ticket lines come first: the month box folds away */}
+                    {features?.commissions === true && <div className="[@media(max-height:820px)]:hidden"><MyMonthLine refreshKey={lastSale?.id} /></div>}
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
@@ -595,14 +648,15 @@ export default function POSPage() {
                                     </button>
                                     <div className="flex flex-col items-end gap-1.5">
                                         <span className="font-semibold tabular text-sm">{money(item.total)}</span>
-                                        <div className="flex items-center gap-1">
+                                        {/* A weighing is one line of its weight: no − / + (remove it, or weigh again) */}
+                                        {item.sold_as !== 'weight' && <div className="flex items-center gap-1">
                                             <button onClick={() => cart.updateItemQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded-md bg-dark-secondary hover:bg-zinc-700 flex items-center justify-center" aria-label="-"><Minus className="w-3.5 h-3.5" /></button>
                                             <span className="w-7 text-center text-sm font-semibold tabular">{item.sold_as === 'carton' ? item.cartons : item.quantity}</span>
                                             <button
                                                 onClick={() => { const r = cart.updateItemQuantity(item.id, item.quantity + 1); if (r && !r.success) toast.error(r.message); }}
                                                 className="w-7 h-7 rounded-md bg-dark-secondary hover:bg-zinc-700 flex items-center justify-center" aria-label="+"
                                             ><Plus className="w-3.5 h-3.5" /></button>
-                                        </div>
+                                        </div>}
                                     </div>
                                 </div>
                                 {isEditing && (
@@ -610,7 +664,7 @@ export default function POSPage() {
                                         item={item}
                                         canDiscount={canDiscount}
                                         onPrice={(price) => cart.setLinePrice(item.id, price)}
-                                        onRemove={() => { cart.removeItem(item.id); setEditingLine(null); }}
+                                        onRemove={() => { undoable(() => cart.removeItem(item.id), t('pos.lineRemoved', { name: item.product_name })); setEditingLine(null); }}
                                     />
                                 )}
                             </div>
@@ -640,24 +694,29 @@ export default function POSPage() {
                             <span className="font-semibold">{t('pos.total')}</span>
                             <span className="text-2xl font-bold tabular">{money(total)}</span>
                         </div>
+                        {/* As people say it: 250 DA = «25 ألف» */}
+                        {resolvePosControls(posControls).showCentimes && centimesLabel(total, currentLanguage()) && (
+                            <p className="text-end text-sm text-zinc-400 font-semibold" data-testid="cart-centimes">{centimesLabel(total, currentLanguage())}</p>
+                        )}
                     </div>
 
                     {cart.reservation && (
                         <p className="text-xs text-sky-300 flex items-center gap-1.5" data-testid="pos-reservation"><Bookmark className="w-3.5 h-3.5" /> {t('res.inCart', { n: cart.reservation.number, amount: money(cart.reservation.deposit) })}</p>
                     )}
-                    <div className="grid grid-cols-2 gap-2">
+                    {/* On a short screen (1024 × 700) the four buttons take one row, icons only: the ticket lines keep the room */}
+                    <div className="grid grid-cols-2 [@media(max-height:820px)]:grid-cols-4 gap-2 [&_.btn-label]:[@media(max-height:820px)]:sr-only">
                         <Button variant="secondary" onClick={() => setShowOptionsModal(true)} disabled={cart.items.length === 0} title={t('pos.options')} data-testid="pos-options">
-                            <SlidersHorizontal className="w-4 h-4" /> {canDiscount ? t('pos.discountShort') : t('pos.options')}
+                            <SlidersHorizontal className="w-4 h-4" /> <span className="btn-label">{canDiscount ? t('pos.discountShort') : t('pos.options')}</span>
                         </Button>
-                        <Button variant="secondary" onClick={handleHoldTransaction} disabled={cart.items.length === 0} title="F8">
-                            <Pause className="w-4 h-4" /> {t('pos.hold')}
+                        <Button variant="secondary" onClick={handleHoldTransaction} disabled={cart.items.length === 0} title={`${t('pos.hold')} (F8)`}>
+                            <Pause className="w-4 h-4" /> <span className="btn-label">{t('pos.hold')}</span>
                         </Button>
                         {/* Reserve the pieces with a deposit (not for a reservation already picked up) */}
-                        <Button variant="secondary" onClick={() => setShowReserve(true)} disabled={cart.items.length === 0 || !!cart.reservation} data-testid="pos-reserve">
-                            <Bookmark className="w-4 h-4" /> {t('res.reserve')}
+                        <Button variant="secondary" onClick={() => setShowReserve(true)} disabled={cart.items.length === 0 || !!cart.reservation} data-testid="pos-reserve" title={t('res.reserve')}>
+                            <Bookmark className="w-4 h-4" /> <span className="btn-label">{t('res.reserve')}</span>
                         </Button>
-                        <Button variant="secondary" onClick={() => { if (confirm(t('pos.clearConfirm'))) cart.clearCart(); }} disabled={cart.items.length === 0} className="hover:!bg-red-500/15 hover:!text-red-300">
-                            <Trash2 className="w-4 h-4" /> {t('pos.clear')}
+                        <Button variant="secondary" onClick={() => undoable(() => cart.clearCart(), t('pos.cleared'))} disabled={cart.items.length === 0} title={t('pos.clear')} className="hover:!bg-red-500/15 hover:!text-red-300">
+                            <Trash2 className="w-4 h-4" /> <span className="btn-label">{t('pos.clear')}</span>
                         </Button>
                     </div>
                     <Button variant="success" size="lg" className="w-full h-14 text-lg" onClick={startPayment} disabled={cart.items.length === 0} data-testid="pos-pay">
@@ -665,7 +724,7 @@ export default function POSPage() {
                         {t('pos.pay', { amount: money(total) })}
                         <kbd className="ms-auto text-xs font-normal opacity-70 border border-white/30 rounded px-1.5">F4</kbd>
                     </Button>
-                    <p className="text-[11px] text-zinc-600 text-center">{t('pos.shortcuts')}</p>
+                    <p className="text-[11px] text-zinc-600 text-center [@media(max-height:820px)]:hidden">{t('pos.shortcuts')}</p>
                     {shift && (
                         <button type="button" onClick={() => setShowExpense(true)} className="text-xs text-zinc-400 hover:text-zinc-200 underline-offset-2 hover:underline self-center">
                             {t('expense.open')}

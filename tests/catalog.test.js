@@ -291,9 +291,9 @@ describe('free label codes', () => {
         ean8.forEach(code => expect(code.slice(-1)).toBe(catalog.gs1CheckDigit(code.slice(0, 7))));
         expect(catalog.generateFreeCodes(api, { type: 'code39', count: 1 })[0]).toMatch(/^HN\d{8}$/);
         expect(catalog.generateFreeCodes(api, { type: 'itf14', count: 1 })[0]).toMatch(/^29\d{12}$/);
-        // Article barcodes never fall in the reserved 29… range
+        // Article barcodes stay in 20…: 21–28 are a label scale's, 29 the free labels'
         const own = catalog.generateInternalBarcodes(api, 50);
-        own.forEach(code => expect(code.startsWith('29')).toBe(false));
+        own.forEach(code => expect(code.slice(0, 2)).toBe('20'));
     });
 });
 

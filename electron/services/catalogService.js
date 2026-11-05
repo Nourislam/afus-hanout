@@ -12,6 +12,7 @@
  *   api.uuid()            -> new id
  */
 
+const { decodeScaleBarcode } = require('../shared/scaleBarcode.ts');
 const CLOTHING = require('../shared/clothing.json');
 
 const IDENTIFIER_PATTERN = /^[A-Z0-9][A-Z0-9._-]*$/;
@@ -272,8 +273,9 @@ function generateInternalBarcodes(api, count = 1, reserved = new Set(), random =
     const taken = new Set([...reserved].map(normalizeCode));
     const codes = [];
     for (let attempts = 0; codes.length < count && attempts < count * 200; attempts++) {
-        // 20…–28…: article codes. 29… is kept for free labels (generateFreeCodes)
-        let body = '2' + Math.min(Math.floor(random() * 9), 8);
+        // 20…: article codes. 21…–28… are a label scale's (electron/shared/scaleBarcode.ts),
+        // 29… is kept for free labels (generateFreeCodes)
+        let body = '20';
         for (let i = 0; i < 10; i++) body += Math.floor(random() * 10);
         const code = body + ean13CheckDigit(body);
         if (taken.has(code)) continue;
@@ -283,7 +285,7 @@ function generateInternalBarcodes(api, count = 1, reserved = new Set(), random =
         taken.add(code);
         codes.push(code);
     }
-    if (codes.length < count) throw codedError('SKU_EXHAUSTED', { stem: '2' });
+    if (codes.length < count) throw codedError('SKU_EXHAUSTED', { stem: '20' });
     return codes;
 }
 
@@ -868,6 +870,23 @@ function lookupPlu(api, plu) {
     return product ? { type: 'product', product } : null;
 }
 
+/**
+ * A label printed by the shop's scale: its article (by PLU, sold by weight
+ * only) and the weight, or the printed price and the weight it stands for.
+ * @returns {{ type: 'product', product: object, scale: { grams: number, price?: number } } | null}
+ */
+function lookupScaleLabel(api, code, format) {
+    const reading = decodeScaleBarcode(code, format);
+    if (!reading) return null;
+    const found = lookupPlu(api, reading.plu);
+    if (!found || found.product.unit !== 'kg') return null;
+    if ('grams' in reading) return { ...found, scale: { grams: reading.grams } };
+    const perKg = Number(found.product.price) || 0;
+    if (!(perKg > 0)) return null;
+    // Rounded up: the printed price is never above the price of the weight (nor the official price)
+    return { ...found, scale: { grams: Math.ceil(reading.price / perKg * 1000 - 1e-9), price: reading.price } };
+}
+
 /** Point a variant's QR code at its current SKU (used after a SKU change). */
 function regenerateQrCode(api, variantId) {
     const variant = api.get('SELECT * FROM product_variants WHERE id = ?', [variantId]);
@@ -913,6 +932,7 @@ function getLowStock(api) {
 module.exports = {
     coded,
     lookupPlu,
+    lookupScaleLabel,
     codedError,
     normalizeCode,
     validateIdentifier,

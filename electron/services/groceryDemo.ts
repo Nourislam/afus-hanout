@@ -339,11 +339,13 @@ function buildShop(api: Api, { lang = 'ar', imagesDir, now = new Date(), seed = 
         // Always something sold out and something running low, for the screens that show them
         if (a.key === 'CHOCO') a.left = 0;
         if (a.key === 'TEA') a.left = 2;
+        // Bread has no barcode (sold from its picture button), the weighed ones a scale number
+        const code = a.unit === 'kg' ? null : barcodes[b++];
         const image = writeImage(`demo-${a.key.toLowerCase()}.svg`, articleSvg(a.name.slice(0, 1), categoryColour[a.cat]));
         catalog.saveProduct(api, {
             id: a.id, name: a.name, category_id: categoryIds[a.cat], supplier_id: a.supplier,
             price: a.price, cost: a.cost, min_stock_level: a.unit === 'kg' ? 3000 : 5, image_path: image,
-            barcode: a.unit === 'kg' ? null : barcodes[b++], stock_quantity: a.left + a.sold,
+            barcode: a.key === 'BREAD' ? null : code, stock_quantity: a.left + a.sold,
             unit: a.unit || 'piece', plu: a.plu ?? '', capped_price: a.capped ?? null,
             carton_qty: a.carton ? a.carton[0] : '', carton_price: a.carton ? a.carton[1] : null,
             carton_barcode: a.carton ? barcodes[b++] : '', has_colors: false, has_sizes: false,

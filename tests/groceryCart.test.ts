@@ -106,4 +106,34 @@ describe('cart with cartons and weighed lines', () => {
         cart().updateItemQuantity(id, 48);
         expect(cart().items[0]).toMatchObject({ cartons: 2, quantity: 48, discount: 0, total: 960 });
     });
+
+    it('undo: a cleared ticket comes back as it was (lines, customer, discount)', () => {
+        cart().addCarton(milk);
+        cart().addWeighed(tomato, 500);
+        cart().setCustomer({ id: 'c1', name: 'Amine' });
+        cart().setDiscount(10, 'fixed');
+        const before = cart().snapshot();
+        cart().clearCart();
+        expect(cart().items).toHaveLength(0);
+        cart().restore(before, cart().items);
+        expect(cart().items.map((i: { sold_as?: string }) => i.sold_as)).toEqual(['carton', 'weight']);
+        expect(cart().customer).toMatchObject({ id: 'c1' });
+        expect(cart().discount).toBe(10);
+    });
+
+    it('undo only puts back the ticket it removed: not after a new scan, a sale or a hold', () => {
+        cart().addCarton(milk);
+        const before = cart().snapshot();
+        cart().clearCart();
+        const after = cart().items;
+        // Something happened since (a scan): «تراجع» does nothing, the new line stays
+        cart().addWeighed(tomato, 500);
+        expect(cart().restore(before, after)).toBe(false);
+        expect(cart().items.map((i: { sold_as?: string }) => i.sold_as)).toEqual(['weight']);
+        // Nothing happened since: the ticket comes back
+        const again = cart().snapshot();
+        cart().clearCart();
+        expect(cart().restore(again, cart().items)).toBe(true);
+        expect(cart().items).toHaveLength(1);
+    });
 });

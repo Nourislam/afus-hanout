@@ -2,6 +2,7 @@
 // "what do I do now?" list, the plain-words comparisons and the date limits.
 import { PERMISSIONS } from './permissions';
 import { DASHBOARD_LINKS } from './listFilters';
+import { shopDayStart, SHOP_DAY_STARTS_AT } from '../../electron/shared/shopDay.ts';
 
 export const TABS = ['today', 'sales', 'stock', 'cash'];
 export const MAX_ALERTS = 5;
@@ -38,10 +39,11 @@ export function localDate(date) {
 /** Same form as sales.created_at (stored in UTC). */
 export const toDb = (date) => date.toISOString().replace('T', ' ').slice(0, 19);
 
-const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+// The shop's day runs from 04:00 to 04:00 (a sale at 00:30 is the evening's)
+const startOfDay = (d) => shopDayStart(d);
 // Algerian shops count the week from Saturday
 const startOfWeek = (d) => { const s = startOfDay(d); s.setDate(s.getDate() - ((s.getDay() + 1) % 7)); return s; };
-const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
+const startOfMonth = (d) => { const s = shopDayStart(d); return new Date(s.getFullYear(), s.getMonth(), 1, SHOP_DAY_STARTS_AT); };
 const range = (from, to) => ({ startDate: toDb(from), endDate: toDb(to) });
 
 /**
@@ -54,7 +56,7 @@ export function dashboardRanges(now = new Date()) {
     const today = startOfDay(now);
     const week = startOfWeek(now);
     const month = startOfMonth(now);
-    const lastMonth = new Date(month.getFullYear(), month.getMonth() - 1, 1);
+    const lastMonth = new Date(month.getFullYear(), month.getMonth() - 1, 1, SHOP_DAY_STARTS_AT);
     const lastMonthNow = new Date(Math.min(lastMonth.getTime() + (now - month), month.getTime()));
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
     const since30 = new Date(today); since30.setDate(today.getDate() - 30);
@@ -192,4 +194,32 @@ export function daysWithoutSale(row, now = new Date()) {
     const text = String(value);
     const time = new Date(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text) ? `${text.replace(' ', 'T')}Z` : text).getTime();
     return Number.isNaN(time) ? null : Math.max(0, Math.floor((now.getTime() - time) / DAY));
+}
+
+/**
+ * Every hour (or day) of the period, even without sales, so the bars keep
+ * their place. Hours run in the shop day's order (from the morning past
+ * midnight, from 09h or the first sale); days from the period's first shop
+ * day to today's.
+ */
+export function chartBuckets(rows, period, bucket, now = new Date()) {
+    const byKey = new Map(rows.map(r => [r.bucket, r]));
+    const item = (key, label) => ({ key, label, total: byKey.get(key)?.total || 0, count: byKey.get(key)?.count || 0 });
+    if (bucket === 'hour') {
+        const order = (h) => (h - SHOP_DAY_STARTS_AT + 24) % 24;
+        const first = Math.min(order(9), ...rows.map(r => order(Number(r.bucket))));
+        const out = [];
+        for (let o = first; o <= order(now.getHours()); o++) {
+            const key = String((o + SHOP_DAY_STARTS_AT) % 24).padStart(2, '0');
+            out.push(item(key, `${key}h`));
+        }
+        return out;
+    }
+    const out = [];
+    const start = shopDayStart(new Date(`${period.startDate.replace(' ', 'T')}Z`));
+    const last = localDate(shopDayStart(now));
+    for (const day = new Date(start.getFullYear(), start.getMonth(), start.getDate()); localDate(day) <= last; day.setDate(day.getDate() + 1)) {
+        out.push(item(localDate(day), null));
+    }
+    return out;
 }
