@@ -20,10 +20,7 @@
     "preelectron:build:mac": "node scripts/check-deps.mjs",
     "electron:build:mac": "vite build && electron-builder --mac",
     "preelectron:start": "node scripts/check-deps.mjs",
-    "electron:start": "electron .",
-    "check:website-apps": "node scripts/website-apps-check.mjs",
-    "build:demo": "vite build -c demo-web/vite.config.mjs",
-    "build:site": "npm run build:demo && node site/build.mjs"
+    "electron:start": "electron ."
   },
   "keywords": [
     "pos",
@@ -39,18 +36,14 @@
   "dependencies": {
     "bwip-js": "^4.8.0",
     "exceljs": "^4.4.0",
-    "node-fetch": "^3.3.2",
-    "nodemailer": "^10.1.7",
     "sql.js": "^1.13.0",
     "uuid": "^11.1.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.2",
-    "@fontsource-variable/alexandria": "^5.3.0",
     "@fontsource-variable/cairo": "^5.3.0",
     "@fontsource-variable/inter": "^5.3.0",
-    "@fontsource/ibm-plex-sans-arabic": "^5.3.0",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^22.20.5",
     "@types/react": "^18.2.45",

@@ -5,7 +5,7 @@ export default {
     // Application identity (the shop's own name/logo is shown where available)
     // Product name: the same in every language (electron/shared/brand.json)
     'app.name': [PRODUCT_NAME, PRODUCT_NAME, PRODUCT_NAME],
-    'app.tagline': ['Software for Algerian clothing & fashion shops', 'Logiciel pour boutiques de vêtements et accessoires en Algérie', 'برنامج محلات الملابس والإكسسوارات في الجزائر'],
+    'app.tagline': ["Software for Algerian grocery shops", "Logiciel pour les épiceries et supérettes en Algérie", "برنامج الحوانيت والمحلات الغذائية في الجزائر"],
     'app.loading': ['Loading…', 'Chargement…', 'جارٍ التحميل…'],
 
     // Navigation
@@ -26,7 +26,6 @@ export default {
     'nav.employees': ['Employees', 'Employés', 'العمال'],
     'nav.reports': ['Reports', 'Rapports', 'التقارير'],
     'nav.settings': ['Settings', 'Paramètres', 'الإعدادات'],
-    'nav.website': ['My store', 'Ma boutique en ligne', 'متجري'],
     'nav.closeShift': ['Close shift', 'Clôturer la caisse', 'غلق الصندوق'],
     'nav.logout': ['Log out', 'Déconnexion', 'خروج'],
 
@@ -145,5 +144,4 @@ export default {
     'titlebar.synced': ['Synced', 'Synchronisé', 'متزامن'],
     'titlebar.offline': ['Offline', 'Hors ligne', 'بدون اتصال'],
     'titlebar.syncError': ['Sync error', 'Erreur de synchro', 'خطأ في المزامنة'],
-    'nav.websiteOrders': ["Website orders", "Commandes du site", "طلبات الموقع"],
 };

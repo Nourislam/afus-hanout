@@ -18,7 +18,7 @@ const set = (v) => v !== null && v !== undefined && v !== '';
 /** @returns one line per size / colour (articles with sizes) or per article, sorted by article then size */
 function stockLines(api) {
     const products = api.all(`
-        SELECT p.id, p.name, p.sku, p.barcode, p.price, p.cost, p.stock_quantity, p.min_stock_level,
+        SELECT p.id, p.name, p.sku, p.barcode, p.price, p.cost, p.stock_quantity, p.min_stock_level, p.unit, p.plu,
                COALESCE(p.has_variants, 0) AS has_variants, p.brand, p.season, p.collection, c.name AS category
         FROM products p LEFT JOIN categories c ON c.id = p.category_id
         WHERE COALESCE(p.is_active, 1) = 1
@@ -37,16 +37,19 @@ function stockLines(api) {
         const unitCost = r2(v && set(v.cost) ? v.cost : p.cost);
         const unitPrice = r2(v && set(v.price) ? v.price : p.price);
         const pieces = Math.max(0, quantity);
+        // Sold by weight: the stock is in grams, the prices per kg
+        const weighed = !v && p.unit === 'kg';
+        const priced = weighed ? pieces / 1000 : pieces;
         return {
             product_id: p.id, variant_id: v ? v.id : null,
             name: p.name, category: p.category || '', brand: p.brand || '', season: p.season || '', collection: p.collection || '',
             color: v?.color || '', color_code: v?.color_code || '', size: v?.size || '',
-            sku: (v ? v.sku : p.sku) || '', barcode: (v ? v.barcode : p.barcode) || '',
+            sku: (v ? v.sku : p.sku) || '', barcode: (v ? v.barcode : p.barcode) || '', plu: weighed && p.plu ? String(p.plu) : '',
             qr: (v ? v.qr_code || v.sku : p.sku) || '',
-            quantity, min_level: Number(v ? v.min_stock_level : p.min_stock_level) || 0,
+            quantity, min_level: Number(v ? v.min_stock_level : p.min_stock_level) || 0, unit: weighed ? 'kg' : 'piece',
             unit_cost: unitCost, unit_price: unitPrice,
-            cost_value: r2(pieces * unitCost), retail_value: r2(pieces * unitPrice),
-            margin_value: r2(pieces * (unitPrice - unitCost)),
+            cost_value: r2(priced * unitCost), retail_value: r2(priced * unitPrice),
+            margin_value: r2(priced * (unitPrice - unitCost)),
         };
     };
     for (const p of products) {
@@ -56,18 +59,20 @@ function stockLines(api) {
     return lines;
 }
 
-/** Totals of some lines: pieces, purchase value, sale value, margin. */
+/** Totals of some lines: pieces, kilograms, purchase value, sale value, margin. */
 function stockTotals(lines) {
-    const t = { articles: new Set(lines.map(l => l.product_id)).size, lines: lines.length, pieces: 0, cost: 0, retail: 0, margin: 0, pieces_without_cost: 0 };
+    const t = { articles: new Set(lines.map(l => l.product_id)).size, lines: lines.length, pieces: 0, grams: 0, cost: 0, retail: 0, margin: 0, pieces_without_cost: 0 };
     for (const l of lines) {
-        const pieces = Math.max(0, l.quantity);
+        // Kilograms are not pieces: an article sold by weight counts in grams
+        const pieces = l.unit === 'kg' ? 0 : Math.max(0, l.quantity);
+        if (l.unit === 'kg') t.grams += Math.max(0, l.quantity);
         t.pieces += pieces;
         t.cost += l.cost_value;
         t.retail += l.retail_value;
         t.margin += l.margin_value;
         if (pieces > 0 && !(l.unit_cost > 0)) t.pieces_without_cost += pieces;
     }
-    return { ...t, cost: r2(t.cost), retail: r2(t.retail), margin: r2(t.margin) };
+    return { ...t, kg: t.grams / 1000, cost: r2(t.cost), retail: r2(t.retail), margin: r2(t.margin) };
 }
 
 /** The same totals per category (for the summary sheet). */

@@ -13,6 +13,10 @@ const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100 + 0;
 const DAY = 86400000;
 const toDb = (date) => new Date(date).toISOString().replace('T', ' ').slice(0, 19);
 
+// Stock of a simple article in the unit of its prices: kg for an article sold by weight (stock in grams)
+const UNITS = "(CASE WHEN unit = 'kg' THEN stock_quantity / 1000.0 ELSE stock_quantity END)";
+const P_UNITS = "(CASE WHEN p.unit = 'kg' THEN COALESCE(p.stock_quantity, 0) / 1000.0 ELSE COALESCE(p.stock_quantity, 0) END)";
+
 /** Pieces kept since a date (or ever), per variant (key v:id) and per article (key p:id). */
 function netSold(api, since = null) {
     const rows = api.all(`
@@ -69,14 +73,15 @@ function runOutSoon(api, { now = Date.now(), days = 14, horizon = 7 } = {}) {
  */
 function sellThrough(api, { by = 'product', since = null } = {}) {
     const sold = netSold(api, since);
+    // Sold by weight: grams on the shelf and lines sold do not add up, left out
     const products = api.all(`
-        SELECT p.id, p.name, NULLIF(TRIM(COALESCE(p.collection, '')), '') AS collection, NULLIF(p.season, '') AS season,
-               ${PRODUCT_STOCK} AS stock
-        FROM products p WHERE p.is_active = 1
+        SELECT p.id, p.name, c.name AS category, ${PRODUCT_STOCK} AS stock
+        FROM products p LEFT JOIN categories c ON c.id = p.category_id
+        WHERE p.is_active = 1 AND COALESCE(p.unit, 'piece') <> 'kg'
     `);
     const groups = new Map();
     for (const p of products) {
-        const key = by === 'collection' ? p.collection : by === 'season' ? p.season : p.id;
+        const key = by === 'category' ? p.category : p.id;
         if (key === null || key === undefined) continue;
         const g = groups.get(key) || { key, label: by === 'product' ? p.name : key, sold: 0, stock: 0, articles: 0 };
         g.sold += sold.get(`p:${p.id}`) || 0;
@@ -134,10 +139,10 @@ function dormantRows(api, since) {
         SELECT p.id AS product_id, p.name, ${PRODUCT_STOCK} AS stock,
                CASE WHEN COALESCE(p.has_variants, 0) = 1
                     THEN (SELECT COALESCE(SUM(v.stock_quantity * COALESCE(v.cost, p.cost, 0)), 0) FROM product_variants v WHERE v.product_id = p.id AND v.is_active = 1 AND v.stock_quantity > 0)
-                    ELSE COALESCE(p.stock_quantity, 0) * COALESCE(p.cost, 0) END AS cost_value,
+                    ELSE ${P_UNITS} * COALESCE(p.cost, 0) END AS cost_value,
                CASE WHEN COALESCE(p.has_variants, 0) = 1
                     THEN (SELECT COALESCE(SUM(v.stock_quantity * COALESCE(v.price, p.price, 0)), 0) FROM product_variants v WHERE v.product_id = p.id AND v.is_active = 1 AND v.stock_quantity > 0)
-                    ELSE COALESCE(p.stock_quantity, 0) * COALESCE(p.price, 0) END AS retail_value,
+                    ELSE ${P_UNITS} * COALESCE(p.price, 0) END AS retail_value,
                (SELECT MAX(s.created_at) FROM ${NET_SALE_ITEMS} si JOIN sales s ON s.id = si.sale_id
                 WHERE si.product_id = p.id AND si.net_quantity > 0 AND ${countedSale('s')}) AS last_sale_at,
                p.created_at
@@ -172,11 +177,11 @@ function stockWorth(api, { now = Date.now(), dormantDays = 60 } = {}) {
     const lines = api.get(`
         SELECT
           COALESCE(SUM(CASE WHEN p.has_variants = 1 THEN v.stock_quantity * COALESCE(v.cost, p.cost, 0) END), 0)
-            + (SELECT COALESCE(SUM(stock_quantity * COALESCE(cost, 0)), 0) FROM products WHERE is_active = 1 AND COALESCE(has_variants, 0) = 0 AND stock_quantity > 0) AS cost,
+            + (SELECT COALESCE(SUM(${UNITS} * COALESCE(cost, 0)), 0) FROM products WHERE is_active = 1 AND COALESCE(has_variants, 0) = 0 AND stock_quantity > 0) AS cost,
           COALESCE(SUM(CASE WHEN p.has_variants = 1 THEN v.stock_quantity * COALESCE(v.price, p.price, 0) END), 0)
-            + (SELECT COALESCE(SUM(stock_quantity * COALESCE(price, 0)), 0) FROM products WHERE is_active = 1 AND COALESCE(has_variants, 0) = 0 AND stock_quantity > 0) AS retail,
+            + (SELECT COALESCE(SUM(${UNITS} * COALESCE(price, 0)), 0) FROM products WHERE is_active = 1 AND COALESCE(has_variants, 0) = 0 AND stock_quantity > 0) AS retail,
           COALESCE(SUM(CASE WHEN p.has_variants = 1 THEN v.stock_quantity END), 0)
-            + (SELECT COALESCE(SUM(stock_quantity), 0) FROM products WHERE is_active = 1 AND COALESCE(has_variants, 0) = 0 AND stock_quantity > 0) AS units
+            + (SELECT COALESCE(SUM(CASE WHEN unit = 'kg' THEN 0 ELSE stock_quantity END), 0) FROM products WHERE is_active = 1 AND COALESCE(has_variants, 0) = 0 AND stock_quantity > 0) AS units
         FROM product_variants v JOIN products p ON p.id = v.product_id
         WHERE v.is_active = 1 AND p.is_active = 1 AND v.stock_quantity > 0
     `) || {};

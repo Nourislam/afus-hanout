@@ -9,9 +9,6 @@ export const DEFAULT_FEATURES = {
     giftCards: false,      // gift cards (Offers)
     suppliers: true,       // supplier list in the Catalogue
     purchaseOrders: true,  // purchase orders (needs suppliers)
-    email: false,          // send tickets and purchase orders by e-mail (needs internet)
-    ecommerce: false,      // Shopify / WooCommerce connection (needs internet)
-    website: true,         // the shop's own website (Website Manager)
     // Shop add-ons: off until the owner turns them on
     charges: false,        // shop charges (rent, salaries, bills) and the month's net profit
     commissions: false,    // employees' commissions, monthly goals, employee of the month
@@ -33,7 +30,6 @@ export const MODULE_GROUPS = [
     { id: 'sales', modules: ['credit', 'customers'] },
     { id: 'offers', modules: ['promotions', 'bundles', 'giftCards'] },
     { id: 'stock', modules: ['suppliers', 'purchaseOrders'] },
-    { id: 'online', modules: ['email', 'ecommerce', 'website'] },
 ];
 
 // A module that cannot work without another one

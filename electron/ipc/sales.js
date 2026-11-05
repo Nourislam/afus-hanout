@@ -1,4 +1,6 @@
 // IPC handlers: sales. Moved out of main.js unchanged; main.js passes what they use.
+const { stockUnits, weighedPrice, aboveCap, isWeighed } = require('../shared/grocery.ts');
+
 module.exports = function register(ctx) {
     const {
         SyncManager,
@@ -52,7 +54,7 @@ module.exports = function register(ctx) {
         if (sale.reservation_id) reservations.completeForSale(dbApi, sale);
 
         for (const item of sale.items) {
-          const product = getOne('SELECT id, name, cost, has_variants, stock_quantity FROM products WHERE id = ?', [item.product_id]);
+          const product = getOne('SELECT id, name, cost, has_variants, stock_quantity, unit, capped_price FROM products WHERE id = ?', [item.product_id]);
           // Not an article: a pack (its own column, product_id only ever points at an article)
           const bundle = product ? null : getOne('SELECT * FROM bundles WHERE id = ?', [item.product_id]);
           const variant = item.variant_id
@@ -68,9 +70,22 @@ module.exports = function register(ctx) {
           // or a cart opened before another sale cannot take more than the stock.
           // Lines are read after the previous ones were taken off, so two lines of
           // the same piece add up.
+          // The units come from the article, not from the window: an article sold
+          // by weight is one line of its grams; any other article ignores a weight
+          if (product) {
+            if (isWeighed(product)) {
+              if (!(Number(item.weight_grams) > 0) || Number(item.quantity) !== 1) {
+                throw catalog.codedError('WEIGHT_REQUIRED', { product: product.name });
+              }
+            } else if (item.weight_grams || item.sold_as === 'weight') {
+              item.weight_grams = null;
+              if (item.sold_as === 'weight') item.sold_as = null;
+            }
+          }
           if (product) {
             const available = variant ? (variant.stock_quantity || 0) : (product.stock_quantity || 0);
-            if (Number(item.quantity) > available) {
+            // A weighed line takes its grams, any other line its quantity
+            if (stockUnits(item) > available) {
               throw catalog.codedError('STOCK_INSUFFICIENT', {
                 product: variant ? `${product.name} (${catalog.variantLabel(variant)})` : product.name,
                 available,
@@ -78,25 +93,33 @@ module.exports = function register(ctx) {
             }
           }
 
+          // Never above the official price (capped articles: bread, milk, oil...)
+          if (product && aboveCap(product, item.unit_price, item.weight_grams)) {
+            throw catalog.codedError('PRICE_ABOVE_CAP', { product: product.name, cap: product.capped_price });
+          }
+
           // Cost snapshot for profit reports: variant cost if set, else product cost
+          // (a weighed line costs its weight at the cost per kg)
           let unitCost = 0;
           if (variant && variant.cost !== null && variant.cost !== undefined) unitCost = variant.cost;
-          else if (product) unitCost = product.cost || 0;
+          else if (product) unitCost = Number(item.weight_grams) > 0 ? weighedPrice(product.cost || 0, item.weight_grams) : (product.cost || 0);
+          const soldAs = ['carton', 'weight'].includes(item.sold_as) ? item.sold_as : null;
 
           runInsert(`
-        INSERT INTO sale_items (id, sale_id, product_id, bundle_id, variant_id, variant_label, sku, product_name, quantity, unit_price, discount, tax_amount, total, unit_cost)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO sale_items (id, sale_id, product_id, bundle_id, variant_id, variant_label, sku, product_name, quantity, unit_price, discount, tax_amount, total, unit_cost, weight_grams, sold_as)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [item.id, sale.id, product ? item.product_id : null, bundle ? bundle.id : null, variant ? variant.id : null,
           variant ? catalog.variantLabel(variant) : (item.variant_label || null),
           variant ? variant.sku : (item.sku || null),
-          item.product_name, item.quantity, item.unit_price, item.discount || 0, item.tax_amount || 0, item.total, unitCost]);
+          item.product_name, item.quantity, item.unit_price, item.discount || 0, item.tax_amount || 0, item.total, unitCost,
+          Number(item.weight_grams) > 0 ? Math.round(item.weight_grams) : null, soldAs]);
 
           if (product) {
             // Regular product or one variant of it
             catalog.adjustStock(dbApi, {
               productId: item.product_id,
               variantId: variant ? variant.id : null,
-              delta: -item.quantity,
+              delta: -stockUnits(item),
               type: 'sale',
               reason: `Sale #${sale.receipt_number}`,
               employeeId: sale.employee_id || null,

@@ -8,7 +8,7 @@ import { toast } from '../ui/Toast';
 import { t } from '../../i18n';
 
 /**
- * Clothing categories (T-shirts, trousers, shoes, bags…). The shop owner can
+ * The shop's categories (dairy, drinks, vegetables…). The shop owner can
  * create their own categories, rename or delete them.
  */
 export function CategoryManagerModal({ isOpen, onClose, categories, onSave }) {

@@ -24,7 +24,7 @@ export default {
     // Shop charges
     'charges.title': ["The shop's charges", "Les charges du magasin", "مصاريف المحل"],
     'charges.empty': ["No charge: the net profit is the profit on the sales (minus the drawer's expenses).", "Aucune charge : le bénéfice net est celui des ventes (moins les dépenses de la caisse).", "لا توجد مصاريف: الربح الصافي هو ربح المبيعات (ناقص مصاريف الصندوق)."],
-    'charges.onlyWhatYouPay': ["Add only what your shop really pays.", "Ajoutez seulement ce que la boutique paie vraiment.", "أضف فقط ما يدفعه محلك فعلًا."],
+    'charges.onlyWhatYouPay': ["Add only what your shop really pays.", "Ajoutez seulement ce que le magasin paie vraiment.", "أضف فقط ما يدفعه محلك فعلًا."],
     'charges.add': ["Add a charge", "Ajouter une charge", "أضف مصروفًا"],
     'charges.edit': ["Change", "Modifier", "تعديل"],
     'charges.stop': ["Stop", "Arrêter", "أوقف"],

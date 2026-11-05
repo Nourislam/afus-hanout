@@ -1,9 +1,8 @@
 import { t } from '../i18n';
 import { formatMoney } from '../i18n/format';
 import { useState, useEffect } from 'react';
-import ProductMatrixModal from '../components/products/ProductMatrixModal';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Package, Grid, List, QrCode, Tag, X, Grid3x3 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Package, Grid, List, QrCode, Tag, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { PageHeader } from '../components/ui/PageHeader';
 import { SearchInput } from '../components/ui/Input';
@@ -19,9 +18,10 @@ import { translateError } from '../i18n/errors';
 
 
 import { useSettingsStore } from '../stores/settingsStore';
-import { ProductFormModal } from '../components/products/ProductFormModal';
+import ArticleFormModal from '../components/products/ArticleFormModal';
 import { lacksCost, readFilter } from '../lib/listFilters';
 import { ExportButton, ExcelIcon } from '../components/ui/ExportButton';
+import { stockLabel, perUnit } from '../lib/units';
 
 export default function ProductsPage() {
     const [products, setProducts] = useState([]);
@@ -31,7 +31,6 @@ export default function ProductsPage() {
     const [viewMode, setViewMode] = useState('grid');
     const [showProductModal, setShowProductModal] = useState(false);
     // Colours x sizes of one article (stock, sold, buying plan)
-    const [matrixOf, setMatrixOf] = useState(null);
     const [editingProduct, setEditingProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showExcelImport, setShowExcelImport] = useState(false);
@@ -42,10 +41,6 @@ export default function ProductsPage() {
     // Articles without a purchase price (?filter=noCost, from the home screen's "complete the prices")
     const noCostOnly = readFilter(searchParams, 'filter', ['noCost'], '') === 'noCost';
     const [variantsByProduct, setVariantsByProduct] = useState(null);
-    // On the website or not (shown only while the website module is on)
-    const websiteOn = useSettingsStore(state => state.settings.features?.website !== false);
-    const [webFilter, setWebFilter] = useState('all');
-    const onWebsite = (product) => product.show_on_website === undefined || product.show_on_website === null || !!product.show_on_website;
     const setNoCostOnly = (on) => {
         const next = new URLSearchParams(searchParams);
         if (on) next.set('filter', 'noCost'); else next.delete('filter');
@@ -105,8 +100,7 @@ export default function ProductsPage() {
             product.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             product.barcode?.includes(searchQuery);
         const matchesCost = !noCostOnly || (variantsByProduct !== null && lacksCost(product, variantsByProduct[product.id] || []));
-        const matchesWeb = !websiteOn || webFilter === 'all' || (webFilter === 'shown') === onWebsite(product);
-        return matchesCategory && matchesSearch && matchesCost && matchesWeb;
+        return matchesCategory && matchesSearch && matchesCost;
     });
 
     const formatCurrency = (amount) => {
@@ -117,7 +111,7 @@ export default function ProductsPage() {
         if (product.variant_count > 0 && product.min_variant_price !== product.max_variant_price) {
             return `${formatCurrency(product.min_variant_price)} – ${formatCurrency(product.max_variant_price)}`;
         }
-        return formatCurrency(product.variant_count > 0 ? product.min_variant_price : product.price);
+        return formatCurrency(product.variant_count > 0 ? product.min_variant_price : product.price) + perUnit(product);
     };
 
     const handleDeleteProduct = async (product) => {
@@ -198,19 +192,6 @@ export default function ProductsPage() {
                                 ]}
                                 className="w-52"
                             />
-                            {websiteOn && (
-                                <Select
-                                    value={webFilter}
-                                    onChange={setWebFilter}
-                                    options={[
-                                        { value: 'all', label: `${t('products.filterWebsite')}: ${t('products.filterWebsiteAll')}` },
-                                        { value: 'shown', label: t('products.filterWebsiteShown') },
-                                        { value: 'hidden', label: t('products.filterWebsiteHidden') },
-                                    ]}
-                                    className="w-48"
-                                    data-testid="filter-website"
-                                />
-                            )}
                             <button type="button" onClick={() => setNoCostOnly(!noCostOnly)} aria-pressed={noCostOnly} data-testid="filter-no-cost"
                                 className={`h-10 px-3 rounded-lg border text-sm inline-flex items-center gap-1.5 whitespace-nowrap transition-colors ${noCostOnly ? 'border-amber-500/50 bg-amber-500/15 text-amber-200' : 'border-dark-border text-zinc-400 hover:text-white'}`}>
                                 <Tag className="w-4 h-4" /> {t('products.filterNoCost')}
@@ -276,7 +257,6 @@ export default function ProductsPage() {
                                     </div>
                                     <div className="space-y-1">
                                         <h3 dir="auto" className="font-medium leading-snug line-clamp-2 break-words" title={product.name}>{product.name}</h3>
-                                        {websiteOn && !onWebsite(product) && <Badge className="bg-zinc-500/15 text-zinc-400" data-testid="badge-not-on-website">{t('products.hiddenOnWebsite')}</Badge>}
                                         <p className="text-xs text-zinc-500 leading-snug">
                                             {product.variant_count > 0 ? t('products.variantsInStock', { n: product.variant_count, stock: product.stock_quantity }) : (product.sku || t('products.noSku'))}
                                         </p>
@@ -300,17 +280,6 @@ export default function ProductsPage() {
                                             </Button>
                                         </PermissionGate>
                                         <div className="grid grid-cols-3 gap-1.5">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="justify-center"
-                                                title={t('dash.do.matrix')}
-                                                aria-label={t('dash.do.matrix')}
-                                                data-testid="product-matrix"
-                                                onClick={() => setMatrixOf(product.id)}
-                                            >
-                                                <Grid3x3 className="w-4 h-4" />
-                                            </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
@@ -366,7 +335,6 @@ export default function ProductsPage() {
                                                 <span className="min-w-0">
                                                     <span dir="auto" className="block font-medium break-words">{product.name}</span>
                                                     {product.variant_count > 0 && <span className="text-xs text-zinc-500">{t('products.variantCount', { n: product.variant_count })}</span>}
-                                                    {websiteOn && !onWebsite(product) && <span className="block text-xs text-zinc-500">{t('products.hiddenOnWebsite')}</span>}
                                                 </span>
                                             </div>
                                         </TableCell>
@@ -379,7 +347,7 @@ export default function ProductsPage() {
                                             ) : '-'}
                                         </TableCell>
                                         <TableCell className="font-medium whitespace-nowrap">{formatPrice(product)}</TableCell>
-                                        <TableCell>{product.stock_quantity}</TableCell>
+                                        <TableCell>{stockLabel(product)}</TableCell>
                                         <TableCell><StatusBadge status={getStockStatus(product)} /></TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1 flex-nowrap">
@@ -391,16 +359,6 @@ export default function ProductsPage() {
                                                     onClick={() => { setEditingProduct(product); setShowProductModal(true); }}
                                                 >
                                                     <Edit2 className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="secondary"
-                                                    size="sm"
-                                                    title={t('dash.do.matrix')}
-                                                    aria-label={t('dash.do.matrix')}
-                                                    data-testid="product-matrix"
-                                                    onClick={() => setMatrixOf(product.id)}
-                                                >
-                                                    <Grid3x3 className="w-3 h-3" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
@@ -430,13 +388,12 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Product Modal */}
-                <ProductFormModal
+                <ArticleFormModal
                     isOpen={showProductModal}
                     onClose={() => setShowProductModal(false)}
                     product={editingProduct}
                     categories={categories}
                     initialValues={initialValues}
-                    onCategoriesChanged={loadData}
                     onSave={() => { loadData(); setShowProductModal(false); }}
                 />
 
@@ -465,7 +422,6 @@ export default function ProductsPage() {
                     onImport={handleExcelImport}
                     title={t('products.importTitle')}
                 />
-                <ProductMatrixModal productId={matrixOf} isOpen={!!matrixOf} onClose={() => { setMatrixOf(null); loadData(); }} />
             </div>
         </>
     );

@@ -9,6 +9,7 @@
  * window. `approval` is { employeeId, pin } of the manager who agreed.
  */
 const catalog = require('./catalogService');
+const { weighedPrice, cartonDeal } = require('../shared/grocery.ts');
 const { checkEmployeePin } = require('./pinService');
 const { isManager } = require('./session');
 // Same promotion rules as the sales screen (ES module, loaded with require)
@@ -75,13 +76,20 @@ function manualDiscount(api, sale) {
     for (const item of sale.items || []) {
         const qty = Number(item.quantity) || 0;
         const variant = item.variant_id ? api.get('SELECT price FROM product_variants WHERE id = ?', [item.variant_id]) : null;
-        const product = api.get('SELECT price, wholesale_price FROM products WHERE id = ?', [item.product_id]);
+        const product = api.get('SELECT price, wholesale_price, carton_qty, carton_price FROM products WHERE id = ?', [item.product_id]);
         // Packs and quotes keep their own price
         let listPrice = product ? catalog.effectivePrice(product, variant) : Number(item.unit_price) || 0;
         if (wholesale && product && Number(product.wholesale_price) > 0) listPrice = Number(product.wholesale_price);
+        // A weighed line: the list price is the price of its weight (prices are per kg)
+        const grams = Number(item.weight_grams) || 0;
+        if (product && grams > 0) listPrice = weighedPrice(listPrice, grams);
         const paid = Number(item.unit_price) || 0;
+        // A carton line: the carton price is the shop's own price, not a discount
+        const carton = product && item.sold_as === 'carton' && Number(product.carton_qty) > 1
+            ? cartonDeal({ ...product, price: listPrice }, Math.round(qty / Number(product.carton_qty)))
+            : null;
         base += listPrice * qty;
-        given += Math.max(0, listPrice - paid) * qty + Math.max(0, Number(item.discount) || 0);
+        given += Math.max(0, listPrice - paid) * qty + Math.max(0, (Number(item.discount) || 0) - (carton ? carton.discount : 0));
     }
     given += Math.max(0, Number(sale.manual_discount) || 0);
     return { amount: r2(given), base: r2(base), percent: base > 0 ? r2((given / base) * 100) : 0 };

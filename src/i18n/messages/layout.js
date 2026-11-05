@@ -13,6 +13,6 @@ export default {
     'nav.mode.simpleHint': ["The pages you choose (sales, articles, stock, labels, credit and reports at first).", "Les pages que vous choisissez (au départ : caisse, articles, stock, étiquettes, crédit et rapports).", "الصفحات التي تختارها (في البداية: البيع والسلع والمخزون والملصقات والكريدي والتقارير)."],
     'nav.mode.nowSimple': ["Simple menu", "Menu simple", "القائمة البسيطة"],
     'nav.mode.nowFull': ["Full menu", "Menu complet", "القائمة الكاملة"],
-    'shop.unnamed': ["My shop", "Ma boutique", "محلي"],
+    'shop.unnamed': ["My shop", "Mon magasin", "محلي"],
     'titlebar.program': ["The program used by the shop", "Le logiciel du magasin", "البرنامج الذي يستعمله المحل"],
 };

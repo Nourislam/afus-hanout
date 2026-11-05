@@ -1,11 +1,10 @@
 // [English, French, Arabic]
 export default {
-    'categories.title': ["Clothing categories", "Catégories de vêtements", "أصناف الملابس"],
+    'categories.title': ["Categories", "Catégories", "الأصناف"],
     'categories.manage': ["Manage categories", "Gérer les catégories", "إدارة الأصناف"],
     'categories.new': ["New category", "Nouvelle catégorie", "صنف جديد"],
-    'categories.namePlaceholder': ["e.g. Trousers, Shorts, Shoes…", "ex. Pantalons, Shorts, Chaussures…", "مثلاً: سراويل، شورتات، أحذية…"],
+    'categories.namePlaceholder': ["e.g. Dairy, Drinks, Vegetables…", "ex. Laitages, Boissons, Légumes…", "مثلاً: ألبان، مشروبات، خضر…"],
     'categories.color': ["Colour", "Couleur", "اللون"],
-    'categories.suggestions': ["Suggested clothing categories (click to add):", "Catégories suggérées (cliquer pour ajouter) :", "أصناف مقترحة (اضغط للإضافة):"],
     'categories.empty': ["No categories yet.", "Aucune catégorie.", "لا توجد أصناف بعد."],
     'categories.nameRequired': ["Category name is required", "Le nom de la catégorie est obligatoire", "اسم الصنف إجباري"],
     'categories.exists': ["This category already exists", "Cette catégorie existe déjà", "هذا الصنف موجود"],

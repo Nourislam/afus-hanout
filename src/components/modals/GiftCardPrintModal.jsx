@@ -4,24 +4,16 @@ import { formatMoney } from '../../i18n/format';
 import { useState, useEffect } from 'react';
 import { Modal, ModalBody, ModalFooter } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import { Printer, Gift, Download, Mail } from 'lucide-react';
+import { Printer, Gift, Download } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { toast } from '../ui/Toast';
 
 export default function GiftCardPrintModal({ isOpen, onClose, giftCard }) {
     const [barcodeImage, setBarcodeImage] = useState(null);
-    const [showEmailInput, setShowEmailInput] = useState(false);
-    const [email, setEmail] = useState('');
-    const [sending, setSending] = useState(false);
     const { companySettings } = useAuthStore();
 
     useEffect(() => {
-        if (giftCard) {
-            generateBarcode();
-            // Pre-fill email if customer attached
-            if (giftCard.customer_email) setEmail(giftCard.customer_email);
-        }
+        if (giftCard) generateBarcode();
     }, [giftCard]);
 
     const generateBarcode = async () => {
@@ -57,21 +49,6 @@ export default function GiftCardPrintModal({ isOpen, onClose, giftCard }) {
             if (path) toast.success(t('common.savedTo', { path }));
         } catch {
             toast.error(t('gift.pdfFailed'));
-        }
-    };
-
-    const handleSendEmail = async () => {
-        if (!email) return toast.error(t('gift.enterEmail'));
-        setSending(true);
-        try {
-            await window.electronAPI.giftCards.sendEmail({ giftCard: { ...giftCard, barcodeImage }, email });
-            toast.success(t('gift.emailSent'));
-            setShowEmailInput(false);
-        } catch (error) {
-            console.error(error);
-            toast.error(t('gift.emailFailed'));
-        } finally {
-            setSending(false);
         }
     };
 
@@ -142,22 +119,6 @@ export default function GiftCardPrintModal({ isOpen, onClose, giftCard }) {
                     </p>
                 </div>
 
-                {showEmailInput && (
-                    <div className="max-w-md mx-auto mt-6 p-4 bg-zinc-800 rounded-lg no-print">
-                        <h3 className="text-sm font-bold mb-2">{t('gift.sendEmail')}</h3>
-                        <div className="flex gap-2">
-                            <Input
-                                placeholder="customer@example.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="flex-1"
-                            />
-                            <Button onClick={handleSendEmail} loading={sending}>
-                                <Mail className="w-4 h-4" />
-                            </Button>
-                        </div>
-                    </div>
-                )}
             </ModalBody>
             <ModalFooter>
                 <div className="flex justify-between w-full no-print">
@@ -166,10 +127,6 @@ export default function GiftCardPrintModal({ isOpen, onClose, giftCard }) {
                         <Button variant="outline" onClick={handlePrint}>
                             <Printer className="w-4 h-4 me-2" />
                             {t('common.print')}
-                        </Button>
-                        <Button variant="outline" onClick={() => setShowEmailInput(!showEmailInput)}>
-                            <Mail className="w-4 h-4 me-2" />
-                            {t('common.email')}
                         </Button>
                         <Button onClick={handleSavePdf}>
                             <Download className="w-4 h-4 me-2" />

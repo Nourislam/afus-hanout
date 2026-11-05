@@ -2,7 +2,7 @@
 export default {
     'supplierPay.bankTransfer': ["Bank transfer / CCP", "Virement bancaire / CCP", "تحويل بنكي / CCP"],
     'supplierPay.check': ["Cheque", "Chèque", "صك"],
-    'purchaseReturn.wrongSize': ["Wrong size / colour", "Mauvaise taille / couleur", "مقاس / لون خاطئ"],
+    'purchaseReturn.wrongSize': ["Wrong article", "Mauvais article", "سلعة خاطئة"],
     'return.sellable': ["Sellable (Restock)", "Revendable (remis en stock)", "قابل للبيع (يرجع للمخزون)"],
     'return.damaged': ["Damaged", "Abîmé", "تالف"],
     'supplierPay.draft': ["Draft", "Brouillon", "مسودة"],
@@ -77,7 +77,5 @@ export default {
     'supplierHistory.loading': ["Loading history...", "Chargement de l'historique…", "جارٍ تحميل السجل…"],
     'supplierHistory.none': ["No history found.", "Aucun historique.", "لا يوجد سجل."],
     'quote.loadFailed': ["Failed to load quote details", "Échec du chargement du devis", "تعذّر تحميل عرض السعر"],
-    'quote.emailed': ["Quotation emailed successfully", "Devis envoyé", "تم إرسال عرض السعر"],
     'quote.createdBy': ["Created By", "Créé par", "أنشأه"],
-    'quote.emailCustomer': ["Email Customer", "Envoyer au client", "إرسال للزبون"],
 };

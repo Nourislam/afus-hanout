@@ -28,7 +28,7 @@ export function formatSize(bytes) {
     return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
-const ROWS = ['shopName', 'articles', 'pieces', 'sales', 'customers', 'employees', 'lastSale'];
+const ROWS = ['shopName', 'articles', 'sales', 'customers', 'employees', 'lastSale'];
 
 /** Backup next to today's data, before it replaces it. */
 function RestorePreview({ backup, onClose, onRestored }) {

@@ -1,3 +1,7 @@
+// Kept in Afus Hanout, which has no website: the old migration
+// 2026_10_website_order_history (electron/database/migrations.js) requires this
+// file, and old migrations are never edited.
+
 /**
  * The key that recognises a customer of the website: the phone number,
  * written one way (Algerian 0XXXXXXXXX). "+213 661 22 33 44",

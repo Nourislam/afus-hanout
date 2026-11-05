@@ -14,7 +14,7 @@ export default {
     'figures.check.sale_subtotal': ["Each ticket = the sum of its lines", "Chaque ticket = la somme de ses lignes", "كل تذكرة = مجموع أسطرها"],
     'figures.check.sale_total': ["Each ticket total = lines − discounts (+ TVA)", "Total de chaque ticket = lignes − remises (+ TVA)", "مجموع كل تذكرة = الأسطر − التخفيضات (+ الرسم)"],
     'figures.check.sale_paid': ["Each ticket = what was paid for it", "Chaque ticket = ce qui a été payé", "كل تذكرة = ما دُفع مقابلها"],
-    'figures.check.sizes_sum': ["An article with sizes holds the sum of its sizes", "Un article à tailles = la somme de ses tailles", "السلعة ذات المقاسات = مجموع مقاساتها"],
+    'figures.check.sizes_sum': ["An article with variants holds the sum of its variants", "Un article à variantes = la somme de ses variantes", "السلعة ذات الأنواع = مجموع أنواعها"],
     'figures.check.stock_history': ["The stock = the last movement of its history", "Le stock = le dernier mouvement de son historique", "المخزون = آخر حركة في سجله"],
     'figures.check.stock_negative': ["No stock below 0", "Aucun stock sous 0", "لا يوجد مخزون أقل من 0"],
     'figures.check.kridi_paid': ["Each kridi: paid = its payments, never more than owed", "Chaque crédit : payé = ses versements, jamais plus que dû", "كل كريدي: المدفوع = دفعاته، ولا يتجاوز المستحق"],

@@ -3,18 +3,12 @@ import { translateError } from '../../i18n/errors';
 import { useState, useEffect } from 'react';
 import { Modal, ModalBody } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
 import { toast } from '../ui/Toast';
-import { Printer, Mail, Download, FileText } from 'lucide-react';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { Printer, Download, FileText } from 'lucide-react';
 
 export default function ReceiptPreviewModal({ isOpen, onClose, sale }) {
     const [html, setHtml] = useState('');
     const [loading, setLoading] = useState(true);
-    // Sending by e-mail only when the E-mail module is on
-    const emailOn = useSettingsStore(state => !!state.settings.features?.email);
-    const [email, setEmail] = useState('');
-    const [sendingEmail, setSendingEmail] = useState(false);
     const [printing, setPrinting] = useState(false);
     const [invoiceBusy, setInvoiceBusy] = useState('');
     // A4 invoice (office printer or PDF), from the data saved with the sale
@@ -65,23 +59,6 @@ export default function ReceiptPreviewModal({ isOpen, onClose, sale }) {
             toast.error(t('receipt.printFailed'), undefined, 'printer');
         } finally {
             setPrinting(false);
-        }
-    };
-
-    const handleEmail = async () => {
-        if (!email) {
-            toast.error(t('receipt.enterEmail'));
-            return;
-        }
-        setSendingEmail(true);
-        try {
-            await window.electronAPI.email.sendReceipt(sale, email);
-            toast.success(t('receipt.sentTo', { email }));
-        } catch (error) {
-            console.error('Email failed:', error);
-            toast.error(translateError(error) || t('receipt.emailFailed'));
-        } finally {
-            setSendingEmail(false);
         }
     };
 
@@ -158,31 +135,6 @@ export default function ReceiptPreviewModal({ isOpen, onClose, sale }) {
                                 </div>
                             )}
                         </div>
-
-                        {emailOn && (
-                        <div className="p-4 rounded-lg bg-dark-tertiary flex-1">
-                            <h3 className="font-semibold mb-2">{t('receipt.email')}</h3>
-                            <div className="space-y-3">
-                                <Input
-                                    label={t('receipt.customerEmail')}
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="customer@example.com"
-                                />
-                                <Button
-                                    onClick={handleEmail}
-                                    loading={sendingEmail}
-                                    disabled={!email}
-                                    variant="secondary"
-                                    className="w-full"
-                                >
-                                    <Mail className="w-4 h-4 me-2" />
-                                    {t('receipt.send')}
-                                </Button>
-                            </div>
-                        </div>
-                        )}
 
                         <Button variant="ghost" onClick={onClose} className="mt-auto">
                             {t('common.close')}

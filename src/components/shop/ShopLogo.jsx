@@ -5,7 +5,7 @@ import { Store } from 'lucide-react';
 const cache = new Map();
 
 // Words that say "shop" and not which shop: skipped for the initials
-const GENERIC_WORDS = new Set(['boutique', 'magasin', 'store', 'shop', 'showroom', 'bazar', 'بوتيك', 'محل', 'متجر', 'محلات', 'بازار']);
+const GENERIC_WORDS = new Set(['boutique', 'magasin', 'store', 'shop', 'showroom', 'bazar', 'hanout', 'superette', 'épicerie', 'alimentation', 'بوتيك', 'محل', 'متجر', 'محلات', 'بازار', 'حانوت', 'سوبيرات', 'مواد', 'غذائية']);
 
 // The shop's own colours: warm and neutral tones, never the Afus blue/green,
 // so a shop without a logo never looks like the program's mark
@@ -14,7 +14,7 @@ const SHOP_COLORS = [
     ['#334155', '#94a3b8'], ['#9a3412', '#fb923c'], ['#86198f', '#e879f9'], ['#3f6212', '#a3e635'],
 ];
 
-/** "Boutique Amina" → "A", "Zara Kids" → "ZK", "بوتيك أمينة" → "أ" */
+/** "Hanout En-Nour" → "E", "Superette Amina Kids" → "AK", "حانوت النور" → "ا" (the word for "shop" is skipped) */
 export function shopInitials(name) {
     const words = String(name || '').trim().split(/\s+/).filter(Boolean);
     const meaningful = words.filter(w => !GENERIC_WORDS.has(w.toLowerCase()));

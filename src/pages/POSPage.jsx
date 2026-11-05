@@ -19,6 +19,8 @@ import CustomerPickerModal from '../components/pos/CustomerPickerModal';
 import OpeningCashDialog from '../components/shifts/OpeningCashDialog';
 import CashExpenseDialog from '../components/shifts/CashExpenseDialog';
 import { VariantPickerModal } from '../components/pos/VariantPickerModal';
+import WeightModal, { weightLabel } from '../components/pos/WeightModal';
+import { stockLabel, perUnit } from '../lib/units';
 import FirstSaleGuide from '../components/pos/FirstSaleGuide';
 import MyMonthLine from '../components/pos/MyMonthLine';
 import { ReserveDialog, ReservationsDialog } from '../components/pos/Reservations';
@@ -73,6 +75,8 @@ function ProductImage({ product, className = '' }) {
 
 export default function POSPage() {
     const [products, setProducts] = useState([]);
+    // An article sold by weight waiting for its weight
+    const [weighProduct, setWeighProduct] = useState(null);
     // Quick buttons: the articles sold most these 7 days (worked out by the program)
     const [quickIds, setQuickIds] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -160,6 +164,12 @@ export default function POSPage() {
 
     const addToCart = (product, variant = null, { fromScanner = false } = {}) => {
         const result = cart.addItem(product, 1, variant);
+        // Sold by weight: weigh it first
+        if (result.needsWeight) {
+            if (fromScanner) beep('ok');
+            setWeighProduct(product);
+            return false;
+        }
         if (!result.success) {
             beep('error');
             toast.error(result.message);
@@ -201,6 +211,10 @@ export default function POSPage() {
                 addToCart(result.product, result.variant, { fromScanner });
             } else if (result.needsVariant) {
                 setVariantProduct(result.product);
+            } else if (result.carton) {
+                // The carton's own barcode: one carton of the article
+                const added = cart.addCarton(result.product);
+                if (!added.success) { beep('error'); toast.error(added.message); } else if (fromScanner) beep('ok');
             } else {
                 addToCart(result.product, null, { fromScanner });
             }
@@ -428,7 +442,7 @@ export default function POSPage() {
                                     <button key={product.id} type="button" onClick={() => handleProductClick(product)} data-testid="pos-quick-pick"
                                         className="h-16 px-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-start flex flex-col justify-center min-w-0 transition-colors">
                                         <span dir="auto" className="text-sm font-semibold leading-tight line-clamp-1">{product.name}</span>
-                                        <span className="text-xs text-indigo-300 tabular">{money(product.variant_count > 0 ? product.min_variant_price : product.price)}</span>
+                                        <span className="text-xs text-indigo-300 tabular">{money(product.variant_count > 0 ? product.min_variant_price : product.price)}{perUnit(product)}</span>
                                     </button>
                                 ))}
                             </div>
@@ -456,13 +470,13 @@ export default function POSPage() {
                                         <div className="relative">
                                             <ProductImage product={product} className="aspect-[4/5] w-full" />
                                             <span className={`absolute top-1.5 end-1.5 badge ${out ? 'badge-danger' : low ? 'badge-warning' : 'bg-black/60 text-zinc-200'}`}>
-                                                {out ? t('variants.outOfStock') : product.stock_quantity}
+                                                {out ? t('variants.outOfStock') : stockLabel(product)}
                                             </span>
                                         </div>
                                         <p className="mt-2 font-medium text-sm leading-tight line-clamp-2 min-h-[2.5em]">{product.name}</p>
                                         {product.brand && <p className="text-[11px] text-zinc-500 truncate">{product.brand}</p>}
                                         <p className="mt-1 text-indigo-300 font-bold tabular">
-                                            {money(price)}{product.variant_count > 0 && product.min_variant_price !== product.max_variant_price ? '+' : ''}
+                                            {money(price)}{perUnit(product)}{product.variant_count > 0 && product.min_variant_price !== product.max_variant_price ? '+' : ''}
                                         </p>
                                         <VariantHints product={product} />
                                     </button>
@@ -486,8 +500,8 @@ export default function POSPage() {
                                                     <div className="xl:hidden mt-1"><VariantHints product={product} /></div>
                                                 </td>
                                                 <td className="hidden xl:table-cell w-48"><VariantHints product={product} /></td>
-                                                <td className="text-zinc-400 tabular whitespace-nowrap">{product.stock_quantity}</td>
-                                                <td className="text-end font-semibold text-indigo-300 tabular whitespace-nowrap">{money(price)}</td>
+                                                <td className="text-zinc-400 tabular whitespace-nowrap">{stockLabel(product)}</td>
+                                                <td className="text-end font-semibold text-indigo-300 tabular whitespace-nowrap">{money(price)}{perUnit(product)}</td>
                                             </tr>
                                         );
                                     })}
@@ -567,6 +581,12 @@ export default function POSPage() {
                                                 {(item.color || item.size) ? variantLabel(item) : item.variant_label}
                                             </p>
                                         )}
+                                        {item.sold_as === 'carton' && (
+                                            <p className="text-xs text-sky-300 mt-0.5" data-testid="line-cartons">{t('pos.cartonsLine', { n: item.cartons, pieces: item.quantity })}</p>
+                                        )}
+                                        {item.sold_as === 'weight' && (
+                                            <p className="text-xs text-emerald-300 mt-0.5 tabular" data-testid="line-weight">{weightLabel(item.weight_grams)} × {money(item.price_per_kg)}/{t('pos.kg')}</p>
+                                        )}
                                         <p className="text-xs text-zinc-500 mt-0.5 tabular">
                                             {bargained && <span className="line-through me-1.5">{money(item.original_price)}</span>}
                                             <span className={bargained ? 'text-emerald-300' : ''}>{money(item.unit_price)}</span>
@@ -577,7 +597,7 @@ export default function POSPage() {
                                         <span className="font-semibold tabular text-sm">{money(item.total)}</span>
                                         <div className="flex items-center gap-1">
                                             <button onClick={() => cart.updateItemQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded-md bg-dark-secondary hover:bg-zinc-700 flex items-center justify-center" aria-label="-"><Minus className="w-3.5 h-3.5" /></button>
-                                            <span className="w-7 text-center text-sm font-semibold tabular">{item.quantity}</span>
+                                            <span className="w-7 text-center text-sm font-semibold tabular">{item.sold_as === 'carton' ? item.cartons : item.quantity}</span>
                                             <button
                                                 onClick={() => { const r = cart.updateItemQuantity(item.id, item.quantity + 1); if (r && !r.success) toast.error(r.message); }}
                                                 className="w-7 h-7 rounded-md bg-dark-secondary hover:bg-zinc-700 flex items-center justify-center" aria-label="+"
@@ -656,6 +676,15 @@ export default function POSPage() {
 
             <PaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} total={total} onComplete={handlePaymentComplete} />
 
+            <WeightModal
+                product={weighProduct}
+                onClose={() => setWeighProduct(null)}
+                onWeighed={(grams) => {
+                    const added = cart.addWeighed(weighProduct, grams);
+                    if (!added.success) { beep('error'); toast.error(added.message); return; }
+                    setWeighProduct(null);
+                }}
+            />
             <VariantPickerModal
                 isOpen={!!variantProduct}
                 product={variantProduct}

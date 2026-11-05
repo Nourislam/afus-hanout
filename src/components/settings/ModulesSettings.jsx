@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-    Rows3, LayoutGrid, CreditCard, Users, Percent, PackageOpen, Gift, Truck, FileText, Mail, Globe, ShoppingBag, Boxes, Wifi, Check, Lock, Calculator, Sparkles, Trophy,
+    Rows3, LayoutGrid, CreditCard, Users, Percent, PackageOpen, Gift, Truck, FileText, ShoppingBag, Boxes, Check, Lock, Calculator, Sparkles, Trophy,
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { toast } from '../ui/Toast';
@@ -13,10 +13,10 @@ import { MODULE_GROUPS, MODULE_REQUIRES, ADDON_PAGES, ADDON_LINKS, resolveFeatur
 
 const MODULE_ICONS = {
     credit: CreditCard, customers: Users, promotions: Percent, bundles: PackageOpen, giftCards: Gift,
-    suppliers: Truck, purchaseOrders: FileText, email: Mail, ecommerce: ShoppingBag, website: Globe,
+    suppliers: Truck, purchaseOrders: FileText,
     charges: Calculator, commissions: Trophy,
 };
-const GROUP_ICONS = { sales: ShoppingBag, offers: Percent, stock: Boxes, online: Wifi, addons: Sparkles };
+const GROUP_ICONS = { sales: ShoppingBag, offers: Percent, stock: Boxes, addons: Sparkles };
 
 /** On / off switch with its label (a real checkbox, for the keyboard and screen readers). */
 export function Switch({ checked, disabled, onChange, label }) {

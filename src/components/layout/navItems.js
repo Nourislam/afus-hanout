@@ -3,7 +3,7 @@
 // Shared by the menu and by Settings › Modules (pages of the simple menu).
 import {
     LayoutDashboard, ShoppingCart, Package, Boxes, UserCog, BarChart3, Percent, QrCode,
-    History, CreditCard, FileText, LibraryBig, Users, Truck, Globe, ShoppingBag,
+    History, CreditCard, FileText, LibraryBig, Users, Truck,
 } from 'lucide-react';
 import { PERMISSIONS } from '../../stores/authStore';
 import { offerTabs } from '../../lib/modules';
@@ -35,8 +35,6 @@ export const NAV_GROUPS = [
         items: [
             // Promotions, packs and gift cards: shown while one of them is on and allowed
             { path: '/offers', icon: Percent, label: 'nav.offers', show: (features, can) => offerTabs(features, can).length > 0 },
-            { path: '/website', icon: Globe, label: 'nav.website', permission: PERMISSIONS.SETTINGS_VIEW, feature: 'website' },
-            { path: '/website-orders', icon: ShoppingBag, label: 'nav.websiteOrders', permission: PERMISSIONS.SETTINGS_VIEW, feature: 'website' },
         ],
     },
     {

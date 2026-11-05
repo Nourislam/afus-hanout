@@ -11,14 +11,14 @@ export default {
     'acc.part.summary': ["The month in short: sales, returns, HT / TVA / TTC, each way of paying, kridi paid in, stock value", "Le mois en bref : ventes, retours, HT / TVA / TTC, chaque mode de paiement, crédits encaissés, valeur du stock", "ملخص الشهر: المبيعات، المرتجعات، دون رسم / الرسم / بالرسم، كل طريقة دفع، دفعات الكريدي، قيمة المخزون"],
     'acc.part.journal': ["The sales journal: every ticket and return", "Le journal des ventes : chaque ticket et retour", "سجل المبيعات: كل تذكرة وكل إرجاع"],
     'acc.part.kridi': ["The kridi paid in during the month", "Les crédits encaissés pendant le mois", "دفعات الكريدي المقبوضة خلال الشهر"],
-    'acc.part.stock': ["The stock today, size by size, and per category", "Le stock d'aujourd'hui, taille par taille, et par catégorie", "مخزون اليوم مقاسًا بمقاس، وحسب الصنف"],
+    'acc.part.stock': ["The stock today, article by article, and per category", "Le stock d'aujourd'hui, article par article, et par catégorie", "مخزون اليوم سلعة بسلعة، وحسب الصنف"],
     'acc.save': ["Save the file", "Enregistrer le fichier", "احفظ الملف"],
     'acc.saved': ["The file is saved", "Le fichier est enregistré", "تم حفظ الملف"],
     'acc.sendHint': ["Open its folder and drag it into an e-mail or a WhatsApp message to your accountant.", "Ouvrez son dossier et glissez-le dans un e-mail ou un message WhatsApp à votre comptable.", "افتح مجلده واسحبه إلى رسالة بريد أو واتساب لمحاسبك."],
     'acc.folder': ["Open its folder", "Ouvrir son dossier", "افتح مجلده"],
     // A purchase order from the supplier's file
     'poFile.button': ["From the supplier's file (Excel)", "Depuis le fichier du fournisseur (Excel)", "من ملف المورد (إكسال)"],
-    'poFile.hint': ["His invoice or order form in Excel: article (or code), colour, size, quantity, unit price. Each line is matched to your sizes; you check before saving.", "Sa facture ou son bon de commande en Excel : article (ou code), couleur, taille, quantité, prix unitaire. Chaque ligne est reliée à vos tailles ; vous vérifiez avant d'enregistrer.", "فاتورته أو طلبيته في إكسال: السلعة (أو الرمز)، اللون، المقاس، الكمية، سعر الوحدة. كل سطر يُربط بمقاساتك، وتراجع قبل الحفظ."],
+    'poFile.hint': ["His invoice or order form in Excel: article (or code), quantity, unit price. Each line is matched to your articles; you check before saving.", "Sa facture ou son bon de commande en Excel : article (ou code), quantité, prix unitaire. Chaque ligne est rapprochée de vos articles ; vous vérifiez avant d'enregistrer.", "فاتورته أو طلبيته في إكسال: السلعة (أو الرمز)، الكمية، سعر الوحدة. كل سطر يُطابق مع سلعك وتراجع قبل الحفظ."],
     'poFile.added': ["{n} lines added from the supplier's file — check them, then save", "{n} lignes ajoutées depuis le fichier du fournisseur — vérifiez, puis enregistrez", "أُضيف {n} سطر من ملف المورد — راجعها ثم احفظ"],
     'poFile.notFound': ["No table with an article (or code) column and a quantity column was found in this file", "Aucun tableau avec une colonne article (ou code) et une colonne quantité dans ce fichier", "لم يُعثر في هذا الملف على جدول فيه عمود السلعة (أو الرمز) وعمود الكمية"],
     // Lines without a code (before a count)

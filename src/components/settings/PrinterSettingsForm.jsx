@@ -2,7 +2,7 @@ import { t } from '../../i18n';
 import { translateError } from '../../i18n/errors';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-    RefreshCw, Printer, Tag, Square, Circle, RectangleHorizontal, QrCode, Barcode, Layers, Shirt,
+    RefreshCw, Printer, Tag, Square, Circle, RectangleHorizontal, QrCode, Barcode,
     CheckCircle2, AlertTriangle, Info, Receipt, Minus, Plus, Ruler, Eye, FlaskConical,
 } from 'lucide-react';
 import { toast } from '../ui/Toast';
@@ -389,7 +389,6 @@ export function LabelPrinterForm({ printers, onPrintersChange, labels, onLabelsC
     const codeType = layout.codeType || 'qr';
     const isRound = (layout.shape || 'rect') === 'round';
     const qrSide = codeType === 'qr' && !isRound;
-    const perArticle = layout.codeScope === 'article';
 
     // Which codes can be read on this size, at this printer resolution
     const optionsKey = JSON.stringify([layout, label.dpi]);
@@ -540,22 +539,6 @@ export function LabelPrinterForm({ printers, onPrintersChange, labels, onLabelsC
             )}
             {CODE_TYPES.some(c => codeOptions?.codeTypes?.[c.id]?.ok === false) && <p className="text-xs text-zinc-500">{t('printing.disabledWhy')}</p>}
 
-            <div>
-                <span className="form-label">{t('printing.codeFor')}</span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
-                    {[
-                        { id: 'variant', icon: Layers },
-                        { id: 'article', icon: Shirt },
-                    ].map(({ id, icon: Icon }) => (
-                        <button key={id} type="button" onClick={() => setLayout({ codeScope: id, ...(id === 'article' ? { showVariant: false } : {}) })}
-                            aria-pressed={(layout.codeScope || 'variant') === id}
-                            className={`p-3 rounded-lg border text-start transition-colors ${(layout.codeScope || 'variant') === id ? 'border-indigo-500 bg-indigo-500/10' : 'border-dark-border hover:border-zinc-600'}`}>
-                            <p className="text-sm font-medium flex items-center gap-2"><Icon className="w-4 h-4 flex-none" /> {t(`labels.scope.${id}`)}</p>
-                            <p className="text-xs text-zinc-500 mt-1">{t(`labels.scope.${id}Hint`)}</p>
-                        </button>
-                    ))}
-                </div>
-            </div>
         </Panel>
     );
 
@@ -565,8 +548,6 @@ export function LabelPrinterForm({ printers, onPrintersChange, labels, onLabelsC
                 <Toggle checked={layout.showShopName} onChange={(v) => setLayout({ showShopName: v })} label={t('labels.showShopName')} />
                 <Toggle checked={layout.showLogo} onChange={(v) => setLayout({ showLogo: v })} label={t('labels.showLogo')} hint={shop && !shop.shopLogo ? t('printing.noLogoYet') : null} />
                 <Toggle checked={layout.showProductName} onChange={(v) => setLayout({ showProductName: v })} label={t('labels.showProductName')} />
-                <Toggle checked={layout.showVariant && !perArticle} disabled={perArticle} onChange={(v) => setLayout({ showVariant: v })}
-                    label={t('labels.showVariant')} hint={perArticle ? t('labels.variantOffArticle') : null} />
                 <Toggle checked={layout.showSku} onChange={(v) => setLayout({ showSku: v })} label={t('labels.showCodeText')} />
                 <Toggle checked={layout.showPrice} onChange={(v) => setLayout({ showPrice: v })} label={t('labels.showPrice')} />
                 <Toggle checked={layout.showPrice && layout.showSalePrice !== false} disabled={!layout.showPrice} onChange={(v) => setLayout({ showSalePrice: v })}

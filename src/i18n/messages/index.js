@@ -2,7 +2,6 @@
 import common from './common';
 import round2 from './round2';
 import misc from './misc';
-import ecommerce from './ecommerce';
 import excel from './excel';
 import barcode from './barcode';
 import modals from './modals';
@@ -15,6 +14,7 @@ import customers from './customers';
 import inventory from './inventory';
 import dashboard from './dashboard';
 import pos from './pos';
+import grocery from './grocery';
 import settings from './settings';
 import setup from './setup';
 import products from './products';
@@ -33,15 +33,13 @@ import trial from './trial';
 import help from './help';
 import about from './about';
 import insights from './insights';
-import website from './website';
 import smart from './smart';
-import shops from './shops';
 import addons from './addons';
 import figures from './figures';
 import exportsTexts from './exports';
 import sharing from './sharing';
 
-const MODULES = { common, round2, misc, ecommerce, excel, barcode, modals, purchases, gift, promos, reports, credit, customers, inventory, dashboard, pos, settings, setup, products, errors, catalog, login, printing, layout, settingsHub, catalogHub, partners, dash, operations, demo, trial, help, about, insights, website, smart, shops, addons, figures, exports: exportsTexts, sharing };
+const MODULES = { common, round2, misc, excel, barcode, modals, purchases, gift, promos, reports, credit, customers, inventory, dashboard, pos, settings, setup, products, errors, catalog, login, printing, layout, settingsHub, catalogHub, partners, dash, operations, demo, trial, help, about, insights, smart, addons, figures, exports: exportsTexts, sharing, grocery };
 
 function merge(modules) {
     const all = {};

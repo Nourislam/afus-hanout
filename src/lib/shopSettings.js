@@ -17,12 +17,6 @@ export const DEFAULT_SHOP = {
     businessNis: '',
     businessAi: '',
     shopDescription: '',
-    // Shown on the shop's website: opening hours (one line each), social pages, map link
-    shopHours: '',
-    shopFacebook: '',
-    shopInstagram: '',
-    shopTiktok: '',
-    shopMapUrl: '',
     defaultLanguage: 'ar',
     currency: 'DZD',
     currencySymbol: 'DA',
@@ -32,7 +26,7 @@ export const DEFAULT_SHOP = {
     receiptHeader: '',
     // Empty = translated default thank-you line
     receiptFooter: '',
-    // Small "Afus Boutique" line at the bottom of the ticket
+    // Small product name line at the bottom of the ticket
     receiptShowBrand: true,
     // QR of the ticket, scanned later for a return or an exchange
     receiptTicketQr: true,

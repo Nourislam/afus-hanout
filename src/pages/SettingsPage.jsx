@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-    Building, Receipt, Percent, Database, Save, Upload, Mail, CheckCircle, Printer, ScanLine, Hash,
-    Languages, Tags, ToggleRight, Globe, ScrollText, Settings as SettingsIcon, Palette, Moon, Sun, Monitor, Eye, FlaskConical, ShoppingCart, Info,
-    Store,
+    Building, Receipt, Percent, Database, Save, Upload, CheckCircle, Printer, ScanLine, Hash,
+    Languages, Tags, ToggleRight, ScrollText, Settings as SettingsIcon, Palette, Moon, Sun, Monitor, Eye, FlaskConical, ShoppingCart, Info,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input, TextArea } from '../components/ui/Input';
@@ -19,14 +18,12 @@ import { ScannerSettingsForm } from '../components/settings/ScannerSettingsForm'
 import { ModulesSettings } from '../components/settings/ModulesSettings';
 import { BackupSettings } from '../components/settings/BackupSettings';
 import { FiguresCheck } from '../components/settings/FiguresCheck';
-import { ShopsSettings } from '../components/settings/ShopsSettings';
 import { DEFAULT_SHOP, loadShopConfiguration, saveShopConfiguration } from '../lib/shopSettings';
 import { resolveFeatures } from '../lib/features';
 import { isTaxEnabled } from '../lib/tax';
 import { colorName } from '../lib/clothing';
 import { useSettingsStore } from '../stores/settingsStore';
 import { SystemLogs } from '../components/settings/SystemLogs';
-import { EcommerceSettings } from '../components/settings/EcommerceSettings';
 import { PosControlsSettings } from '../components/settings/PosControlsSettings';
 import { AboutSettings } from '../components/settings/AboutSettings';
 import { LANGUAGES, setLanguage, useT } from '../i18n';
@@ -37,7 +34,7 @@ import { getThemePreference, setThemePreference } from '../lib/theme';
 // has its own section, even when one printer does both jobs. E-mail and the
 // online store appear only while their module is on.
 // Tabs whose fields are kept by the page and saved by its "Save changes" button
-const PAGE_SAVED_TABS = ['business', 'language', 'receipt', 'labelPrinter', 'scanner', 'sku', 'modules', 'mail'];
+const PAGE_SAVED_TABS = ['business', 'language', 'receipt', 'labelPrinter', 'scanner', 'sku', 'modules'];
 
 const SECTION_GROUPS = [
     { id: 'shop', ids: ['business', 'language', 'appearance'] },
@@ -45,13 +42,12 @@ const SECTION_GROUPS = [
     { id: 'sales', ids: ['posScreen'] },
     { id: 'catalog', ids: ['sku'] },
     { id: 'modules', ids: ['modules'] },
-    { id: 'online', ids: ['mail', 'ecommerce', 'shops'] },
     { id: 'system', ids: ['backup', 'logs', 'about'] },
 ];
 
 const SECTION_ICONS = {
     business: Building, language: Languages, appearance: Palette, receipt: Receipt, labelPrinter: Tags, scanner: ScanLine,
-    sku: Hash, posScreen: ShoppingCart, modules: ToggleRight, mail: Mail, ecommerce: Globe, shops: Store, backup: Database, logs: ScrollText, about: Info,
+    sku: Hash, posScreen: ShoppingCart, modules: ToggleRight, backup: Database, logs: ScrollText, about: Info,
 };
 
 // Old links (?tab=features, ?tab=printers) still open the right section
@@ -83,9 +79,6 @@ export default function SettingsPage() {
     }, [searchParams]);
     const [settings, setSettings] = useState({
         ...DEFAULT_SHOP,
-        email_host: 'smtp.gmail.com',
-        email_port: 587,
-        email_secure: false,
     });
     const [features, setFeatures] = useState(resolveFeatures());
     const [theme, setTheme] = useState(getThemePreference);
@@ -106,10 +99,6 @@ export default function SettingsPage() {
         // What the sales screen offers: the owner's choice
         ...(isAdmin() ? ['posScreen'] : []),
         'sku', 'modules',
-        ...(features.email ? ['mail'] : []),
-        ...(features.ecommerce ? ['ecommerce'] : []),
-        // The owner's other shops
-        ...(isAdmin() ? ['shops'] : []),
         'backup',
         ...(isAdmin() ? ['logs'] : []),
         'about',
@@ -132,16 +121,7 @@ export default function SettingsPage() {
             };
 
             const storeConfig = parse(data.store_config);
-            const emailConfig = parse(data.email_settings);
-            setSettings(prev => ({
-                ...prev,
-                ...storeConfig,
-                email_host: emailConfig.host ?? prev.email_host,
-                email_port: emailConfig.port ?? prev.email_port,
-                email_user: emailConfig.user,
-                email_password: emailConfig.pass,
-                email_secure: emailConfig.secure ?? prev.email_secure,
-            }));
+            setSettings(prev => ({ ...prev, ...storeConfig }));
             setFeatures(resolveFeatures(parse(data.features)));
 
             const config = await loadShopConfiguration();
@@ -157,14 +137,6 @@ export default function SettingsPage() {
             setLoading(false);
         }
     };
-
-    const emailConfig = () => ({
-        host: settings.email_host,
-        port: settings.email_port,
-        user: settings.email_user,
-        pass: settings.email_password,
-        secure: settings.email_secure,
-    });
 
     const handleSave = async () => {
         if (!String(settings.businessName || '').trim()) {
@@ -185,7 +157,6 @@ export default function SettingsPage() {
             storeConfig.poSignatureTitle = settings.poSignatureTitle || '';
             storeConfig.poSignatureImage = settings.poSignatureImage || '';
 
-            if (features.email) await window.electronAPI.settings.set({ key: 'email_settings', value: emailConfig() });
             await window.electronAPI.settings.set({ key: 'features', value: features });
             await saveShopConfiguration({ shop: storeConfig, printers, labels, scanner, sku });
             await reloadStoreSettings();
@@ -209,27 +180,6 @@ export default function SettingsPage() {
         } catch (error) {
             toast.error(t('settings.saveFailed'));
             console.error(error);
-        }
-    };
-
-    const testEmail = async () => {
-        setSaving(true);
-        try {
-            await window.electronAPI.settings.set({ key: 'email_settings', value: emailConfig() });
-            const result = await window.electronAPI.email.testConnection({
-                smtp_host: settings.email_host,
-                smtp_port: parseInt(settings.email_port, 10),
-                smtp_user: settings.email_user,
-                smtp_pass: settings.email_password,
-                smtp_secure: settings.email_secure,
-            });
-            if (result.success) toast.success(t('settings.email.ok'));
-            else toast.error(t('settings.email.failed', { error: result.message }));
-        } catch (e) {
-            toast.error(t('settings.saveFailed'));
-            console.error(e);
-        } finally {
-            setSaving(false);
         }
     };
 
@@ -602,42 +552,6 @@ export default function SettingsPage() {
                         {currentTab === 'modules' && (
                             <ModulesSettings features={features} onFeaturesChange={setFeatures} />
                         )}
-
-                        {currentTab === 'mail' && (
-                            <Card className="space-y-6">
-                                <SectionHeader icon={Mail} color="bg-indigo-500/20 text-indigo-400" title={t('settings.tab.mail')} text={t('settings.email.text')} />
-                                <div className="grid gap-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Input label={t('settings.email.host')} value={settings.email_host || ''} className="ltr"
-                                            onChange={(e) => handleChange('email_host', e.target.value)} placeholder="smtp.gmail.com" />
-                                        <Input label={t('settings.email.port')} type="number" value={settings.email_port || ''}
-                                            onChange={(e) => handleChange('email_port', e.target.value)} placeholder="587" />
-                                    </div>
-                                    <Input label={t('settings.email.user')} value={settings.email_user || ''} className="ltr"
-                                        onChange={(e) => handleChange('email_user', e.target.value)} />
-                                    <Input label={t('settings.email.password')} type="password" value={settings.email_password || ''}
-                                        onChange={(e) => handleChange('email_password', e.target.value)} />
-                                    <label className="flex items-center gap-2 text-sm text-zinc-300">
-                                        <input type="checkbox" checked={settings.email_secure || false}
-                                            onChange={(e) => handleChange('email_secure', e.target.checked)}
-                                            className="w-4 h-4 rounded bg-dark-tertiary border-dark-border" />
-                                        {t('settings.email.secure')}
-                                    </label>
-                                    <p className="text-xs text-zinc-500">{t('settings.email.secureHint')}</p>
-                                    <div className="pt-4 border-t border-dark-border">
-                                        <Button variant="secondary" onClick={testEmail}>{t('settings.email.test')}</Button>
-                                    </div>
-                                </div>
-                            </Card>
-                        )}
-
-                        {currentTab === 'ecommerce' && (
-                            <Card className="p-6">
-                                <EcommerceSettings />
-                            </Card>
-                        )}
-
-                        {currentTab === 'shops' && <ShopsSettings />}
 
                         {currentTab === 'backup' && (
                             <div className="space-y-4">

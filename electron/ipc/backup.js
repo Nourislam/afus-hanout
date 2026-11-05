@@ -28,7 +28,6 @@ module.exports = function register(ctx) {
         shell,
         shopImagesDir,
         shopT,
-        website,
     } = ctx;
 
     let sqlModule = null;
@@ -106,7 +105,7 @@ module.exports = function register(ctx) {
       try {
         const file = backupService.backupPath(dir, name);
         const summary = backupService.summarizeDatabase(await sqlJs(), fs.readFileSync(file));
-        if (!summary.valid) return { success: false, error: shopT('backup.invalidFile') };
+        if (!summary.valid) return { success: false, error: shopT('backup.invalidFile', { app: BRAND.productName }) };
         // The data of today is kept first: a restore can always be undone
         const safety = backupService.createBackup(dir, dbPath, { kind: 'before-restore' });
         try { backupService.backupImages(dir, shopImagesDir()); } catch { /* pictures are never removed */ }
@@ -120,7 +119,6 @@ module.exports = function register(ctx) {
           throw error;
         }
         refreshTrial();
-        website.moveContactToShop();
         // The pictures of the restored articles come back too (none removed)
         try { backupService.restoreImages(dir, shopImagesDir()); } catch (error) { console.error('Pictures not restored:', error); }
         // The employees may differ in the restored data: log in again
@@ -161,7 +159,7 @@ module.exports = function register(ctx) {
       });
       if (!filePaths || !filePaths.length) return { success: false, canceled: true };
       const summary = backupService.summarizeDatabase(await sqlJs(), fs.readFileSync(filePaths[0]));
-      if (!summary.valid) return { success: false, error: shopT('backup.invalidFile') };
+      if (!summary.valid) return { success: false, error: shopT('backup.invalidFile', { app: BRAND.productName }) };
       const backup = backupService.createBackup(backupFolder(), filePaths[0], { kind: 'imported' });
       try { backupService.importImages(filePaths[0], backupFolder()); } catch (error) { console.error('Pictures not imported:', error); }
       return { success: true, backup };

@@ -3,9 +3,36 @@ import { isTaxEnabled } from '../lib/tax';
 import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
 import { bestPromotion } from '../lib/promotions';
+import { isWeighed, weighedPrice, cartonDeal, pricePerKg } from '../../electron/shared/grocery.ts';
 
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 const lineTotal = (quantity, unitPrice, discount = 0) => round2(quantity * unitPrice - (discount || 0));
+
+/** A line at a new unit price; a carton line keeps its carton price as a ceiling (its discount follows). */
+function withPrice(item, price) {
+    const discount = item.sold_as === 'carton'
+        ? (cartonDeal({ price, carton_qty: item.carton_qty, carton_price: item.carton_price }, item.cartons || 1)?.discount ?? 0)
+        : item.discount;
+    return { ...item, unit_price: price, discount, total: lineTotal(item.quantity, price, discount) };
+}
+
+/** Pieces (grams for a weighed article) of an article already in the other lines of the cart. */
+const usedElsewhere = (items, productId, exceptId = null) => items
+    .filter(i => i.product_id === productId && !i.variant_id && i.id !== exceptId)
+    .reduce((sum, i) => sum + (Number(i.weight_grams) > 0 ? Number(i.weight_grams) : Number(i.quantity) || 0), 0);
+
+/** The fields every new line of an article starts with. */
+const baseLine = (product) => ({
+    id: uuid(),
+    product_id: product.id,
+    product_name: product.name,
+    category_id: product.category_id || null,
+    brand: product.brand || null,
+    image_path: product.image_path || null,
+    variant_id: null,
+    variant_label: null,
+    sku: product.sku || null,
+});
 
 /** Lines of a ticket put on hold (stored as JSON); a damaged record gives none. */
 export function heldLines(held) {
@@ -93,9 +120,12 @@ export const useCartStore = create((set, get) => ({
      */
     addItem: (product, quantity = 1, variant = null) => {
         const { items, globalTaxRate } = get();
+        // An article sold by weight is weighed first (addWeighed)
+        if (!variant && isWeighed(product)) return { success: false, needsWeight: true, message: t('cart.needsWeight') };
         const variantId = variant ? variant.id : null;
+        // Pieces only: a carton or a weighed line of the same article is its own line
         const existingIndex = items.findIndex(item =>
-            item.product_id === product.id && (item.variant_id || null) === variantId);
+            item.product_id === product.id && (item.variant_id || null) === variantId && !item.sold_as);
         // Use product-specific tax only if explicitly set (> 0), otherwise use global rate
         const itemTaxRate = (product.tax_rate && product.tax_rate > 0) ? product.tax_rate : globalTaxRate;
         const retailPrice = variant && variant.price !== null && variant.price !== undefined && variant.price !== ''
@@ -110,8 +140,9 @@ export const useCartStore = create((set, get) => ({
             const newItems = [...items];
             const line = newItems[existingIndex];
             const maxStock = line.max_stock ?? available ?? 999999;
+            const others = variant ? 0 : usedElsewhere(items, product.id, line.id);
 
-            if (line.quantity + quantity > maxStock) {
+            if (line.quantity + quantity + others > maxStock) {
                 return { success: false, message: t('cart.insufficientStock') };
             }
 
@@ -124,7 +155,7 @@ export const useCartStore = create((set, get) => ({
             return { success: true, quantity: newItems[existingIndex].quantity };
         }
 
-        if (quantity > available) {
+        if (quantity + (variant ? 0 : usedElsewhere(items, product.id)) > available) {
             return { success: false, message: t('cart.insufficientStock') };
         }
 
@@ -166,7 +197,25 @@ export const useCartStore = create((set, get) => ({
         const item = items.find(i => i.id === itemId);
         if (!item) return { success: false, message: t('cart.itemNotFound') };
 
-        if (item.max_stock !== undefined && quantity > item.max_stock) {
+        // A weighed line is one weighing: weigh again for more
+        if (item.sold_as === 'weight') return quantity === 1 ? { success: true } : { success: false, message: t('cart.weighAgain') };
+        // A carton line: + and − add or take one carton
+        if (item.sold_as === 'carton') {
+            const cartons = (item.cartons || 1) + (quantity > item.quantity ? 1 : -1);
+            if (cartons <= 0) { get().removeItem(itemId); return { success: true }; }
+            const deal = cartonDeal({ price: item.unit_price, carton_qty: item.carton_qty, carton_price: item.carton_price }, cartons);
+            if (!deal) return { success: false, message: t('cart.noCarton') };
+            if (item.max_stock !== undefined && deal.quantity + usedElsewhere(items, item.product_id, item.id) > item.max_stock) {
+                return { success: false, message: t('cart.insufficientStock') };
+            }
+            set(state => ({ items: state.items.map(i => i.id === itemId
+                ? { ...i, cartons, quantity: deal.quantity, discount: deal.discount, total: lineTotal(deal.quantity, i.unit_price, deal.discount) }
+                : i) }));
+            return { success: true };
+        }
+
+        const others = item.variant_id ? 0 : usedElsewhere(items, item.product_id, item.id);
+        if (item.max_stock !== undefined && quantity + others > item.max_stock) {
             return { success: false, message: t('cart.insufficientStock') };
         }
 
@@ -178,6 +227,87 @@ export const useCartStore = create((set, get) => ({
             )
         }));
         return { success: true };
+    },
+
+    /** One carton (or more) of an article: its pieces, at the carton price. */
+    addCarton: (product, cartons = 1) => {
+        const { items, globalTaxRate } = get();
+        const existing = items.find(i => i.product_id === product.id && i.sold_as === 'carton');
+        const count = (existing?.cartons || 0) + cartons;
+        // A wholesale customer pays the wholesale price: the carton is never dearer than its pieces
+        const wholesale = Number(product.wholesale_price) > 0 ? Number(product.wholesale_price) : null;
+        const listPrice = get().customer?.is_wholesale && wholesale ? wholesale : Number(product.price) || 0;
+        const deal = cartonDeal({ ...product, price: existing ? existing.unit_price : listPrice }, count);
+        if (!deal) return { success: false, message: t('cart.noCarton') };
+        const stock = Number(product.stock_quantity) || 0;
+        if (deal.quantity + usedElsewhere(items, product.id, existing?.id) > stock) {
+            return { success: false, message: t('cart.insufficientStock') };
+        }
+        const unitPrice = listPrice;
+        if (existing) {
+            set({
+                items: items.map(i => i.id === existing.id
+                    ? { ...i, cartons: count, quantity: deal.quantity, discount: deal.discount, total: lineTotal(deal.quantity, i.unit_price, deal.discount) }
+                    : i),
+                lastAddedId: existing.id,
+            });
+            return { success: true, quantity: deal.quantity };
+        }
+        const line = {
+            ...baseLine(product),
+            sold_as: 'carton',
+            cartons: count,
+            carton_qty: product.carton_qty,
+            carton_price: product.carton_price ?? null,
+            quantity: deal.quantity,
+            unit_price: unitPrice,
+            original_price: unitPrice,
+            retail_price: Number(product.price) || 0,
+            wholesale_price: wholesale,
+            tax_rate: (product.tax_rate && product.tax_rate > 0) ? product.tax_rate : globalTaxRate,
+            discount: deal.discount,
+            total: lineTotal(deal.quantity, unitPrice, deal.discount),
+            max_stock: stock,
+        };
+        set({ items: [...items, line], lastAddedId: line.id });
+        return { success: true, quantity: deal.quantity };
+    },
+
+    /**
+     * One weighing of an article sold by weight: its own line of quantity 1,
+     * priced per kg, or at the price read on a scale label.
+     */
+    addWeighed: (product, grams, labelPrice = null) => {
+        const { items, globalTaxRate } = get();
+        const g = Math.round(Number(grams) || 0);
+        if (!(g > 0)) return { success: false, message: t('cart.needsWeight') };
+        const stock = Number(product.stock_quantity) || 0;
+        if (g + usedElsewhere(items, product.id) > stock) {
+            return { success: false, message: t('cart.insufficientStock') };
+        }
+        const wholesale = Number(product.wholesale_price) > 0 ? Number(product.wholesale_price) : null;
+        const perKg = get().customer?.is_wholesale && wholesale ? wholesale : Number(product.price) || 0;
+        const unitPrice = labelPrice !== null && labelPrice !== undefined ? round2(labelPrice) : weighedPrice(perKg, g);
+        const line = {
+            ...baseLine(product),
+            sold_as: 'weight',
+            weight_grams: g,
+            price_per_kg: perKg,
+            // Both prices per kg, so the line follows the customer; a scale label keeps its price
+            retail_per_kg: Number(product.price) || 0,
+            wholesale_per_kg: wholesale,
+            label_price: labelPrice !== null && labelPrice !== undefined,
+            quantity: 1,
+            unit_price: unitPrice,
+            original_price: unitPrice,
+            retail_price: unitPrice,
+            tax_rate: (product.tax_rate && product.tax_rate > 0) ? product.tax_rate : globalTaxRate,
+            discount: 0,
+            total: unitPrice,
+            max_stock: 1,
+        };
+        set({ items: [...items, line], lastAddedId: line.id });
+        return { success: true, quantity: 1 };
     },
 
     removeItem: (itemId) => {
@@ -201,9 +331,7 @@ export const useCartStore = create((set, get) => ({
         const value = Math.max(0, round2(price));
         set(state => ({
             items: state.items.map(item =>
-                item.id === itemId
-                    ? { ...item, unit_price: value, total: lineTotal(item.quantity, value, item.discount) }
-                    : item
+                item.id === itemId ? withPrice(item, value) : item
             )
         }));
     },
@@ -213,9 +341,17 @@ export const useCartStore = create((set, get) => ({
         // change to the wholesale (or retail) price; prices typed by hand stay
         const wholesale = !!customer?.is_wholesale;
         const items = get().items.map(item => {
-            if (item.unit_price !== item.original_price || item.retail_price === undefined) return item;
+            if (item.unit_price !== item.original_price) return item;
+            // A weighed line: the price per kg of this customer, for its weight (a scale label keeps its price)
+            if (item.sold_as === 'weight') {
+                if (item.label_price || item.retail_per_kg === undefined) return item;
+                const perKg = wholesale && item.wholesale_per_kg ? item.wholesale_per_kg : item.retail_per_kg;
+                const price = weighedPrice(perKg, item.weight_grams);
+                return { ...withPrice(item, price), original_price: price, price_per_kg: perKg };
+            }
+            if (item.retail_price === undefined) return item;
             const price = wholesale && item.wholesale_price ? item.wholesale_price : item.retail_price;
-            return { ...item, unit_price: price, original_price: price, total: lineTotal(item.quantity, price, item.discount) };
+            return { ...withPrice(item, price), original_price: price };
         });
         set({ customer, items });
     },
@@ -313,21 +449,28 @@ export const useCartStore = create((set, get) => ({
      */
     loadReservation: (reservation, customer) => {
         get().clearCart();
-        const items = (reservation.items || []).map(line => ({
-            id: uuid(),
-            product_id: line.product_id,
-            product_name: line.product_name,
-            variant_id: line.variant_id || null,
-            variant_label: line.variant_label || null,
-            quantity: line.quantity,
-            unit_price: line.unit_price,
-            original_price: line.unit_price,
-            tax_rate: get().globalTaxRate,
-            discount: 0,
-            total: lineTotal(line.quantity, line.unit_price),
-            // The reserved pieces are this customer's: no more than reserved
-            max_stock: line.quantity,
-        }));
+        const items = (reservation.items || []).map(line => {
+            const grams = Number(line.weight_grams) || 0;
+            const discount = Number(line.discount) || 0;
+            return {
+                id: uuid(),
+                product_id: line.product_id,
+                product_name: line.product_name,
+                variant_id: line.variant_id || null,
+                variant_label: line.variant_label || null,
+                quantity: line.quantity,
+                unit_price: line.unit_price,
+                original_price: line.unit_price,
+                tax_rate: get().globalTaxRate,
+                // A weighed line keeps its weight; a carton its carton price
+                ...(grams > 0 ? { sold_as: 'weight', weight_grams: grams, price_per_kg: pricePerKg(line.unit_price, grams) } : {}),
+                ...(line.sold_as === 'carton' ? { sold_as: 'carton' } : {}),
+                discount,
+                total: lineTotal(line.quantity, line.unit_price, discount),
+                // The reserved pieces are this customer's: no more than reserved
+                max_stock: line.quantity,
+            };
+        });
         set({ items, customer: customer || null, reservation: { id: reservation.id, number: reservation.number, deposit: Number(reservation.deposit) || 0 } });
     },
 

@@ -1,4 +1,4 @@
-// Simple mode shows only the everyday screens of a clothing shop; full mode
+// Simple mode shows only the everyday screens of a grocery shop; full mode
 // shows every module. Saved for the whole shop in the settings table
 // (key ui_mode). A new shop starts in simple mode (set by the setup wizard);
 // a shop set up before this option existed keeps the full menu.

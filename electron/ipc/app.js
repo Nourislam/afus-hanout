@@ -2,7 +2,6 @@
 module.exports = function register(ctx) {
     const {
         BrowserWindow,
-        EcommerceSyncManager,
         PROFILE,
         WINDOW_THEME,
         app,
@@ -113,15 +112,13 @@ module.exports = function register(ctx) {
     // online store only ever sees the shop's own data.
     // ------------------------------------------------------------------
     const demoService = require('../services/demoService');
-    const { demoStaff } = require('../services/demoData');
-    // The demo shop is tried on the Afus website (the web demo runs this same
-    // program): the installed program no longer offers it. Its data, if any,
-    // stays until the owner deletes it from Settings › About
-    const webDemo = () => !!globalThis.__AFUS_WEB_DEMO__;
+    const { demoStaff } = require('../services/groceryDemo.ts');
+    // Afus Hanout has no website: the installed program offers its demo shop
+    // for the first 3 months after the install (trialService). Its data, if
+    // any, stays until the owner deletes it from Settings › About
     function trialStatus() {
       const clock = ctx.trialClock || { installedAt: Date.now(), now: Date.now() };
-      const status = trialService.status({ installedAt: clock.installedAt, now: Math.max(Date.now(), clock.now) });
-      return webDemo() ? status : { ...status, demo: { ...status.demo, available: false, daysLeft: 0 } };
+      return trialService.status({ installedAt: clock.installedAt, now: Math.max(Date.now(), clock.now) });
     }
     // The demo shop's data stays on disk after its 3 months (only opening it is
     // refused); the owner removes it when they choose, from Settings › About
@@ -151,8 +148,6 @@ module.exports = function register(ctx) {
     function afterShopSwitch() {
       session.clear();
       refreshTrial();
-      EcommerceSyncManager.loadConnections();
-      EcommerceSyncManager.refreshSchedule();
     }
     ipcMain.handle('demo:status', () => {
       const lang = (getSettingValue('store_config') || {}).defaultLanguage || 'ar';

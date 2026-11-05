@@ -65,7 +65,7 @@ export default function CreatePurchaseOrderModal({ isOpen, onClose, onComplete, 
         }
     };
 
-    // Clothing products are ordered per colour/size so received stock goes to the right variant
+    // An article with variants is ordered per variant so received stock goes to the right one
     useEffect(() => {
         let cancelled = false;
         if (!searchQuery.trim()) {

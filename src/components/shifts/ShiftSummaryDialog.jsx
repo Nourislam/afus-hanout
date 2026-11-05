@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Banknote, Receipt, AlertCircle, Clock, Shirt, Calculator, CheckCircle2 } from 'lucide-react';
+import { Banknote, Receipt, AlertCircle, Clock, Package, Calculator, CheckCircle2 } from 'lucide-react';
 import { toast } from '../ui/Toast';
 import { Button } from '../ui/Button';
 import { useAuthStore } from '../../stores/authStore';
@@ -118,7 +118,7 @@ export default function ShiftSummaryDialog({ shiftId, onClose, onLogout, mode = 
                                 <div className="text-lg font-bold tabular">{stats.total_transactions}</div>
                             </div>
                             <div className="bg-dark-tertiary p-3 rounded-xl">
-                                <div className="text-zinc-500 text-xs mb-1 flex items-center gap-1.5"><Shirt size={13} /> {t('shift.pieces')}</div>
+                                <div className="text-zinc-500 text-xs mb-1 flex items-center gap-1.5"><Package size={13} /> {t('shift.pieces')}</div>
                                 <div className="text-lg font-bold tabular">{stats.items_sold}</div>
                             </div>
                         </div>

@@ -48,9 +48,11 @@ describe('decision figures: run-out, sell-through, matrix, buying plan, stock wo
         expect(insights.runOutSoon(api, { now: NOW })).toEqual([]);
     });
 
-    it('2. sell-through = sold / (sold + in stock), per article, collection and season', () => {
-        api.run("UPDATE products SET collection = 'Denim 2026', season = 'winter' WHERE id = 'jean'");
-        api.run("UPDATE products SET collection = 'Basics', season = 'winter' WHERE id = 'belt'");
+    it('2. sell-through = sold / (sold + in stock), per article and per category; kilograms left out', () => {
+        api.run("INSERT INTO categories (id, name) VALUES ('c1', 'Rayon 1')");
+        api.run("UPDATE products SET category_id = 'c1' WHERE id IN ('jean', 'belt')");
+        // Sold by weight: grams on the shelf and lines sold do not add up
+        api.run("INSERT INTO products (id, name, price, stock_quantity, unit, category_id) VALUES ('tomato', 'Tomates', 120, 5000, 'kg', 'c1')");
         // Jean: 11 pieces in stock (4+2+0+3+2); 9 kept -> 9 / 20 = 45 %
         sale(v['J-N-38'], 6, 10); sale(v['J-N-40'], 3, 5);
         // Belt: 10 in stock, 10 sold -> 50 %
@@ -59,8 +61,8 @@ describe('decision figures: run-out, sell-through, matrix, buying plan, stock wo
         expect(byArticle.rows.find(r => r.key === 'jean')).toMatchObject({ sold: 9, stock: 11, rate: 45 });
         expect(byArticle.rows.find(r => r.key === 'belt')).toMatchObject({ sold: 10, stock: 10, rate: 50 });
         expect(byArticle.total).toEqual({ sold: 19, stock: 21, rate: 47.5 });
-        expect(insights.sellThrough(api, { by: 'collection' }).rows.map(r => r.key).sort()).toEqual(['Basics', 'Denim 2026']);
-        expect(insights.sellThrough(api, { by: 'season' }).rows).toEqual([expect.objectContaining({ key: 'winter', sold: 19, stock: 21, articles: 2 })]);
+        expect(byArticle.rows.find(r => r.key === 'tomato')).toBeUndefined();
+        expect(insights.sellThrough(api, { by: 'category' }).rows).toEqual([expect.objectContaining({ key: 'Rayon 1', label: 'Rayon 1', sold: 19, stock: 21, articles: 2 })]);
         // Only the sales of the period
         expect(insights.sellThrough(api, { by: 'product', since: ago(7) }).rows.find(r => r.key === 'jean')).toMatchObject({ sold: 3 });
     });

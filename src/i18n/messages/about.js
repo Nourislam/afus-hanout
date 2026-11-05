@@ -27,10 +27,10 @@ export default {
     'about.updateAvailable': ["Version {version} is available", "La version {version} est disponible", "الإصدار {version} متوفر"],
     'about.download': ["Download", "Télécharger", "تحميل"],
     'about.updateHint': ["Make a backup first, then install the new version over this one: your data is kept.", "Faites d'abord une sauvegarde, puis installez la nouvelle version par-dessus : vos données sont gardées.", "أنشئ نسخة احتياطية أولاً ثم ثبّت الإصدار الجديد فوق هذا: تبقى بياناتك محفوظة."],
-    'about.demoTitle': ["Demo shop data", "Données de la boutique de démo", "بيانات المحل التجريبي"],
-    'about.demoText': ["The demo shop takes {size} on this computer. It is kept, even after its 3 months; your shop's data is separate.", "La boutique de démo occupe {size} sur cet ordinateur. Elle est gardée, même après ses 3 mois ; les données de votre magasin sont à part.", "المحل التجريبي يشغل {size} على هذا الحاسوب. يبقى محفوظاً حتى بعد أشهره الثلاثة؛ بيانات محلك منفصلة."],
+    'about.demoTitle': ["Demo shop data", "Données du magasin de démo", "بيانات المحل التجريبي"],
+    'about.demoText': ["The demo shop takes {size} on this computer. It is kept, even after its 3 months; your shop's data is separate.", "Le magasin de démo occupe {size} sur cet ordinateur. Il est gardé, même après ses 3 mois ; les données de votre magasin sont à part.", "المحل التجريبي يشغل {size} على هذا الحاسوب. يبقى محفوظاً حتى بعد أشهره الثلاثة؛ بيانات محلك منفصلة."],
     'about.demoDelete': ["Delete the demo shop data", "Supprimer les données de démo", "حذف بيانات المحل التجريبي"],
-    'about.demoConfirm': ["Delete the demo shop (its articles, sales and pictures)? Your shop's own data is not touched.", "Supprimer la boutique de démo (articles, ventes et photos) ? Les données de votre magasin ne sont pas touchées.", "حذف المحل التجريبي (سلعه ومبيعاته وصوره)؟ بيانات محلك لا تُمس."],
+    'about.demoConfirm': ["Delete the demo shop (its articles, sales and pictures)? Your shop's own data is not touched.", "Supprimer le magasin de démo (articles, ventes et photos) ? Les données de votre magasin ne sont pas touchées.", "حذف المحل التجريبي (سلعه ومبيعاته وصوره)؟ بيانات محلك لا تُمس."],
     'about.demoDeleted': ["Demo shop data deleted", "Données de démo supprimées", "تم حذف بيانات المحل التجريبي"],
     'about.upToDate': ["You have the latest version", "Vous avez la dernière version", "لديك أحدث إصدار"],
 };

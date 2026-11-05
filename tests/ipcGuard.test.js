@@ -21,7 +21,7 @@ const code = async (fn) => { try { await fn(); } catch (e) { return e.message.sp
 /** Every channel registered with ipcMain.handle in the main process. */
 function registeredChannels() {
     const ipc = fs.readdirSync(path.join(__dirname, '../electron/ipc')).map(f => `electron/ipc/${f}`);
-    const files = ['electron/main.js', ...ipc, 'electron/ecommerce/EcommerceSyncManager.js'];
+    const files = ['electron/main.js', ...ipc];
     const text = files.map(f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8')).join('\n');
     return new Set([...text.matchAll(/ipcMain\.handle\('([^']+)'/g)].map(m => m[1]));
 }

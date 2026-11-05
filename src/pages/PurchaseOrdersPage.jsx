@@ -9,15 +9,12 @@ import {
     Calendar,
     CheckCircle,
     Package,
-    Mail
 } from 'lucide-react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
 import { toast } from '../components/ui/Toast';
-import { Input } from '../components/ui/Input';
-import { Modal, ModalBody, ModalFooter } from '../components/ui/Modal';
 import CreatePurchaseOrderModal from '../components/modals/CreatePurchaseOrderModal';
 import RecordSupplierPaymentModal from '../components/modals/RecordSupplierPaymentModal';
 import CreatePurchaseReturnModal from '../components/modals/CreatePurchaseReturnModal';
@@ -35,7 +32,6 @@ export default function PurchaseOrdersPage() {
     const [orders, setOrders] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showEmailModal, setShowEmailModal] = useState(false);
     const [showPayModal, setShowPayModal] = useState(false);
     const [showReturnModal, setShowReturnModal] = useState(false);
     const [showReceiveModal, setShowReceiveModal] = useState(false);
@@ -45,10 +41,7 @@ export default function PurchaseOrdersPage() {
 
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedPO, setSelectedPO] = useState(null);
-    const [emailPO, setEmailPO] = useState(null);
-    const [emailAddress, setEmailAddress] = useState('');
     const { loadSettings } = useSettingsStore();
-    const emailOn = useSettingsStore(state => !!state.settings.features?.email);
 
     useEffect(() => {
         fetchOrders();
@@ -118,12 +111,6 @@ export default function PurchaseOrdersPage() {
         setShowDetailsModal(true);
     };
 
-    const handleEmailClick = (po) => {
-        setEmailPO(po);
-        setEmailAddress(po.supplier_email || '');
-        setShowEmailModal(true);
-    };
-
     const handlePayClick = (po) => {
         setSelectedPO(po);
         setShowPayModal(true);
@@ -132,22 +119,6 @@ export default function PurchaseOrdersPage() {
     const handleReturnClick = (po) => {
         setSelectedPO(po);
         setShowReturnModal(true);
-    };
-
-    const handleSendEmail = async () => {
-        if (!emailAddress) {
-            toast.error(t('receipt.enterEmail'));
-            return;
-        }
-        setShowEmailModal(false);
-        toast.info(t('po.sending'));
-        try {
-            await window.electronAPI.email.sendPurchaseOrder({ to: emailAddress, po: emailPO });
-            toast.success(t('po.sent'));
-        } catch (error) {
-            console.error('Email error:', error);
-            toast.error(t('receipt.emailFailed'));
-        }
     };
 
     const handleSavePdf = async (po) => {
@@ -244,11 +215,6 @@ export default function PurchaseOrdersPage() {
                                     <Button size="sm" variant="ghost" onClick={() => handleSavePdf(po)} title={t('gift.savePdf')} aria-label={t('gift.savePdf')}>
                                         <FileText className="w-4 h-4" />
                                     </Button>
-                                    {emailOn && (
-                                        <Button size="sm" variant="ghost" onClick={() => handleEmailClick(po)} title={t('po.email')} aria-label={t('po.email')}>
-                                            <Mail className="w-4 h-4" />
-                                        </Button>
-                                    )}
                                     <Button size="sm" variant="ghost" onClick={() => handleViewDetails(po)} title={t('credit.view')} aria-label={t('credit.view')}>
                                         <Eye className="w-4 h-4" />
                                     </Button>
@@ -293,29 +259,6 @@ export default function PurchaseOrdersPage() {
                     setInitialItems(null);
                 }}
             />
-
-            {/* Email Modal */}
-            <Modal isOpen={showEmailModal} onClose={() => setShowEmailModal(false)} title={t('po.sendTitle')}>
-                <ModalBody>
-                    <div className="space-y-4">
-                        <p className="text-zinc-400">{t('po.sendText')}</p>
-                        <Input
-                            label={t('po.supplierEmail')}
-                            type="email"
-                            value={emailAddress}
-                            onChange={(e) => setEmailAddress(e.target.value)}
-                            placeholder="supplier@example.com"
-                        />
-                    </div>
-                </ModalBody>
-                <ModalFooter>
-                    <Button variant="secondary" onClick={() => setShowEmailModal(false)}>{t('common.cancel')}</Button>
-                    <Button onClick={handleSendEmail}>
-                        <Mail className="w-4 h-4 me-2" />
-                        {t('receipt.send')}
-                    </Button>
-                </ModalFooter>
-            </Modal>
 
             {/* Payment Modal */}
             <RecordSupplierPaymentModal

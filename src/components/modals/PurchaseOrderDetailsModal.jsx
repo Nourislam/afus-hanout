@@ -4,15 +4,12 @@ import { formatMoney } from '../../i18n/format';
 import { useState, useEffect } from 'react';
 import { Modal, ModalBody, ModalFooter } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { FileText, Mail } from 'lucide-react';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { FileText } from 'lucide-react';
 import { toast } from '../ui/Toast';
 
 export default function PurchaseOrderDetailsModal({ isOpen, onClose, purchaseOrder }) {
     const [details, setDetails] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [sending, setSending] = useState(false);
-    const emailOn = useSettingsStore(state => !!state.settings.features?.email);
 
     useEffect(() => {
         if (purchaseOrder && isOpen) {
@@ -30,27 +27,6 @@ export default function PurchaseOrderDetailsModal({ isOpen, onClose, purchaseOrd
             toast.error(t('po.detailsFailed'));
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleSendEmail = async () => {
-        if (!details?.supplier_email) {
-            toast.error(t('po.noSupplierEmail'));
-            return;
-        }
-
-        setSending(true);
-        try {
-            await window.electronAPI.email.sendPurchaseOrder({
-                to: details.supplier_email,
-                po: details
-            });
-            toast.success(t('po.emailed'));
-        } catch (error) {
-            console.error('Email failed:', error);
-            toast.error(t('receipt.emailFailed'));
-        } finally {
-            setSending(false);
         }
     };
 
@@ -156,12 +132,6 @@ export default function PurchaseOrderDetailsModal({ isOpen, onClose, purchaseOrd
 
                         {/* Actions */}
                         <div className="flex justify-end gap-3 mt-4">
-                            {emailOn && details.supplier_email && (
-                                <Button size="sm" variant="outline" onClick={handleSendEmail} loading={sending}>
-                                    <Mail className="w-4 h-4 me-2" />
-                                    {t('po.emailSupplier')}
-                                </Button>
-                            )}
                             <Button size="sm" variant="outline" onClick={() => window.electronAPI.purchaseOrders.savePdf(details)}>
                                 <FileText className="w-4 h-4 me-2" />
                                 {t('po.downloadPdf')}

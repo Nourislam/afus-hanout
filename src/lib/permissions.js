@@ -18,6 +18,5 @@ export const NAV_PERMISSIONS = {
     '/promotions': PERMISSIONS.PROMOTIONS_VIEW,
     '/employees': PERMISSIONS.EMPLOYEES_VIEW,
     '/reports': PERMISSIONS.REPORTS_VIEW,
-    '/website': PERMISSIONS.SETTINGS_VIEW,
     '/settings': PERMISSIONS.SETTINGS_VIEW,
 };

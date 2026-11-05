@@ -97,7 +97,7 @@ export default function SetupWizard({ onComplete }) {
         }
     };
 
-    // Ready-made clothing categories in the chosen language (only on an empty catalogue)
+    // Ready-made grocery categories in the chosen language (only on an empty catalogue)
     const createDefaultCategories = async () => {
         const existing = await window.electronAPI.categories.getAll();
         if (existing.length > 0) return;
@@ -302,7 +302,7 @@ export default function SetupWizard({ onComplete }) {
             <TitleBar bare />
             <div className="flex-1 min-h-0 flex justify-center p-4 lg:p-6">
                 <div className="w-full max-w-6xl min-h-0 lg:h-[min(46rem,100%)] lg:my-auto flex flex-col lg:flex-row gap-4 lg:gap-6">
-                    {/* The program: Afus Boutique identity and the steps */}
+                    {/* The program: its identity and the steps */}
                     <aside className="lg:w-60 flex-none flex lg:flex-col gap-4 lg:gap-6 rounded-2xl border border-dark-border bg-dark-secondary/60 p-4 lg:p-5">
                         <div className="flex items-center gap-3 min-w-0">
                             <AfusLogo size={40} title={t('app.name')} />

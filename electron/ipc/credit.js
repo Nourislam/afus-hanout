@@ -1,15 +1,10 @@
 // IPC handlers: credit. Moved out of main.js unchanged; main.js passes what they use.
 module.exports = function register(ctx) {
     const {
-        getStoreSettings,
-        BRAND,
         SyncManager,
         createCreditSale,
-        fs,
         generateInvoiceNumber,
         getOne,
-        getSettings,
-        initEmailService,
         ipcMain,
         runInsert,
         runQuery,
@@ -193,108 +188,4 @@ module.exports = function register(ctx) {
       return generateInvoiceNumber();
     });
 
-    // ==========================================
-    // CREDIT SALES
-    // ==========================================
-
-
-
-    // Credit Invoice Email
-    ipcMain.handle('creditInvoice:sendEmail', async (_, { creditSaleId, email }) => {
-      const creditSale = getOne(`
-    SELECT cs.*, s.receipt_number, s.subtotal, s.tax_amount, s.discount_amount,
-           c.name as customer_name, c.email as customer_email, c.phone as customer_phone, c.address as customer_address
-    FROM credit_sales cs
-    LEFT JOIN sales s ON cs.sale_id = s.id
-    LEFT JOIN customers c ON cs.customer_id = c.id
-    WHERE cs.id = ?
-  `, [creditSaleId]);
-
-      if (!creditSale) {
-        throw new Error('Credit sale not found');
-      }
-
-      console.log('Sending Credit Invoice Email. Data:', JSON.stringify(creditSale, null, 2));
-
-      creditSale.items = runQuery('SELECT * FROM sale_items WHERE sale_id = ?', [creditSale.sale_id]);
-      creditSale.payments = runQuery('SELECT * FROM credit_payments WHERE credit_sale_id = ?', [creditSaleId]);
-
-      // Get settings
-      // Every setting, the shop's own details (store_config) on top
-      const settings = getStoreSettings();
-
-      // Initialize email service
-      if (!initEmailService({
-        smtp_host: settings.email_host,
-        smtp_port: settings.email_port,
-        smtp_user: settings.email_user,
-        smtp_pass: settings.email_password,
-        smtp_secure: settings.email_secure
-      })) {
-        throw new Error('Email service not configured');
-      }
-
-      // Generate invoice PDF
-      const invoiceService = require('../services/invoiceService');
-      const pdfPath = await invoiceService.generateInvoicePdf(creditSale, settings);
-
-      try {
-        const result = await invoiceService.sendInvoiceEmail({
-          to: email || creditSale.customer_email,
-          creditSale,
-          businessInfo: {
-            businessName: settings.businessName || BRAND.productName,
-            businessAddress: settings.businessAddress,
-            businessPhone: settings.businessPhone,
-            businessEmail: settings.businessEmail
-          },
-          pdfPath
-        });
-
-        // Cleanup
-        fs.unlink(pdfPath, () => { });
-
-        return result;
-      } catch (error) {
-        fs.unlink(pdfPath, () => { });
-        throw error;
-      }
-    });
-
-    // Send payment reminder
-    ipcMain.handle('creditInvoice:sendReminder', async (_, { creditSaleId, email }) => {
-      const creditSale = getOne(`
-    SELECT cs.*, c.name as customer_name, c.email as customer_email
-    FROM credit_sales cs
-    LEFT JOIN customers c ON cs.customer_id = c.id
-    WHERE cs.id = ?
-  `, [creditSaleId]);
-
-      if (!creditSale) {
-        throw new Error('Credit sale not found');
-      }
-
-      const settings = await getSettings();
-
-      if (!initEmailService({
-        smtp_host: settings.email_host,
-        smtp_port: settings.email_port,
-        smtp_user: settings.email_user,
-        smtp_pass: settings.email_password,
-        smtp_secure: settings.email_secure
-      })) {
-        throw new Error('Email service not configured');
-      }
-
-      const invoiceService = require('../services/invoiceService');
-      return await invoiceService.sendReminderEmail({
-        to: email || creditSale.customer_email,
-        creditSale,
-        businessInfo: {
-          businessName: settings.businessName || BRAND.productName,
-          businessPhone: settings.businessPhone,
-          businessEmail: settings.businessEmail
-        }
-      });
-    });
 };

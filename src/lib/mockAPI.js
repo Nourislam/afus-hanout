@@ -8,17 +8,17 @@ const mockEmployees = [
 ];
 
 const mockCategories = [
-    { id: 'cat1', name: 'تيشيرتات', color: '#3b82f6', icon: null },
-    { id: 'cat2', name: 'سراويل', color: '#22c55e', icon: null },
-    { id: 'cat3', name: 'أحذية', color: '#a855f7', icon: null },
-    { id: 'cat4', name: 'إكسسوارات', color: '#f59e0b', icon: null },
+    { id: 'cat1', name: 'مواد غذائية', color: '#f59e0b', icon: null },
+    { id: 'cat2', name: 'حليب وألبان', color: '#3b82f6', icon: null },
+    { id: 'cat3', name: 'خضر وفواكه', color: '#22c55e', icon: null },
+    { id: 'cat4', name: 'مشروبات', color: '#06b6d4', icon: null },
 ];
 
 const mockProducts = [
-    { id: 'p1', name: 'T-shirt basique', brand: 'Zara', sku: 'TSH-001', barcode: '', price: 1500, cost: 900, stock_quantity: 24, min_stock_level: 3, tax_rate: 0, is_active: 1, category_id: 'cat1', category_name: 'تيشيرتات', category_color: '#3b82f6' },
-    { id: 'p2', name: 'Jean slim', brand: "Levi's", sku: 'JEA-001', barcode: '', price: 4500, cost: 2800, stock_quantity: 12, min_stock_level: 2, tax_rate: 0, is_active: 1, category_id: 'cat2', category_name: 'سراويل', category_color: '#22c55e' },
-    { id: 'p3', name: 'Basket sport', brand: 'Nike', sku: 'SHO-001', barcode: '', price: 8500, cost: 6000, stock_quantity: 6, min_stock_level: 2, tax_rate: 0, is_active: 1, category_id: 'cat3', category_name: 'أحذية', category_color: '#a855f7' },
-    { id: 'p4', name: 'Ceinture cuir', brand: '', sku: 'ACC-001', barcode: '', price: 1200, cost: 600, stock_quantity: 15, min_stock_level: 3, tax_rate: 0, is_active: 1, category_id: 'cat4', category_name: 'إكسسوارات', category_color: '#f59e0b' },
+    { id: 'p1', name: 'سميد 1 كغ', brand: '', sku: 'SEM-001', barcode: '6130000000014', price: 120, cost: 100, stock_quantity: 24, min_stock_level: 5, tax_rate: 0, is_active: 1, unit: 'piece', category_id: 'cat1', category_name: 'مواد غذائية', category_color: '#f59e0b' },
+    { id: 'p2', name: 'حليب كيس 1 لتر', brand: '', sku: 'LAI-001', barcode: '6130000000021', price: 25, cost: 22, stock_quantity: 40, min_stock_level: 10, tax_rate: 0, is_active: 1, unit: 'piece', category_id: 'cat2', category_name: 'حليب وألبان', category_color: '#3b82f6' },
+    { id: 'p3', name: 'طماطم', brand: '', sku: 'TOM-001', barcode: '', price: 120, cost: 80, stock_quantity: 12500, min_stock_level: 5000, tax_rate: 0, is_active: 1, unit: 'kg', plu: 1, category_id: 'cat3', category_name: 'خضر وفواكه', category_color: '#22c55e' },
+    { id: 'p4', name: 'مشروب غازي 2 ل', brand: '', sku: 'BOI-001', barcode: '6130000000038', price: 150, cost: 120, stock_quantity: 18, min_stock_level: 6, tax_rate: 0, is_active: 1, unit: 'piece', category_id: 'cat4', category_name: 'مشروبات', category_color: '#06b6d4' },
 ];
 
 const mockCustomers = [
@@ -32,7 +32,7 @@ let mockBundles = [];
 let mockPromotions = [];
 
 const mockSettings = {
-    businessName: 'Boutique démo',
+    businessName: 'Hanout démo',
     businessAddress: 'Rue Didouche Mourad',
     businessWilaya: '16 - Alger',
     businessPhone: '0555 00 00 00',
@@ -146,12 +146,6 @@ export const mockElectronAPI = {
         saveFromPath: async () => ({ success: true, fileName: 'mock-image.jpg' }),
         delete: async () => ({ success: true }),
         get: async () => null,
-    },
-
-    email: {
-        testConnection: async () => ({ success: true, message: 'Mock SMTP connected' }),
-        sendTest: async () => ({ success: true, message: 'Mock email sent' }),
-        sendReceipt: async () => ({ success: true }),
     },
 
     giftCards: {

@@ -323,10 +323,6 @@ export default function SuppliersPage() {
                                     <label className="block text-sm font-medium mb-1">{t('shop.email')}</label>
                                     <Input type="email" className="ltr" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">{t('suppliers.website')}</label>
-                                    <Input className="ltr" value={formData.website} onChange={e => setFormData({ ...formData, website: e.target.value })} />
-                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">{t('customers.notes')}</label>

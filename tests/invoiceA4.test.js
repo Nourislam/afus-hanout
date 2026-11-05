@@ -56,7 +56,7 @@ describe('A4 invoice of a sale', () => {
         const ticket = service.generateHtml(SALE, { ...SHOP, defaultLanguage: 'ar', demo: true });
         expect(ticket).toContain('محل تجريبي — ليست بيعًا حقيقيًا');
         const invoice = service.generateHtml(SALE, { ...SHOP, type: 'invoice', demo: true });
-        expect(invoice).toContain('BOUTIQUE DE DÉMO — PAS UNE VENTE');
+        expect(invoice).toContain('MAGASIN DE DÉMO — PAS UNE VENTE');
         expect(service.generateHtml(SALE, { ...SHOP })).not.toContain('PAS UNE VENTE');
     });
 });

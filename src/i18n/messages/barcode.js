@@ -1,13 +1,9 @@
 // [English, French, Arabic]
 export default {
-    'barcode.preset.fashion': ["Hang tag", "Étiquette suspendue", "ملصق معلّق"],
-    'barcode.preset.fashionHint': ["Clothing hang tag with size (45 × 80 mm)", "Étiquette vêtement avec taille (45 × 80 mm)", "ملصق ملابس مع المقاس (45 × 80 مم)"],
     'barcode.preset.retail': ["Price sticker", "Étiquette prix", "ملصق السعر"],
     'barcode.preset.retailHint': ["Standard price sticker", "Étiquette de prix standard", "ملصق سعر عادي"],
     'barcode.preset.accessories': ["Accessories", "Accessoires", "الإكسسوارات"],
     'barcode.preset.accessoriesHint': ["Small tags for jewellery, belts, sunglasses", "Petites étiquettes : bijoux, ceintures, lunettes", "ملصقات صغيرة: مجوهرات، أحزمة، نظارات"],
-    'barcode.preset.shoebox': ["Shoe box", "Boîte à chaussures", "علبة الأحذية"],
-    'barcode.preset.shoeboxHint': ["Shoe and bag box labels with size", "Étiquettes de boîtes chaussures et sacs avec pointure", "ملصقات علب الأحذية والحقائب مع المقاس"],
     'barcode.preset.qr': ["QR tag", "Étiquette QR", "ملصق QR"],
     'barcode.preset.qrHint': ["Square QR labels", "Étiquettes QR carrées", "ملصقات QR مربعة"],
     'barcode.generated': ["{n} labels generated", "{n} étiquettes créées", "تم إنشاء {n} ملصق"],
@@ -21,7 +17,6 @@ export default {
     'barcode.failed': ["Failed to generate barcode", "Échec de la création du code-barres", "تعذّر إنشاء الباركود"],
     'barcode.randomFailed': ["Failed to generate random barcode", "Échec de la création du code", "تعذّر إنشاء رمز عشوائي"],
     'barcode.print': ["Print Labels", "Imprimer les étiquettes", "طباعة الملصقات"],
-    'barcode.subtitle': ["EAN, UPC, Code128, DataMatrix and other barcode formats. For clothing QR labels use the QR Labels page.", "EAN, Code 128, DataMatrix… Pour les étiquettes QR des vêtements, utilisez la page Étiquettes QR.", "EAN وCode 128 وDataMatrix… لملصقات QR الخاصة بالملابس استعمل صفحة ملصقات QR."],
     'barcode.custom': ["Custom Barcode", "Code-barres libre", "باركود حر"],
     'barcode.presetLabel': ["Industry Preset:", "Modèle d'étiquette :", "نوع الملصق:"],
     'barcode.type': ["Barcode Type", "Type de code-barres", "نوع الباركود"],

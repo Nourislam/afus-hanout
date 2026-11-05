@@ -60,6 +60,9 @@ function topColors(api, range, limit = 8) {
     `, [...params, limit]);
 }
 
+/** Stock of a simple article in the unit of its prices: kg for an article sold by weight (stock in grams). */
+const STOCK_UNITS = "(CASE WHEN unit = 'kg' THEN stock_quantity / 1000.0 ELSE stock_quantity END)";
+
 /** Purchase value and selling value of the stock on hand. */
 function stockValue(api) {
     const variants = api.get(`
@@ -69,10 +72,11 @@ function stockValue(api) {
         FROM product_variants v JOIN products p ON p.id = v.product_id
         WHERE v.is_active = 1 AND p.is_active = 1 AND p.has_variants = 1 AND v.stock_quantity > 0
     `) || {};
+    // An article sold by weight: stock in grams, prices per kg (its kg are not pieces)
     const simple = api.get(`
-        SELECT COALESCE(SUM(stock_quantity * COALESCE(cost, 0)), 0) AS cost_value,
-               COALESCE(SUM(stock_quantity * COALESCE(price, 0)), 0) AS retail_value,
-               COALESCE(SUM(stock_quantity), 0) AS units
+        SELECT COALESCE(SUM(${STOCK_UNITS} * COALESCE(cost, 0)), 0) AS cost_value,
+               COALESCE(SUM(${STOCK_UNITS} * COALESCE(price, 0)), 0) AS retail_value,
+               COALESCE(SUM(CASE WHEN unit = 'kg' THEN 0 ELSE stock_quantity END), 0) AS units
         FROM products
         WHERE is_active = 1 AND COALESCE(has_variants, 0) = 0 AND stock_quantity > 0
     `) || {};

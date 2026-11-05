@@ -7,7 +7,7 @@ export default {
     'login.poweredBy': ["Powered by {app}", "Avec {app}", "يعمل بـ {app}"],
     'login.selectProfile': ["Select your profile to login", "Choisissez votre profil", "اختر حسابك للدخول"],
     'login.noEmployees': ["No employees found", "Aucun employé", "لا يوجد عمال"],
-    'login.noEmployeesHint': ["Restore a backup or reset the shop setup to create an administrator.", "Restaurez une sauvegarde ou réinitialisez la boutique pour créer un administrateur.", "استرجع نسخة احتياطية أو أعد إعداد المحل لإنشاء مدير."],
+    'login.noEmployeesHint': ["Restore a backup or reset the shop setup to create an administrator.", "Restaurez une sauvegarde ou réinitialisez le magasin pour créer un administrateur.", "استرجع نسخة احتياطية أو أعد إعداد المحل لإنشاء مدير."],
     'shift.enterValidAmount': ["Please enter a valid amount", "Veuillez saisir un montant valide", "أدخل مبلغاً صحيحاً"],
     'shift.started': ["Shift started", "Caisse ouverte", "تم فتح الصندوق"],
     'shift.startFailed': ["Failed to start shift", "Impossible d'ouvrir la caisse", "تعذّر فتح الصندوق"],
@@ -34,5 +34,5 @@ export default {
     'shift.notesOptional': ["Notes (Optional)", "Notes (facultatif)", "ملاحظات (اختياري)"],
     'shift.notesPlaceholder': ["Any discrepancies or comments...", "Écart ou remarque…", "أي فرق أو ملاحظة…"],
     'shift.closing': ["Closing...", "Clôture…", "جارٍ الغلق…"],
-    'shift.closeAndLogout': ["Close the shop", "Fermer la boutique", "أغلق المحل"],
+    'shift.closeAndLogout': ["Close the shop", "Fermer le magasin", "أغلق المحل"],
 };

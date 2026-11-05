@@ -108,7 +108,8 @@ module.exports = function register(ctx) {
     (SELECT GROUP_CONCAT(DISTINCT COALESCE(NULLIF(v.color_code, ''), v.color)) FROM product_variants v
        WHERE v.product_id = p.id AND v.is_active = 1 AND v.color IS NOT NULL AND v.color <> '') AS variant_colors,
     (SELECT GROUP_CONCAT(DISTINCT v.size) FROM product_variants v
-       WHERE v.product_id = p.id AND v.is_active = 1 AND v.stock_quantity > 0 AND v.size IS NOT NULL AND v.size <> '') AS sizes_in_stock
+       WHERE v.product_id = p.id AND v.is_active = 1 AND v.stock_quantity > 0 AND v.size IS NOT NULL AND v.size <> '') AS sizes_in_stock,
+    (SELECT b.barcode FROM product_barcodes b WHERE b.product_id = p.id AND b.kind = 'carton' LIMIT 1) AS carton_barcode
 `;
 
     // The sales screen's quick buttons: the 8 articles sold most these 7 days (ids only)

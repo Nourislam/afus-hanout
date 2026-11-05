@@ -4,29 +4,16 @@ import { formatMoney } from '../../i18n/format';
 import { useState, useEffect } from 'react';
 import { Modal, ModalBody, ModalFooter } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import { Mail, Printer, FileText } from 'lucide-react';
+import { Printer, FileText } from 'lucide-react';
 import { toast } from '../ui/Toast';
 
 export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
     const [details, setDetails] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [email, setEmail] = useState('');
-    const [sending, setSending] = useState(false);
 
     useEffect(() => {
-        if (quote && isOpen) {
-            fetchDetails();
-            // Pre-fill email if customer info available in quote object (if we had it)
-            // But we might need to rely on details fetch
-        }
+        if (quote && isOpen) fetchDetails();
     }, [quote, isOpen]);
-
-    useEffect(() => {
-        if (details?.customer_email) {
-            setEmail(details.customer_email);
-        }
-    }, [details]);
 
     const fetchDetails = async () => {
         setLoading(true);
@@ -45,33 +32,6 @@ export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
             toast.error(t('quote.loadFailed'));
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleSendEmail = async () => {
-        if (!email) {
-            toast.error(t('receipt.enterEmail'));
-            return;
-        }
-
-        setSending(true);
-        try {
-            const result = await window.electronAPI.email.sendQuotation({
-                to: email,
-                quote: details
-            });
-
-            if (result.success) {
-                toast.success(t('quote.emailed'));
-                // Optional: onClose(); 
-            } else {
-                toast.error(result.message || t('receipt.emailFailed'));
-            }
-        } catch (error) {
-            console.error('Email failed:', error);
-            toast.error(t('receipt.emailFailed'));
-        } finally {
-            setSending(false);
         }
     };
 
@@ -137,22 +97,7 @@ export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
                         </div>
 
                         {/* Actions */}
-                        <div className="bg-dark-tertiary/50 p-4 rounded-lg flex flex-col md:flex-row gap-4 items-end md:items-center justify-between">
-                            <div className="w-full md:w-auto flex-1">
-                                <label className="block text-xs text-zinc-400 mb-1">{t('quote.emailCustomer')}</label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        placeholder="customer@email.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="h-9 text-sm"
-                                    />
-                                    <Button size="sm" onClick={handleSendEmail} loading={sending}>
-                                        <Mail className="w-4 h-4 me-2" />
-                                        {t('receipt.send')}
-                                    </Button>
-                                </div>
-                            </div>
+                        <div className="bg-dark-tertiary/50 p-4 rounded-lg flex gap-4 items-center justify-end">
                             <Button variant="secondary" size="sm" onClick={() => window.electronAPI.quotations.print(details)}>
                                 <Printer className="w-4 h-4 me-2" />
                                 {t('common.print')}

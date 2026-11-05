@@ -64,7 +64,7 @@ export default {
     'employees.add': ["Add Employee", "Ajouter un employé", "إضافة عامل"],
     'employees.search': ["Search employees…", "Nom de l'employé…", "ابحث عن عامل…"],
     'employees.none': ["No employees found", "Aucun employé", "لا يوجد عمال"],
-    'employees.addHint': ["Add employees to manage staff access", "Ajoutez les vendeurs de la boutique", "أضف البائعين في المحل"],
+    'employees.addHint': ["Add employees to manage staff access", "Ajoutez les vendeurs du magasin", "أضف البائعين في المحل"],
     'employees.you': ["(You)", "(Vous)", "(أنت)"],
     'employees.import': ["Import Employees", "Importer des employés", "استيراد العمال"],
     'employees.pinRequired': ["PIN is required for new employees", "Code PIN obligatoire pour un nouvel employé", "رمز PIN إجباري للعامل الجديد"],

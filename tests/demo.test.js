@@ -20,7 +20,6 @@ const dashboard = require('../electron/services/dashboardService');
 const salesStats = require('../electron/services/salesStatsService');
 const pinService = require('../electron/services/pinService');
 const ShiftService = require('../electron/services/shiftService');
-const { EcommerceSyncManager } = require('../electron/ecommerce/EcommerceSyncManager');
 
 const REAL_FILE = path.join(dir, BRAND.databaseFile);
 const realHash = () => crypto.createHash('sha256').update(fs.readFileSync(REAL_FILE)).digest('hex');
@@ -59,45 +58,69 @@ describe('demo shop: its own database, never the shop\'s', () => {
         expect(api.get("SELECT id FROM employees WHERE id = 'real-admin'")).toBe(null);
     });
 
-    it('the demo shop is complete: articles, variants, pictures, 3 months of sales, returns, kridi, staff, drawers, customers, suppliers', () => {
+    it('the demo shop is complete: grocery articles, pictures, two months of sales, returns, kridi, staff, drawers, customers, distributors', () => {
         demoCounts = {
-            products: count('products'), variants: count('product_variants'), sales: count('sales'), returns: count('returns'),
+            products: count('products'), sales: count('sales'), returns: count('returns'),
             credit: count('credit_sales'), creditPayments: count('credit_payments'), employees: count('employees'),
             customers: count('customers'), suppliers: count('suppliers'), orders: count('purchase_orders'), receivings: count('receivings'),
             closed: count('shifts', 'WHERE end_time IS NOT NULL'), open: count('shifts', 'WHERE end_time IS NULL'), expenses: count('cash_expenses'),
         };
-        expect(demoCounts.products).toBe(63);
-        expect(demoCounts.variants).toBeGreaterThan(300);
-        expect(demoCounts.sales).toBeGreaterThan(400);
-        expect(demoCounts.returns).toBeGreaterThan(10);
+        expect(demoCounts.products).toBe(26);
+        expect(count('product_variants')).toBe(0);
+        expect(demoCounts.sales).toBeGreaterThan(1000);
+        expect(demoCounts.returns).toBeGreaterThan(3);
         expect(demoCounts.credit).toBeGreaterThan(10);
         expect(demoCounts.creditPayments).toBeGreaterThan(3);
         expect(demoCounts.employees).toBe(3);
         expect(demoCounts.customers).toBe(10);
         expect(demoCounts.suppliers).toBe(4);
         expect(demoCounts.receivings).toBe(3);
-        expect(demoCounts.closed).toBe(90);
+        expect(demoCounts.closed).toBe(60);
         expect(demoCounts.open).toBe(1);
-        expect(demoCounts.expenses).toBeGreaterThan(10);
-        // Sales spread over three months
+        expect(demoCounts.expenses).toBeGreaterThan(5);
+        // Sales spread over two months
         const span = api.get('SELECT julianday(MAX(created_at)) - julianday(MIN(created_at)) AS days FROM sales').days;
-        expect(span).toBeGreaterThan(85);
+        expect(span).toBeGreaterThan(55);
         // Every article has a local picture, the shop its logo
         const images = api.all('SELECT image_path FROM products');
         expect(images.every(r => r.image_path && fs.existsSync(path.join(dir, 'demo', 'images', r.image_path)))).toBe(true);
         expect(fs.existsSync(path.join(dir, 'images', images[0].image_path))).toBe(false);
-        // Stock: some sizes sold out, some running low, none negative
-        expect(count('product_variants', 'WHERE stock_quantity = 0')).toBeGreaterThan(5);
-        expect(count('product_variants', 'WHERE stock_quantity BETWEEN 1 AND 2')).toBeGreaterThan(5);
-        expect(count('product_variants', 'WHERE stock_quantity < 0')).toBe(0);
-        // Every variant has its SKU and its own barcode
-        expect(count('product_variants', "WHERE sku IS NULL OR sku = '' OR barcode IS NULL")).toBe(0);
-        expect(api.get('SELECT COUNT(DISTINCT barcode) AS n FROM product_variants').n).toBe(demoCounts.variants);
+        // Stock: some articles sold out or running low, none negative
+        expect(count('products', 'WHERE stock_quantity = 0')).toBeGreaterThan(0);
+        expect(count('products', 'WHERE stock_quantity < 0')).toBe(0);
+        // Every article sold by the piece has its own barcode; the weighed ones a scale number
+        expect(count('products', "WHERE unit = 'piece' AND (barcode IS NULL OR barcode = '')")).toBe(0);
+        expect(count('products', "WHERE unit = 'kg' AND plu IS NULL")).toBe(0);
+    });
+
+    it('the owner opens the demo and sells at once: today\'s drawer is the owner\'s', () => {
+        // In a hanout the owner is at the counter: logging in as the owner never meets another person's open drawer
+        const open = api.all('SELECT employee_id FROM shifts WHERE end_time IS NULL');
+        expect(open).toEqual([{ employee_id: 'demo-admin' }]);
+    });
+
+    it('the grocery is all there: by weight, by the carton, official prices, distributors\' days, Ramadan basket', () => {
+        // Vegetables by weight: stock in grams, lines with their weight
+        expect(count('products', "WHERE unit = 'kg'")).toBe(4);
+        expect(count('sale_items', "WHERE sold_as = 'weight' AND weight_grams > 0 AND quantity = 1")).toBeGreaterThan(100);
+        // Cartons: their own barcode, some sold as cartons at the carton price
+        expect(count('product_barcodes', "WHERE kind = 'carton'")).toBe(count('products', 'WHERE carton_qty IS NOT NULL'));
+        expect(count('sale_items', "WHERE sold_as = 'carton' AND discount > 0")).toBeGreaterThan(3);
+        // Milk, bread, oil, sugar, semolina at their official price, never above it
+        expect(count('products', 'WHERE capped_price IS NOT NULL')).toBe(6);
+        expect(api.get(`SELECT COUNT(*) AS n FROM sale_items si JOIN products p ON p.id = si.product_id
+                        WHERE p.capped_price IS NOT NULL AND si.weight_grams IS NULL AND si.unit_price > p.capped_price`).n).toBe(0);
+        // The distributors come on their days
+        expect(count('supplier_visits')).toBe(4);
+        expect(JSON.parse(api.get("SELECT weekdays FROM supplier_visits WHERE supplier_id = 'demo-sup-1'").weekdays)).toEqual([0, 2, 4]);
+        // The Ramadan basket for the associations
+        expect(count('bundles')).toBe(1);
+        expect(count('bundle_items')).toBe(5);
     });
 
     it('the demo figures add up like real ones (reports, dashboard, kridi, drawers)', () => {
         const stats = salesStats.salesStats(api, RANGE);
-        expect(stats.total_revenue).toBeGreaterThan(1000000);
+        expect(stats.total_revenue).toBeGreaterThan(200000);
         expect(stats.total_refunds).toBeGreaterThan(0);
         expect(dashboard.bestSellers(api, RANGE).products.length).toBeGreaterThan(3);
         // Kridi: each customer's balance is what is still owed on their tickets
@@ -112,7 +135,7 @@ describe('demo shop: its own database, never the shop\'s', () => {
         // (the demo computes it while building; checked here with the program's own formula)
         const shifts = new ShiftService();
         const closed = api.all('SELECT id FROM shifts WHERE end_time IS NOT NULL');
-        expect(closed.length).toBe(90);
+        expect(closed.length).toBe(60);
         for (const s of closed) {
             const st = shifts.getShiftStats(s.id);
             const d = st.cash_difference;
@@ -129,48 +152,27 @@ describe('demo shop: its own database, never the shop\'s', () => {
         expect(pinService.verifyPin(staff.find(s => s.id === 'demo-seller').pin, '3333')).toBe(true);
     });
 
-    it('every screen has something to show: add-ons, gift cards and avoirs, packs, reservations, exchanges, count, markdowns, website orders, loyalty', () => {
+    it('every screen has something to show: add-ons, both sellers, loyalty; the figures check finds nothing wrong', () => {
         const features = JSON.parse(api.get("SELECT value FROM settings WHERE key = 'features'").value);
-        expect(features).toMatchObject({ giftCards: true, charges: true, commissions: true, website: true, bundles: true });
+        expect(features).toMatchObject({ charges: true, commissions: true, bundles: true, credit: true });
         // Both sellers sold (the employee of the month compares them), each with a rule and a goal
         const bySeller = api.all("SELECT employee_id, COUNT(*) AS n FROM sales WHERE employee_id IN ('demo-cashier', 'demo-seller') GROUP BY employee_id");
         expect(bySeller.length).toBe(2);
         expect(bySeller.every(r => r.n > 50)).toBe(true);
         expect(count('employee_commissions')).toBe(2);
-        expect(count('shop_charges', 'WHERE is_active = 1')).toBe(6);
-        // Gift cards: one used little by little, one spent, one untouched; and the avoirs of two returns
-        expect(count('gift_cards', "WHERE COALESCE(kind, 'gift') = 'gift'")).toBe(3);
-        expect(count('gift_card_transactions', "WHERE type = 'redeem'")).toBeGreaterThanOrEqual(2);
-        expect(count('gift_cards', "WHERE kind = 'store_credit'")).toBe(2);
-        for (const g of api.all('SELECT id, initial_balance, current_balance FROM gift_cards')) {
-            const spent = api.get("SELECT COALESCE(SUM(amount), 0) AS n FROM gift_card_transactions WHERE gift_card_id = ? AND type = 'redeem'", [g.id]).n;
-            expect(Math.round(g.initial_balance - spent)).toBe(Math.round(g.current_balance));
-        }
-        expect(count('payments', "WHERE method = 'gift_card'")).toBeGreaterThanOrEqual(2);
-        expect(count('bundles')).toBe(3);
-        expect(count('reservations', "WHERE status = 'open'")).toBe(2);
-        expect(count('exchanges')).toBe(2);
-        expect(count('stock_counts', "WHERE status = 'confirmed'")).toBe(1);
-        expect(count('markdowns')).toBe(2);
-        // The website: created, nine orders at every step, two paid (two sales), one parcel back
-        expect(JSON.parse(api.get("SELECT value FROM settings WHERE key = 'website'").value).created).toBe(true);
-        expect(count('website_orders')).toBe(9);
-        expect(count('website_orders', "WHERE status = 'money_received' AND sale_id IS NOT NULL")).toBe(2);
-        expect(count('sales', "WHERE notes LIKE 'website:%'")).toBe(2);
-        expect(count('website_orders', "WHERE status = 'returned'")).toBe(1);
-        expect(count('website_orders', "WHERE status = 'new'")).toBe(2);
-        // Loyalty: the customers' points are those of their tickets, less what came back
-        expect(api.get('SELECT SUM(loyalty_points) AS n FROM customers').n).toBeGreaterThan(100);
+        expect(count('shop_charges', 'WHERE is_active = 1')).toBe(4);
+        // Loyalty: the customers' points are those of their tickets
+        expect(api.get('SELECT SUM(loyalty_points) AS n FROM customers').n).toBeGreaterThan(50);
         // And "Check the figures" finds nothing wrong in all of it
         const report = require('../electron/services/integrityService').check(api);
         expect(report.ok, JSON.stringify(report.checks.filter(c => !c.ok))).toBe(true);
     });
 
     it('selling, kridi and stock changes in the demo stay in the demo file', () => {
-        const variant = api.get('SELECT * FROM product_variants WHERE stock_quantity > 2 LIMIT 1');
+        const article = api.get("SELECT * FROM products WHERE stock_quantity > 2 AND unit = 'piece' LIMIT 1");
         api.transaction(() => {
             api.run("INSERT INTO sales (id, receipt_number, subtotal, total, status) VALUES ('demo-test-sale', 'T-1', 1000, 1000, 'completed')");
-            catalog.adjustStock(api, { productId: variant.product_id, variantId: variant.id, delta: -1, type: 'sale' });
+            catalog.adjustStock(api, { productId: article.id, delta: -1, type: 'sale' });
             api.run("INSERT INTO customers (id, name) VALUES ('demo-test-customer', 'Test')");
         });
         expect(count('sales')).toBe(demoCounts.sales + 1);
@@ -182,7 +184,7 @@ describe('demo shop: its own database, never the shop\'s', () => {
         expect(init.isDemo()).toBe(true);
         expect(api.get("SELECT id FROM customers WHERE id = 'demo-test-customer'")).toBe(null);
         expect(api.get("SELECT id FROM sales WHERE id = 'demo-test-sale'")).toBe(null);
-        expect(count('products')).toBe(63);
+        expect(count('products')).toBe(26);
         expect(count('sales')).toBeGreaterThan(400);
         expect(realHash()).toBe(realBefore.hash);
     });
@@ -213,7 +215,7 @@ describe('demo shop: its own database, never the shop\'s', () => {
         const again = await demo.enter({ lang: 'fr' });
         expect(again.created).toBe(false);
         expect(api.get("SELECT id FROM sales WHERE id = 'real-sale-2'")).toBe(null);
-        expect(count('products')).toBe(63);
+        expect(count('products')).toBe(26);
         expect(realHash()).toBe(afterReal);
         await demo.exit();
         expect(api.get("SELECT id FROM sales WHERE id = 'real-sale-2'")).not.toBe(null);
@@ -237,36 +239,5 @@ describe('demo shop: its own database, never the shop\'s', () => {
         init.setProfile('real');
         expect(init.getDataRoot()).toBe(dir);
         expect(() => init.setProfile('other')).toThrow();
-    });
-});
-
-describe('online store with the demo shop', () => {
-    function manager({ demoActive }) {
-        const handlers = {};
-        const m = new EcommerceSyncManager({
-            store: { runQuery: () => [], getOne: () => null, runInsert: () => ({}) },
-            adapters: {}, isEnabled: () => true, ipcMain: { handle: (channel, fn) => { handlers[channel] = fn; } },
-        });
-        m.init({ isDemo: () => demoActive });
-        return { m, call: (channel, ...args) => handlers[channel](null, ...args) };
-    }
-
-    it('nothing is sent or linked while the demo shop is open', async () => {
-        const { m, call } = manager({ demoActive: true });
-        expect(m.blockedReason()).toBe('DEMO_ACTIVE');
-        expect((await m.syncAll()).message).toMatch(/^DEMO_ACTIVE/);
-        expect((await m.syncConnection('x')).message).toMatch(/^DEMO_ACTIVE/);
-        for (const channel of ['ecommerce:addConnection', 'ecommerce:testConnection', 'ecommerce:removeConnection', 'ecommerce:autoMapProducts', 'ecommerce:createMapping', 'ecommerce:deleteMapping', 'ecommerce:oauth:start', 'ecommerce:oauth:complete', 'ecommerce:webhookEvent']) {
-            const result = await call(channel, {});
-            expect(result.success, channel).toBe(false);
-            expect(result.message, channel).toMatch(/^DEMO_ACTIVE/);
-        }
-        m.stopScheduledSync?.();
-    });
-
-    it('the real shop is not blocked', async () => {
-        const { m } = manager({ demoActive: false });
-        expect(m.blockedReason()).toBe(null);
-        m.stopScheduledSync?.();
     });
 });

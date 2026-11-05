@@ -1,6 +1,6 @@
 // [English, French, Arabic]
 export default {
-    'dashboard.shop': ["Whole shop", "Toute la boutique", "كل المحل"],
+    'dashboard.shop': ["Whole shop", "Tout le magasin", "كل المحل"],
     'dashboard.mine': ["My sales", "Mes ventes", "مبيعاتي"],
     'dashboard.todaySales': ["Today's sales", "Ventes du jour", "مبيعات اليوم"],
     'dashboard.todayTransactions': ["Sales today", "Tickets aujourd'hui", "عدد التذاكر اليوم"],
@@ -14,11 +14,8 @@ export default {
     'dashboard.revenue': ["Sales", "Ventes", "المبيعات"],
     'dashboard.noSales': ["No sales yet", "Pas encore de ventes", "لا توجد مبيعات بعد"],
     'dashboard.topProducts': ["Top articles (month)", "Top articles (mois)", "أكثر السلع مبيعاً (الشهر)"],
-    'dashboard.topSizes': ["Top sizes", "Top tailles", "أكثر المقاسات مبيعاً"],
-    'dashboard.topColors': ["Top colours", "Top couleurs", "أكثر الألوان مبيعاً"],
     'dashboard.lowStock': ["Low stock", "Stock faible", "مخزون منخفض"],
     'dashboard.seeAll': ["See all", "Tout voir", "عرض الكل"],
-    'dashboard.noLowStock': ["No colour or size is running low", "Aucune couleur/taille en rupture", "لا يوجد لون أو مقاس على وشك النفاد"],
     'dashboard.recentSales': ["Latest sales", "Dernières ventes", "آخر المبيعات"],
     'dashboard.noSalesToday': ["No sales today", "Aucune vente aujourd'hui", "لا توجد مبيعات اليوم"],
     'dashboard.paymentsMonth': ["Payments this month", "Paiements du mois", "الدفعات هذا الشهر"],

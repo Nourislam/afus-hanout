@@ -55,6 +55,10 @@ const COLOR_CODES = {
  * Normalize a scanned or typed identifier: trim, drop control characters and
  * upper-case it. Identifiers are matched case-insensitively.
  */
+function tableExists(api, table) {
+    return !!api.get("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", [table]);
+}
+
 function normalizeCode(code) {
     if (code === null || code === undefined) return '';
     // eslint-disable-next-line no-control-regex
@@ -147,7 +151,68 @@ function findIdentifierOwner(api, code, { excludeVariantId = null, excludeProduc
     `, [normalized, normalized, excludeProductId, excludeProductId]);
     if (product) return { type: 'product', ...product };
 
+    // Another barcode of an article (its carton's code...)
+    if (tableExists(api, 'product_barcodes')) {
+        const extra = api.get(`
+            SELECT b.product_id, b.kind, p.name AS product_name FROM product_barcodes b
+            LEFT JOIN products p ON p.id = b.product_id
+            WHERE UPPER(b.barcode) = ? AND (? IS NULL OR b.product_id <> ?)
+            LIMIT 1
+        `, [normalized, excludeProductId, excludeProductId]);
+        if (extra) return { type: 'barcode', ...extra };
+    }
+
     return null;
+}
+
+/** Grocery fields of the article form, checked before anything is written. */
+function checkGroceryFields(api, product) {
+    const cap = Number(product.capped_price);
+    if (cap > 0 && Number(product.price) > cap + 0.005) {
+        throw codedError('PRICE_ABOVE_CAP', { product: String(product.name).trim(), cap });
+    }
+    const plu = parseInt(product.plu, 10);
+    if (plu > 0 && api.get('SELECT id FROM products WHERE plu = ? AND id <> ?', [plu, product.id])) {
+        const owner = api.get('SELECT name FROM products WHERE plu = ? AND id <> ?', [plu, product.id]);
+        throw codedError('ID_TAKEN', { field: 'plu', value: String(plu), owner: owner.name });
+    }
+    const cartonCode = normalizeCode(product.carton_barcode);
+    if (cartonCode) {
+        // The article's own barcode would be found first: its carton could never be scanned
+        if (cartonCode === normalizeCode(product.barcode)) {
+            throw codedError('ID_TAKEN', { field: 'carton_barcode', value: cartonCode, owner: String(product.name || '').trim() });
+        }
+        const owner = findIdentifierOwner(api, cartonCode, { excludeProductId: product.id });
+        if (owner) throw codedError('ID_TAKEN', { field: 'carton_barcode', value: cartonCode, owner: describeOwner(owner) });
+    }
+}
+
+/** Grocery fields of the article, written when the form sends them. */
+function saveGroceryFields(api, product) {
+    const set = (column, value) => api.run(`UPDATE products SET ${column} = ? WHERE id = ?`, [value, product.id]);
+    if (product.unit !== undefined) set('unit', product.unit === 'kg' ? 'kg' : 'piece');
+    let cartonQty = null;
+    if (product.carton_qty !== undefined) {
+        const qty = parseInt(product.carton_qty, 10);
+        cartonQty = qty >= 2 ? qty : null;
+        set('carton_qty', cartonQty);
+        const price = Number(product.carton_price);
+        set('carton_price', cartonQty && price > 0 ? price : null);
+    }
+    if (product.plu !== undefined) {
+        const plu = parseInt(product.plu, 10);
+        set('plu', plu > 0 ? plu : null);
+    }
+    if (product.capped_price !== undefined) {
+        const cap = Number(product.capped_price);
+        set('capped_price', cap > 0 ? cap : null);
+    }
+    if (product.carton_barcode !== undefined && tableExists(api, 'product_barcodes')) {
+        api.run("DELETE FROM product_barcodes WHERE product_id = ? AND kind = 'carton'", [product.id]);
+        const code = normalizeCode(product.carton_barcode);
+        const hasCarton = cartonQty !== null || (product.carton_qty === undefined && api.get('SELECT carton_qty FROM products WHERE id = ?', [product.id])?.carton_qty);
+        if (code && hasCarton) api.run("INSERT INTO product_barcodes (barcode, product_id, kind) VALUES (?, ?, 'carton')", [code, product.id]);
+    }
 }
 
 function describeOwner(owner) {
@@ -426,6 +491,9 @@ function recomputeProductStock(api, productId) {
  * Move stock for a product or one of its variants and record it in
  * inventory_logs. `delta` is positive to add stock and negative to remove it.
  * Products that have variants must always be moved through a variant.
+ *
+ * @param {object} api
+ * @param {{ productId?: string|null, variantId?: string|null, delta: number, type: string, reason?: string|null, employeeId?: string|null }} move
  */
 function adjustStock(api, { productId, variantId = null, delta, type, reason = null, employeeId = null }) {
     const change = parseInt(delta, 10);
@@ -550,6 +618,11 @@ function productImages(row) {
  *              stock_quantity, min_stock_level, is_active }]
  *           Variants missing from the list are deactivated, never deleted, so
  *           sales history and printed labels keep pointing at a real record.
+ *
+ * @param {object} api
+ * @param {Record<string, any>} product
+ * @param {object[]} [variants]
+ * @param {{ employeeId?: string|null, isNew?: boolean }} [options]
  */
 function saveProduct(api, product, variants = [], { employeeId = null, isNew = false } = {}) {
     if (!product || !product.id) throw new Error('Product id is required');
@@ -571,16 +644,17 @@ function saveProduct(api, product, variants = [], { employeeId = null, isNew = f
     const productBarcode = normalizeCode(product.barcode) || null;
     if (productSku) {
         const owner = findIdentifierOwner(api, productSku, { excludeProductId: product.id });
-        if (owner && !(owner.type === 'variant' && owner.product_id === product.id)) {
+        if (owner && !(['variant', 'barcode'].includes(owner.type) && owner.product_id === product.id)) {
             throw codedError('ID_TAKEN', { field: 'sku', value: productSku, owner: describeOwner(owner) });
         }
     }
     if (productBarcode) {
         const owner = findIdentifierOwner(api, productBarcode, { excludeProductId: product.id });
-        if (owner && !(owner.type === 'variant' && owner.product_id === product.id)) {
+        if (owner && !(['variant', 'barcode'].includes(owner.type) && owner.product_id === product.id)) {
             throw codedError('ID_TAKEN', { field: 'barcode', value: productBarcode, owner: describeOwner(owner) });
         }
     }
+    checkGroceryFields(api, product);
 
     const errors = validateVariants(api, product.id, prepared);
     if (errors.length) {
@@ -629,11 +703,8 @@ function saveProduct(api, product, variants = [], { employeeId = null, isNew = f
             const wholesale = Number(product.wholesale_price);
             api.run('UPDATE products SET wholesale_price = ? WHERE id = ?', [wholesale > 0 ? wholesale : null, product.id]);
         }
-        // On the shop's website or not, when the form sends it (a new article is shown)
-        if (product.show_on_website !== undefined) {
-            const shown = !(product.show_on_website === false || product.show_on_website === 0);
-            api.run('UPDATE products SET show_on_website = ? WHERE id = ?', [shown ? 1 : 0, product.id]);
-        }
+        // Unit, carton, scale number, official price (grocery fields), when the form sends them
+        saveGroceryFields(api, product);
 
         // Simple product: stock is kept on the product itself
         if (!hasVariants) {
@@ -774,7 +845,27 @@ function lookupCode(api, code, { articleScope = false } = {}) {
         }
         return { type: 'product', product };
     }
+
+    // Another barcode of the article: one more piece code, or its carton's code
+    const extra = tableExists(api, 'product_barcodes')
+        ? api.get('SELECT product_id, kind FROM product_barcodes WHERE UPPER(barcode) = ?', [normalized])
+        : null;
+    if (extra) {
+        const product = api.get(productSelect, [extra.product_id]);
+        if (product && product.is_active) return extra.kind === 'carton' ? { type: 'product', product, carton: true } : { type: 'product', product };
+    }
     return null;
+}
+
+/** The article sold by weight that has this PLU (the scale's number for it). */
+function lookupPlu(api, plu) {
+    const n = parseInt(String(plu ?? '').trim(), 10);
+    if (!(n > 0) || String(n) !== String(plu ?? '').trim().replace(/^0+(?=\d)/, '')) return null;
+    const product = api.get(`
+        SELECT p.*, c.name AS category_name, c.color AS category_color
+        FROM products p LEFT JOIN categories c ON c.id = p.category_id
+        WHERE p.plu = ? AND p.is_active = 1`, [n]);
+    return product ? { type: 'product', product } : null;
 }
 
 /** Point a variant's QR code at its current SKU (used after a SKU change). */
@@ -821,6 +912,7 @@ function getLowStock(api) {
 
 module.exports = {
     coded,
+    lookupPlu,
     codedError,
     normalizeCode,
     validateIdentifier,

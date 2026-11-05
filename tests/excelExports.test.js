@@ -57,17 +57,18 @@ describe('the stock file', () => {
         const top = [1, 2, 3, 4, 5, 6, 7].map(n => String(ws.getRow(n).getCell(1).value ?? ws.getRow(n).getCell(2).value ?? '')).join(' | ');
         expect(top).toContain(api.get("SELECT value FROM settings WHERE key = 'store_config'") ? JSON.parse(api.get("SELECT value FROM settings WHERE key = 'store_config'").value).businessName : '');
         expect(top).toContain('س.ت: \u202A16/00-1234567B22\u202C');
-        expect(top).toContain('المخزون مقاسًا بمقاس مع قيمته');
+        expect(top).toContain('المخزون سلعة بسلعة مع قيمته');
         const { header } = table(ws, 'الرقم');
         expect(ws.views[0]).toMatchObject({ state: 'frozen', ySplit: header });
         expect(ws.autoFilter).toBeTruthy();
     });
 
-    it('each size: name, QR, codes, quantity, purchase and sale price, totals as formulas = the program figures', async () => {
+    it('each article: name, codes, pieces or kg, purchase and sale price, totals as formulas = the program figures', async () => {
         const { wb } = await open('stock');
         const ws = wb.getWorksheet('المخزون');
         const { header, labels, cell } = table(ws, 'الرقم');
-        expect(labels).toEqual(['الرقم', 'الصنف', 'السلعة', 'الماركة', 'اللون', 'المقاس', 'رمز QR', 'المرجع (SKU)', 'الباركود', 'الكمية',
+        // A grocery: no brand, colour, size or QR; pieces and kilograms in their own columns
+        expect(labels).toEqual(['الرقم', 'الصنف', 'السلعة', 'المرجع (SKU)', 'الباركود', 'PLU', 'القطع', 'الوزن (كغ)',
             'سعر الشراء للوحدة', 'سعر البيع للوحدة', 'المجموع بسعر الشراء', 'المجموع بسعر البيع', 'الربح المتوقع']);
         const stock = require('../electron/services/stockService');
         const lines = stock.stockLines(api);
@@ -75,14 +76,16 @@ describe('the stock file', () => {
         // First data row = the first stock line, value = quantity × its purchase price, as a formula
         const first = header + 1;
         expect(cell(first, 'السلعة').value).toBe(lines[0].name);
-        expect(cell(first, 'رمز QR').value).toBe(String(lines[0].qr));
+        expect(cell(first, 'الباركود').value).toBe(String(lines[0].barcode));
         const value = cell(first, 'المجموع بسعر الشراء').value;
-        expect(value.formula).toMatch(/^MAX\(0,J\d+\)\*K\d+$/);
+        expect(value.formula).toMatch(/^MAX\(0,G\d+\+H\d+\)\*I\d+$/);
         expect(value.result).toBe(lines[0].cost_value);
         // Totals row: SUBTOTAL formulas, saved value = the program's total
         const totalRow = header + lines.length + 1;
         expect(cell(totalRow, 'الرقم').value).toBe(`المجموع (${lines.length})`);
-        expect(cell(totalRow, 'الكمية').value).toMatchObject({ formula: `SUBTOTAL(109,J${first}:J${totalRow - 1})`, result: totals.pieces });
+        expect(cell(totalRow, 'القطع').value).toMatchObject({ formula: `SUBTOTAL(109,G${first}:G${totalRow - 1})`, result: totals.pieces });
+        expect(cell(totalRow, 'الوزن (كغ)').value).toMatchObject({ formula: `SUBTOTAL(109,H${first}:H${totalRow - 1})`, result: totals.kg });
+        expect(totals.kg).toBeGreaterThan(0);
         expect(cell(totalRow, 'المجموع بسعر الشراء').value.result).toBe(totals.cost);
         expect(cell(totalRow, 'المجموع بسعر البيع').value.result).toBe(totals.retail);
         expect(cell(totalRow, 'الربح المتوقع').value.result).toBe(totals.margin);
@@ -91,6 +94,22 @@ describe('the stock file', () => {
         expect([home.cost, home.retail, home.units]).toEqual([totals.cost, totals.retail, totals.pieces]);
         // Money in dinars, zero as "-"
         expect(cell(first, 'سعر البيع للوحدة').numFmt).toMatch(/"د.ج";.*"-"$/);
+    });
+
+    it('an article sold by weight: its stock in kg, valued kg × price per kg', async () => {
+        const { wb } = await open('stock');
+        const ws = wb.getWorksheet('المخزون');
+        const { header, cell } = table(ws, 'الرقم');
+        const stock = require('../electron/services/stockService');
+        const lines = stock.stockLines(api);
+        const at = lines.findIndex(l => l.unit === 'kg' && l.quantity > 0);
+        expect(at).toBeGreaterThanOrEqual(0);
+        const row = header + 1 + at;
+        expect(cell(row, 'السلعة').value).toBe(lines[at].name);
+        expect(cell(row, 'الوزن (كغ)').value).toBe(lines[at].quantity / 1000);
+        expect(cell(row, 'الوزن (كغ)').numFmt).toMatch(/^#,##0\.000/);
+        expect(cell(row, 'القطع').value).toBeNull();
+        expect(cell(row, 'المجموع بسعر الشراء').value.result).toBe(lines[at].cost_value);
     });
 
     it('a second sheet per category adds up to the same totals', async () => {
@@ -130,7 +149,7 @@ describe('the other files', () => {
         const ws = wb.worksheets[0];
         const { header, cell } = table(ws, 'التاريخ');
         const line = cell(header + 1, 'مجموع السطر').value;
-        expect(line.formula).toMatch(/^I\d+\*J\d+-K\d+$/);
+        expect(line.formula).toMatch(/^H\d+\*I\d+-J\d+$/);
         const sold = api.get(`SELECT ROUND(SUM(si.total), 2) AS t FROM sale_items si JOIN sales s ON s.id = si.sale_id WHERE COALESCE(s.status, 'completed') NOT IN ('voided', 'cancelled')`).t;
         let n = header + 1;
         while (!String(cell(n, 'التاريخ').value ?? '').startsWith('المجموع')) n += 1;
@@ -260,7 +279,7 @@ describe('importing back', () => {
             const fromExample = excel.validateAndTransform(sample, found.mappings, type);
             expect(fromExample.errors, `${type} ${lang}`).toEqual([]);
             expect(fromExample.valid.length, `${type} ${lang}`).toBe(sample.length);
-            if (type === 'products' && lang === 'ar') expect(fromExample.valid[0].name).toBe('سروال جينز');
+            if (type === 'products' && lang === 'ar') expect(fromExample.valid[0].name).toBe('سميد 1 كغ');
         }
     });
 
@@ -292,26 +311,34 @@ describe('importing back', () => {
         await wb.xlsx.load(file.buffer);
         const ws = wb.getWorksheet('المخزون');
         const { header, cell } = table(ws, 'الرقم');
-        const qr = cell(header + 1, 'رمز QR').value;
-        const before = cell(header + 1, 'الكمية').value;
-        cell(header + 1, 'الكمية').value = before + 3; // three more on the shelf than the program thinks
-        const sheet = excel.readCountedSheet(Buffer.from(await wb.xlsx.writeBuffer()));
-        expect(sheet.found).toBe(true);
         const stock = require('../electron/services/stockService');
         const lines = stock.stockLines(api);
+        const piece = lines.findIndex(l => l.unit === 'piece' && l.quantity > 0 && l.barcode);
+        const weighed = lines.findIndex(l => l.unit === 'kg' && l.plu && !l.barcode);
+        const code = cell(header + 1 + piece, 'الباركود').value;
+        const before = cell(header + 1 + piece, 'القطع').value;
+        cell(header + 1 + piece, 'القطع').value = before + 3; // three more on the shelf than the program thinks
+        // Sold by weight: counted in kg in the file, kept in grams
+        // No barcode on loose tomatoes: the file names them by their PLU
+        const weighedPlu = cell(header + 1 + weighed, 'PLU').value;
+        expect(weighedPlu).toBe(lines[weighed].plu);
+        const weighedBefore = lines[weighed].quantity;
+        cell(header + 1 + weighed, 'الوزن (كغ)').value = (weighedBefore + 1500) / 1000;
+        const sheet = excel.readCountedSheet(Buffer.from(await wb.xlsx.writeBuffer()));
+        expect(sheet.found).toBe(true);
         expect(sheet.rows.length).toBe(lines.length); // every line, the totals row is not one
-        const withoutCode = lines.filter(l => !(l.qr || l.sku || l.barcode)).length;
+        const withoutCode = lines.filter(l => !(l.qr || l.sku || l.barcode || l.plu)).length;
         const open = counts.currentCount(api) || counts.startCount(api, {});
         const result = counts.importCounted(api, open.id, [...sheet.rows, { row: 999, code: 'NO-SUCH-CODE', quantity: '2' }]);
         expect(result.set).toBe(lines.length - withoutCode);
         // A line without a code is named, not dropped in silence
         expect(result.problems.filter(p => p.error === 'COUNT_NO_CODE').length).toBe(withoutCode);
         expect(result.problems.filter(p => p.error !== 'COUNT_NO_CODE')).toEqual([{ row: 999, code: 'NO-SUCH-CODE', error: 'COUNT_CODE_UNKNOWN', params: { code: 'NO-SUCH-CODE' } }]);
-        const counted = counts.countLines(api, open.id).find(l => [l.qr_code, l.sku, l.barcode].includes(qr));
-        expect(counted?.counted).toBe(before + 3);
+        const of = (productId) => counts.countLines(api, open.id).find(l => l.product_id === productId);
+        expect(of(lines.find(x => x.barcode === code).product_id)?.counted).toBe(before + 3);
+        expect(of(lines[weighed].product_id)?.counted).toBe(weighedBefore + 1500);
         const changed = counts.countLines(api, open.id).filter(l => l.counted !== l.expected);
-        expect(changed.length).toBe(1);
-        expect(changed[0].counted - changed[0].expected).toBe(3);
+        expect(changed.map(l => l.counted - l.expected).sort((a, b) => a - b)).toEqual([3, 1500]);
         counts.cancelCount(api, open.id);
     });
 });

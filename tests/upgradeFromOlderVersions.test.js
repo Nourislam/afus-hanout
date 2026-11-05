@@ -67,6 +67,7 @@ describe('a shop that installs the new version over an older one', () => {
         const old = new SQL.Database(file);
         const before = Object.fromEntries(old.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")[0].values
             .map(([t]) => [t, old.exec(`SELECT COUNT(*) FROM ${t}`)[0].values[0][0]]));
+        const oldBrands = before.brands ? old.exec('SELECT name FROM brands')[0]?.values.map(([n]) => String(n)) || [] : [];
         old.close();
         expect(before.sales, 'the old shop has a sale').toBeGreaterThan(0);
 
@@ -80,8 +81,18 @@ describe('a shop that installs the new version over an older one', () => {
             expect(now.columns).toEqual(fresh.columns);
             expect(now.indexes).toEqual(fresh.indexes);
 
-            const lost = Object.entries(before).filter(([t, n]) => api.get(`SELECT COUNT(*) AS n FROM ${t}`).n < n);
+            // Afus Hanout has no online store: those tables are removed on purpose
+            // (migration 2026_11_hanout_no_online_store); every other table keeps its rows
+            const REMOVED = /^ecommerce_/;
+            expect(api.all("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'ecommerce_%'")).toEqual([]);
+            const lost = Object.entries(before).filter(([t, n]) => !REMOVED.test(t) && t !== 'brands' && api.get(`SELECT COUNT(*) AS n FROM ${t}`).n < n);
             expect(lost).toEqual([]);
+            // Brands: only the clothing brands of the old seed that no article names are removed
+            // (migration 2026_11_hanout_no_clothing_brands); every other brand is kept
+            const seed = new Set(require('../electron/shared/clothing.json').brands.map(b => b.toLowerCase()));
+            const named = new Set(api.all("SELECT DISTINCT LOWER(TRIM(brand)) AS b FROM products WHERE brand IS NOT NULL").map(r => r.b));
+            const brandsNow = new Set(api.all('SELECT name FROM brands').map(r => r.name.toLowerCase()));
+            expect(oldBrands.filter(b => (!seed.has(b.toLowerCase()) || named.has(b.toLowerCase())) && !brandsNow.has(b.toLowerCase()))).toEqual([]);
 
             expect(integrity.check(api).checks.filter(c => !c.ok)).toEqual([]);
         } finally {
