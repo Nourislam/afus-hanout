@@ -179,6 +179,10 @@ function checkGroceryFields(api, product) {
     }
     const cartonCode = normalizeCode(product.carton_barcode);
     if (cartonCode) {
+        // The article's own barcode would be found first: its carton could never be scanned
+        if (cartonCode === normalizeCode(product.barcode)) {
+            throw codedError('ID_TAKEN', { field: 'carton_barcode', value: cartonCode, owner: String(product.name || '').trim() });
+        }
         const owner = findIdentifierOwner(api, cartonCode, { excludeProductId: product.id });
         if (owner) throw codedError('ID_TAKEN', { field: 'carton_barcode', value: cartonCode, owner: describeOwner(owner) });
     }

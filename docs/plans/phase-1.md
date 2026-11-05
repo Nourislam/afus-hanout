@@ -65,5 +65,12 @@ Checks: `npm run lint`, `npm run typecheck`, `npx vitest run` (81 files, 493 tes
 Left for later phases (seen while checking):
 
 - Phase 2: the ticket area is small at 1024 px; Enter in the payment window does not pay the exact amount; the ticket and the subtotal count a weight line as one piece and the printed ticket does not show the weight.
-- Phase 4: reorder suggestions use the quantity of weighed lines; the stock count screen types grams for an article sold by weight (the counted Excel file already reads kg).
+- Phase 4: reorder suggestions and «runs out soon» use the number of weighings of a weighed article, not its grams.
+- Excel sales-lines sheet: its «Quantity» total adds carton pieces and weighings (the line formula needs the 1 of a weighed line); the stock note «pieces without a purchase price» leaves out kg articles.
 - The variant code (colour/size) stays in the program, unreachable from the article form and the import; its texts say «variant» (النوع).
+
+### Code review (2026-11-05)
+
+A review of the grocery code found, and this branch fixes (each with a test): the cashier's discount check reading weighed and carton lines wrong (sales refused); the official price refused at small weights (rounding); the main process trusting the window about units; reservations losing the weight and the carton price (migration `2026_11_hanout_reservation_lines`); exchanges handing out a weighed article; the stock count treating grams as pieces; the import storing a kg minimum in grams as is and reading «7,50» as 750; cart prices not following a wholesale customer for weighed lines and cartons; a carton barcode equal to the article's. The demo's sold-out article could come back on the shelf on some dates (a sellable return): fixed and checked on six dates.
+
+Checks after the fixes: lint, typecheck, 83 test files / 510 tests.

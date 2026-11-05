@@ -89,7 +89,9 @@ function importProducts(api, rows, { employeeId = null } = {}) {
         const product = {
             id: api.uuid(), name: group.name, price: num(r.price), cost: num(r.cost) ?? 0, unit,
             category_id: categoryId(api, r.category), brand: clean(r.brand) || null,
-            description: clean(r.description) || null, min_stock_level: num(r.min_stock_level) ?? 2,
+            description: clean(r.description) || null,
+            // Sold by weight: the minimum in kg too, kept in grams
+            min_stock_level: unit === 'kg' ? Math.round((quantityOf(r.min_stock_level) ?? 2) * 1000) : num(r.min_stock_level) ?? 2,
             tax_rate: num(r.tax_rate) || 0, is_active: true,
             sku: clean(r.sku) || null, barcode: clean(r.barcode) || null,
             // Sold by weight: kept in grams

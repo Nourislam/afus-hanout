@@ -39,7 +39,9 @@ export function ReserveDialog({ isOpen, onClose, onDone }) {
         try {
             const saved = await window.electronAPI.reservations.create({
                 customer_id: cart.customer?.id,
-                items: cart.items.map(i => ({ product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity, unit_price: i.unit_price, product_name: i.product_name, variant_label: i.variant_label })),
+                // A weighed line keeps its weight, a carton its carton price (its discount)
+                items: cart.items.map(i => ({ product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity, unit_price: i.unit_price, product_name: i.product_name, variant_label: i.variant_label,
+                    weight_grams: i.weight_grams || null, sold_as: i.sold_as || null, discount: i.discount || 0 })),
                 deposit: parseFloat(deposit) || 0,
                 deposit_method: 'cash',
                 expires_at: until || null,

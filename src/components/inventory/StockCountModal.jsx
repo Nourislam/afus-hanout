@@ -10,6 +10,7 @@ import { useT } from '../../i18n';
 import { formatMoney, formatDate } from '../../i18n/format';
 import { translateError } from '../../i18n/errors';
 import { variantLabel } from '../../lib/clothing';
+import { weightLabel } from '../../lib/units';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -231,16 +232,18 @@ export default function StockCountModal({ isOpen, onClose, onConfirmed }) {
                                             <tr key={l.id}>
                                                 <td className="p-2"><span className="font-medium">{l.product_name}</span>{(l.color || l.size) && <span className="text-zinc-400"> · {variantLabel(l)}</span>}</td>
                                                 <td className="p-2 text-zinc-400 ltr">{l.sku || '-'}</td>
-                                                <td className="p-2 text-end tabular">{l.expected}</td>
+                                                <td className="p-2 text-end tabular">{l.unit === 'kg' ? weightLabel(l.expected) : l.expected}</td>
                                                 <td className="p-2 text-end">
                                                     {count ? (
-                                                        <input type="number" min="0" defaultValue={l.counted} key={`${l.id}-${l.counted}`}
-                                                            onBlur={(e) => { if (String(l.counted) !== e.target.value) setCounted(l, e.target.value); }}
+                                                        // Sold by weight: the kg found (kept in grams)
+                                                        <input type="number" min="0" step={l.unit === 'kg' ? '0.001' : '1'} defaultValue={l.unit === 'kg' ? l.counted / 1000 : l.counted} key={`${l.id}-${l.counted}`}
+                                                            onBlur={(e) => { if (String(l.unit === 'kg' ? l.counted / 1000 : l.counted) !== e.target.value) setCounted(l, e.target.value); }}
                                                             onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
                                                             className="w-20 bg-zinc-900 border border-dark-border rounded px-2 py-1 text-center" aria-label={t('count.found')} />
-                                                    ) : <span className="tabular">{l.counted}</span>}
+                                                    ) : <span className="tabular">{l.unit === 'kg' ? weightLabel(l.counted) : l.counted}</span>}
+                                                    {count && l.unit === 'kg' && <span className="ms-1 text-xs text-zinc-500">{t('pos.kg')}</span>}
                                                 </td>
-                                                <td className={`p-2 text-end font-semibold tabular ${diffClass(l.difference)}`}>{signed(l.difference)}</td>
+                                                <td className={`p-2 text-end font-semibold tabular ${diffClass(l.difference)}`}>{l.unit === 'kg' ? (l.difference > 0 ? '+' : '') + weightLabel(l.difference) : signed(l.difference)}</td>
                                                 {count && <td className="p-2 text-end"><button type="button" onClick={() => removeLine(l)} className="text-zinc-500 hover:text-red-400" aria-label={t('common.delete')}><Trash2 className="w-4 h-4" /></button></td>}
                                             </tr>
                                         ))}

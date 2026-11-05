@@ -78,6 +78,7 @@ export default {
     'errors.IMPORT_NO_NAME': ["Row without article name", "Ligne sans nom d'article", "صف بدون اسم سلعة"],
     'errors.IMPORT_EXISTS': ["\"{name}\" is already in the shop — edit it in Articles", "« {name} » existe déjà — modifiez-le dans Articles", "«{name}» موجودة في المحل — عدّلها من صفحة السلع"],
     'errors.IMPORT_NO_PRICE': ["\"{name}\": the selling price is missing or wrong", "« {name} » : le prix de vente manque ou est faux", "«{name}»: سعر البيع ناقص أو خاطئ"],
+    'errors.WEIGHT_REQUIRED': ["\"{product}\" is sold by weight: weigh it on the ticket", "« {product} » se vend au poids : pesez-le sur le ticket", "«{product}» يُباع بالوزن: زِنه في التذكرة"],
     'errors.IMPORT_DUPLICATE': ["\"{name}\" appears on several rows: one row per article", "« {name} » apparaît sur plusieurs lignes : une ligne par article", "«{name}» مكررة في عدة صفوف: صف واحد لكل سلعة"],
     'errors.IMPORT_UNIT': ["\"{name}\": «{value}» is not a way of selling: leave it empty (by the piece) or write kg (by weight)", "« {name} » : « {value} » n'est pas une façon de vendre : laissez vide (à la pièce) ou écrivez kg (au poids)", "«{name}»: «{value}» ليست طريقة بيع: اتركها فارغة (بالقطعة) أو اكتب كغ (بالوزن)"],
     'errors.IMPORT_QUANTITY': ["Row {line}: the quantity must be a whole number of pieces, or kg for an article sold by weight (0 or more)", "Ligne {line} : la quantité doit être un nombre entier de pièces, ou des kg pour un article au poids (0 ou plus)", "الصف {line}: الكمية عدد صحيح من القطع، أو كيلوغرامات للسلعة الموزونة (0 أو أكثر)"],

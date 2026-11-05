@@ -724,6 +724,18 @@ const MIGRATIONS = [
             }
         },
     },
+    {
+        // A line put aside keeps how it is sold: its weight, carton, and the
+        // carton price (as its discount), like a sale line
+        version: '2026_11_hanout_reservation_lines',
+        description: 'Weight, way of selling and discount of a reserved line',
+        up(db) {
+            if (!tableExists(db, 'reservation_items')) return;
+            addColumnIfMissing(db, 'reservation_items', 'weight_grams', 'INTEGER');
+            addColumnIfMissing(db, 'reservation_items', 'sold_as', 'TEXT');
+            addColumnIfMissing(db, 'reservation_items', 'discount', 'REAL DEFAULT 0');
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {
