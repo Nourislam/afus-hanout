@@ -31,7 +31,6 @@ export default {
     'pos.changeGiven': ["change {amount}", "monnaie {amount}", "الباقي {amount}"],
     'pos.discountShort': ["Discount", "Remise", "تخفيض"],
     'pos.clear': ["Clear", "Vider", "إفراغ"],
-    'pos.clearConfirm': ["Empty the ticket?", "Vider le ticket ?", "إفراغ التذكرة؟"],
     'pos.shortcuts': ["F2 search · F4 pay · F8 put on hold · F9 tickets on hold", "F2 recherche · F4 encaisser · F8 mettre en attente · F9 tickets en attente", "F2 بحث · F4 تحصيل · F8 تعليق · F9 التذاكر المعلّقة"],
     'pos.linePrice': ["Price for this customer", "Prix pour ce client", "السعر لهذا الزبون"],
     'pos.resetPrice': ["Normal price", "Prix normal", "السعر العادي"],

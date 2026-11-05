@@ -25,7 +25,7 @@ export function Toast({ toast }) {
     // A success may also carry one button ({ label, to }), e.g. "Open" after turning an add-on on
     const action = toast.type === 'error'
         ? (typeof toast.action === 'string' ? ERROR_ACTIONS[toast.action] : toast.action) || actionForCode(codeOfMessage(toast.message))
-        : toast.action?.to ? toast.action : null;
+        : toast.action?.to || toast.action?.run ? toast.action : null;
 
     return (
         <div
@@ -35,7 +35,7 @@ export function Toast({ toast }) {
             <p className="flex-1 text-sm font-medium whitespace-pre-line">{toast.message}</p>
             {action && (
                 <button type="button" data-testid="toast-action"
-                    onClick={() => { window.location.hash = `#${action.to}`; removeToast(toast.id); }}
+                    onClick={() => { if (action.run) action.run(); else window.location.hash = `#${action.to}`; removeToast(toast.id); }}
                     className="flex-shrink-0 rounded-md bg-white/10 px-2.5 py-1 text-xs font-semibold hover:bg-white/20 whitespace-nowrap">
                     {t(action.label)}
                 </button>
@@ -69,7 +69,7 @@ export const toast = {
     // action: one of ERROR_ACTIONS (lib/errorActions.js) or { label, to }; else found from the error's code
     error: (message, duration, action) => useToastStore.getState().error(message, duration ?? (action || actionForCode(codeOfMessage(message)) ? 8000 : undefined), action),
     warning: (message, duration) => useToastStore.getState().warning(message, duration),
-    info: (message, duration) => useToastStore.getState().info(message, duration),
+    info: (message, duration, action) => useToastStore.getState().info(message, duration, action),
     loading: (message) => useToastStore.getState().addToast(message, 'info', 0),
     dismiss: (id) => useToastStore.getState().removeToast(id),
 };

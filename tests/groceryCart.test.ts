@@ -106,4 +106,18 @@ describe('cart with cartons and weighed lines', () => {
         cart().updateItemQuantity(id, 48);
         expect(cart().items[0]).toMatchObject({ cartons: 2, quantity: 48, discount: 0, total: 960 });
     });
+
+    it('undo: a cleared ticket comes back as it was (lines, customer, discount)', () => {
+        cart().addCarton(milk);
+        cart().addWeighed(tomato, 500);
+        cart().setCustomer({ id: 'c1', name: 'Amine' });
+        cart().setDiscount(10, 'fixed');
+        const before = cart().snapshot();
+        cart().clearCart();
+        expect(cart().items).toHaveLength(0);
+        cart().restore(before);
+        expect(cart().items.map(i => i.sold_as)).toEqual(['carton', 'weight']);
+        expect(cart().customer).toMatchObject({ id: 'c1' });
+        expect(cart().discount).toBe(10);
+    });
 });

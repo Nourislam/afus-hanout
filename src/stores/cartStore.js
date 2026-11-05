@@ -426,6 +426,16 @@ export const useCartStore = create((set, get) => ({
     /** Pieces in the cart (a weighed line is grams, not a piece: see lineCounts). */
     getItemCount: () => lineCounts(get().items).pieces,
 
+    /** What the ticket holds now, to put it back with restore (the «تراجع» button). */
+    snapshot: () => {
+        const { items, customer, reservation, discount, discountType, serviceCharge, taxExempt, notes, coupon } = get();
+        return { items, customer, reservation, discount, discountType, serviceCharge, taxExempt, notes, coupon };
+    },
+
+    restore: (snapshot) => {
+        if (snapshot) set({ ...snapshot, lastAddedId: null });
+    },
+
     clearCart: () => {
         set({
             items: [],

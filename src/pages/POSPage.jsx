@@ -64,6 +64,8 @@ function VariantHints({ product }) {
     );
 }
 
+const UNDO_MS = 10000;
+
 function ProductImage({ product, className = '' }) {
     return (
         <div className={`bg-dark-tertiary rounded-lg flex items-center justify-center overflow-hidden ${className}`}>
@@ -227,6 +229,13 @@ export default function POSPage() {
             console.error('Code lookup failed:', error);
             toast.error(t('pos.lookupFailed'));
         }
+    };
+
+    // No confirmation during a sale: do it at once, with «تراجع» for 10 seconds
+    const undoable = (action, message) => {
+        const before = cart.snapshot();
+        action();
+        toast.info(message, UNDO_MS, { label: 'pos.undo', run: () => cart.restore(before) });
     };
 
     const handleProductClick = (product) => {
@@ -647,7 +656,7 @@ export default function POSPage() {
                                         item={item}
                                         canDiscount={canDiscount}
                                         onPrice={(price) => cart.setLinePrice(item.id, price)}
-                                        onRemove={() => { cart.removeItem(item.id); setEditingLine(null); }}
+                                        onRemove={() => { undoable(() => cart.removeItem(item.id), t('pos.lineRemoved', { name: item.product_name })); setEditingLine(null); }}
                                     />
                                 )}
                             </div>
@@ -697,7 +706,7 @@ export default function POSPage() {
                         <Button variant="secondary" onClick={() => setShowReserve(true)} disabled={cart.items.length === 0 || !!cart.reservation} data-testid="pos-reserve">
                             <Bookmark className="w-4 h-4" /> {t('res.reserve')}
                         </Button>
-                        <Button variant="secondary" onClick={() => { if (confirm(t('pos.clearConfirm'))) cart.clearCart(); }} disabled={cart.items.length === 0} className="hover:!bg-red-500/15 hover:!text-red-300">
+                        <Button variant="secondary" onClick={() => undoable(() => cart.clearCart(), t('pos.cleared'))} disabled={cart.items.length === 0} className="hover:!bg-red-500/15 hover:!text-red-300">
                             <Trash2 className="w-4 h-4" /> {t('pos.clear')}
                         </Button>
                     </div>
