@@ -18,6 +18,7 @@ import { localDate } from '../lib/dashboard';
 import { reminderMessage, whatsappLink } from '../lib/whatsapp';
 import { useSettingsStore } from '../stores/settingsStore';
 import { ExportButton } from '../components/ui/ExportButton';
+import KarniList from '../components/credit/KarniList';
 
 export default function CreditSalesPage() {
     const [creditSales, setCreditSales] = useState([]);
@@ -175,6 +176,8 @@ export default function CreditSalesPage() {
             </PageHeader>
 
             <div className="page-body space-y-4">
+                {/* The karni first: who owes what, «خلّص بعض», the statement on WhatsApp */}
+                <KarniList onChanged={loadData} />
                 <div className="grid fit-grid-sm gap-3">
                     {tiles.map(tile => <StatTile key={tile.label} {...tile} />)}
                 </div>

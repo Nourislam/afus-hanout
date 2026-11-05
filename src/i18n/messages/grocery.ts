@@ -76,6 +76,20 @@ const messages: Record<string, [string, string, string]> = {
     'karni.statement.more': ["… and {n} more", "… et {n} autres", "… و{n} أخرى"],
     'karni.statement.left': ["Left to pay: {amount}", "Reste à payer : {amount}", "الباقي: {amount}"],
     'karni.statement.thanks': ["Thank you for your trust; pay when it suits you.", "Merci de votre confiance ; réglez quand cela vous arrange.", "شكراً على ثقتكم، وخلّصوا متى تيسّر لكم."],
+    'karni.title': ["Karni", "Carnet", "الكارني"],
+    'karni.total': ["{n} customer(s) owe {amount}", "{n} client(s) doivent {amount}", "{n} زبون عليهم {amount}"],
+    'karni.search': ["Name or phone…", "Nom ou téléphone…", "الاسم أو الهاتف…"],
+    'karni.none': ["Nobody owes anything", "Personne ne doit rien", "لا أحد عليه شيء"],
+    'karni.since': ["since {date}", "depuis le {date}", "منذ {date}"],
+    'karni.last': ["last {date}", "dernier le {date}", "آخر مرة {date}"],
+    'karni.ceiling': ["ceiling {amount}", "plafond {amount}", "السقف {amount}"],
+    'karni.payPart': ["Pays some", "Paie une partie", "خلّص بعض"],
+    'karni.statement': ["Statement on WhatsApp", "Relevé WhatsApp", "كشف بواتساب"],
+    'karni.payTitle': ["{name} pays", "{name} paie", "{name} يخلّص"],
+    'karni.owes': ["Owes {amount}", "Doit {amount}", "عليه {amount}"],
+    'karni.all': ["Everything", "Tout", "الكل"],
+    'karni.receive': ["Received", "Reçu", "قبضت"],
+    'karni.paid': ["{amount} received, {left} left", "{amount} reçus, reste {left}", "قُبض {amount}، الباقي {left}"],
 };
 
 export default messages;

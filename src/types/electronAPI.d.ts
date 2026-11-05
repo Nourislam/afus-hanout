@@ -17,7 +17,17 @@ export interface LookupResult {
     scale?: { grams: number; price?: number };
 }
 
+export interface KarniBalance {
+    id: string; name: string; phone?: string | null; owed: number; oldest: string; last: string; credit_limit: number;
+}
+
 export interface ElectronAPI {
+    karni: {
+        balances(): Promise<KarniBalance[]>;
+        lines(customerId: string): Promise<{ date: string; left: number; invoice: string }[]>;
+        payPart(input: { customerId: string; amount: number; method?: 'cash' | 'card'; receivedBy?: string | null }): Promise<{ paid: number; left: number }>;
+    };
+    shell: { openExternal(url: string): Promise<{ success?: boolean } | undefined> };
     settings: {
         get(key: string): Promise<unknown>;
         set(args: { key: string; value: unknown }): Promise<unknown>;

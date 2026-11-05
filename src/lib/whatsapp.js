@@ -33,6 +33,7 @@ export function whatsappLink(phone, text) {
 const STATEMENT_LINES = 10;
 
 /**
+ * @param {{ name: string, shop: string, lines?: { date: string, left: number }[], owed: number, lang: string }} input
  * The karni statement, polite and ready to send: greeting, each open debt
  * with its date (the oldest first), what is left, thanks. The owner sends it
  * himself: no automatic reminder, to keep the relationship.
