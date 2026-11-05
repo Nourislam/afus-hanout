@@ -97,7 +97,7 @@ export default function SettingsPage() {
 
     const { isAdmin } = useAuthStore();
     const tabIds = [
-        'business', 'language', 'appearance', 'receipt', 'labelPrinter', 'scanner',
+        'business', 'language', 'appearance', 'receipt', 'labelPrinter', 'scanner', 'scale',
         // What the sales screen offers: the owner's choice
         ...(isAdmin() ? ['posScreen'] : []),
         'sku', 'modules',
