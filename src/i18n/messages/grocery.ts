@@ -71,6 +71,11 @@ const messages: Record<string, [string, string, string]> = {
     'karni.settingsText': ["A new customer has the karni on at this ceiling; change it for each customer on their card", "Un nouveau client a le carnet ouvert jusqu'à ce plafond ; changez-le pour chaque client sur sa fiche", "الزبون الجديد كريديه مفتوح بهذا السقف؛ غيّره لكل زبون من بطاقته"],
     'karni.defaultLimit': ["Ceiling of a new customer (DA)", "Plafond d'un nouveau client (DA)", "سقف الزبون الجديد (دج)"],
     'karni.limitSaved': ["Ceiling saved", "Plafond enregistré", "حُفظ السقف"],
+    'karni.statement.hello': ["Hello {name}, we hope you are well.", "Bonjour {name}, nous espérons que vous allez bien.", "السلام عليكم {name}، نتمنى أنكم بخير."],
+    'karni.statement.intro': ["Your account at {shop}:", "Votre compte chez {shop} :", "هذا كشف حسابكم عند {shop}:"],
+    'karni.statement.more': ["… and {n} more", "… et {n} autres", "… و{n} أخرى"],
+    'karni.statement.left': ["Left to pay: {amount}", "Reste à payer : {amount}", "الباقي: {amount}"],
+    'karni.statement.thanks': ["Thank you for your trust; pay when it suits you.", "Merci de votre confiance ; réglez quand cela vous arrange.", "شكراً على ثقتكم، وخلّصوا متى تيسّر لكم."],
 };
 
 export default messages;
