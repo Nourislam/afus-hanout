@@ -56,6 +56,7 @@ const messages: Record<string, [string, string, string]> = {
     'scale.unknownPlu': ["No article sold by weight has PLU {plu}: give it to the article (Articles › More)", "Aucun article au poids n'a le PLU {plu} : donnez-le à l'article (Articles › Plus)", "لا توجد سلعة بالوزن برقم PLU {plu}: أعطه للسلعة (السلع › المزيد)"],
     'scale.notLabel': ["Not a label of this scale: check the first two digits and the number of PLU digits", "Pas une étiquette de cette balance : vérifiez les deux premiers chiffres et le nombre de chiffres du PLU", "ليس ملصقاً لهذا الميزان: راجع أول رقمين وعدد أرقام PLU"],
     'scale.saved': ["Scale settings saved", "Réglages de la balance enregistrés", "حُفظ إعداد الميزان"],
+    'pos.noBarcode': ["Without a barcode", "Sans code-barres", "بلا باركود"],
 };
 
 export default messages;

@@ -252,6 +252,16 @@ export default function POSPage() {
 
     const quickPicks = useMemo(() => quickIds.map(id => products.find(p => String(p.id) === String(id) && !p.is_bundle)).filter(p => p && p.stock_quantity > 0), [quickIds, products]);
     const showQuick = quickPicks.length > 0 && !searchQuery.trim() && selectedCategory === 'all' && !selectedBrand;
+    // Bread, vegetables, loose goods: no barcode to scan, a big button with its picture
+    // (the best sellers first). A weighed one opens the weight window.
+    const noBarcode = useMemo(() => {
+        const rank = new Map(quickIds.map((id, i) => [String(id), i]));
+        return products
+            .filter(p => !p.is_bundle && !(p.variant_count > 0) && !String(p.barcode || '').trim() && p.stock_quantity > 0)
+            .sort((a, b) => (rank.get(String(a.id)) ?? 99) - (rank.get(String(b.id)) ?? 99) || a.name.localeCompare(b.name))
+            .slice(0, 12);
+    }, [products, quickIds]);
+    const showNoBarcode = noBarcode.length > 0 && !searchQuery.trim() && !selectedBrand && selectedCategory === 'all';
 
     const countByCategory = useMemo(() => {
         const counts = {};
@@ -440,7 +450,23 @@ export default function POSPage() {
                 )}
 
                 <div className="flex-1 overflow-y-auto p-5">
-                    {/* Sold most this week: one press each (the articles without a barcode too) */}
+                    {/* Without a barcode: one press on its picture */}
+                    {showNoBarcode && (
+                        <div className="mb-4" data-testid="pos-no-barcode">
+                            <p className="text-xs font-semibold text-zinc-400 mb-2">{t('pos.noBarcode')}</p>
+                            <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(104px, 1fr))' }}>
+                                {noBarcode.map(product => (
+                                    <button key={product.id} type="button" onClick={() => handleProductClick(product)} data-testid="pos-no-barcode-item"
+                                        className="min-h-[96px] p-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 flex flex-col items-center gap-1 transition-colors">
+                                        <ProductImage product={product} className="w-14 h-14 rounded-lg" />
+                                        <span dir="auto" className="text-sm font-semibold leading-tight line-clamp-1 text-center w-full">{product.name}</span>
+                                        <span className="text-xs text-emerald-300 tabular">{money(product.price)}{perUnit(product)}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {/* Sold most this week: one press each */}
                     {showQuick && (
                         <div className="mb-4" data-testid="pos-quick-picks">
                             <p className="text-xs font-semibold text-zinc-400 mb-2">{t('pos.quickPicks')}</p>
