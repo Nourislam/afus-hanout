@@ -86,4 +86,20 @@ function openLines(api, customerId) {
     return openCredits(api, customerId).map(c => ({ date: c.created_at, left: c.left, invoice: c.invoice_number }));
 }
 
-module.exports = { openCredits, owed, recordPayment, payPart, balances, openLines };
+/** Ceiling of a new customer's karni when the shop has not set one (Settings › Sales screen). */
+const DEFAULT_KARNI_LIMIT = 5000;
+
+/**
+ * Credit of a customer being created: in a hanout the karni is the rule, so
+ * it is on, at the shop's default ceiling. Someone allowed to set credit
+ * (the owner) may say otherwise in the form; anyone else gets the default.
+ * @returns {[number, number]} [credit_enabled, credit_limit]
+ */
+function newCustomerCredit(customer = {}, { allowed = false, defaultLimit } = {}) {
+    const limit = Number(defaultLimit) > 0 ? Number(defaultLimit) : DEFAULT_KARNI_LIMIT;
+    if (!allowed || customer.credit_enabled === undefined || customer.credit_enabled === null) return [1, limit];
+    if (!customer.credit_enabled) return [0, 0];
+    return [1, Number(customer.credit_limit) > 0 ? Number(customer.credit_limit) : limit];
+}
+
+module.exports = { openCredits, owed, recordPayment, payPart, balances, openLines, newCustomerCredit, DEFAULT_KARNI_LIMIT };

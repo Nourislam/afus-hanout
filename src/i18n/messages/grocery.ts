@@ -66,6 +66,11 @@ const messages: Record<string, [string, string, string]> = {
     'pos.cleared': ["Ticket emptied", "Ticket vidé", "أُفرغت التذكرة"],
     'pos.lineRemoved': ["«{name}» removed", "« {name} » retiré", "أُزيلت «{name}»"],
     'pos.undoTooLate': ["The ticket changed since: nothing to undo", "Le ticket a changé depuis : rien à annuler", "تغيّرت التذكرة بعدها: لا شيء للتراجع عنه"],
+    // The karni
+    'karni.settingsTitle': ["Karni (credit book)", "Carnet (crédit)", "الكارني"],
+    'karni.settingsText': ["A new customer has the karni on at this ceiling; change it for each customer on their card", "Un nouveau client a le carnet ouvert jusqu'à ce plafond ; changez-le pour chaque client sur sa fiche", "الزبون الجديد كريديه مفتوح بهذا السقف؛ غيّره لكل زبون من بطاقته"],
+    'karni.defaultLimit': ["Ceiling of a new customer (DA)", "Plafond d'un nouveau client (DA)", "سقف الزبون الجديد (دج)"],
+    'karni.limitSaved': ["Ceiling saved", "Plafond enregistré", "حُفظ السقف"],
 };
 
 export default messages;

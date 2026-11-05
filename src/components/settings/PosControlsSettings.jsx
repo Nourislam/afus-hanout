@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Percent, CreditCard, Smartphone, FileText, Wallet, Star, Coins } from 'lucide-react';
+import { Percent, CreditCard, Smartphone, FileText, Wallet, Star, Coins, BookOpen } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
@@ -50,6 +50,24 @@ export function PosControlsSettings() {
         const value = Math.min(100, Math.max(0, Number(maxDraft) || 0));
         setMaxDraft(String(value));
         await toggle('cashierMaxDiscount', value);
+    };
+
+    // Karni: the ceiling a new customer gets (each customer's own can be changed)
+    const savedKarni = useSettingsStore(state => state.settings.karni_default_limit);
+    const [karniLimit, setKarniLimit] = useState(() => String(Number(savedKarni) > 0 ? Number(savedKarni) : 5000));
+    const saveKarni = async () => {
+        const value = Math.max(0, Math.round(Number(karniLimit) || 0));
+        setSaving('karni');
+        try {
+            await window.electronAPI.settings.set({ key: 'karni_default_limit', value });
+            await loadSettings();
+            setKarniLimit(String(value));
+            toast.success(t('karni.limitSaved'));
+        } catch (error) {
+            toast.error(translateError(error));
+        } finally {
+            setSaving('');
+        }
     };
 
     // Loyalty: what one point is worth when turned into a voucher
@@ -109,6 +127,19 @@ export function PosControlsSettings() {
                     {group === 'discount' && <p className="form-hint">{t('posControls.discount.ownerHint')}</p>}
                 </Card>
             ))}
+            <Card className="space-y-3" data-testid="karni-settings">
+                <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-sky-500/15 text-sky-300 flex items-center justify-center flex-none"><BookOpen className="w-5 h-5" /></div>
+                    <div className="min-w-0">
+                        <h3 className="font-semibold">{t('karni.settingsTitle')}</h3>
+                        <p className="text-sm text-zinc-500">{t('karni.settingsText')}</p>
+                    </div>
+                </div>
+                <div className="flex flex-wrap items-end gap-3">
+                    <Input label={t('karni.defaultLimit')} type="number" min="0" step="500" value={karniLimit} onChange={(e) => setKarniLimit(e.target.value)} className="tabular w-40" data-testid="karni-default-limit" />
+                    <Button onClick={saveKarni} loading={saving === 'karni'} disabled={!!saving}>{t('common.save')}</Button>
+                </div>
+            </Card>
             <Card className="space-y-3" data-testid="loyalty-settings">
                 <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-lg bg-amber-500/15 text-amber-300 flex items-center justify-center flex-none"><Star className="w-5 h-5" /></div>

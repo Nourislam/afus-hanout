@@ -55,3 +55,17 @@ describe('the karni', () => {
         ]);
     });
 });
+
+describe('a new customer', () => {
+    it('has the karni on with the shop\'s default ceiling, whoever adds them at the till', () => {
+        // A cashier (no right over credit settings): on, at the shop's ceiling, whatever the window sent
+        expect(karni.newCustomerCredit({ credit_enabled: 0, credit_limit: 99999 }, { allowed: false, defaultLimit: 5000 })).toEqual([1, 5000]);
+        // The owner: what the form says; nothing said = on at the shop's ceiling
+        expect(karni.newCustomerCredit({}, { allowed: true, defaultLimit: 5000 })).toEqual([1, 5000]);
+        expect(karni.newCustomerCredit({ credit_enabled: false, credit_limit: 0 }, { allowed: true, defaultLimit: 5000 })).toEqual([0, 0]);
+        expect(karni.newCustomerCredit({ credit_enabled: true, credit_limit: 12000 }, { allowed: true, defaultLimit: 5000 })).toEqual([1, 12000]);
+        // No ceiling set by the shop: 5000 DA
+        expect(karni.newCustomerCredit({}, { allowed: false })).toEqual([1, karni.DEFAULT_KARNI_LIMIT]);
+        expect(karni.DEFAULT_KARNI_LIMIT).toBe(5000);
+    });
+});
