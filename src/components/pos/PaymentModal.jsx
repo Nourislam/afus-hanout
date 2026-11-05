@@ -9,7 +9,7 @@ import { Modal, ModalBody, ModalFooter } from '../ui/Modal';
 import { NumPad } from '../ui/NumPad';
 import { DatePicker } from '../ui/DatePicker';
 import { paymentLabel, quickCashAmounts, cashReceived, baridiPayProblem } from '../../lib/payments';
-import { BARIDI_PAY_MIN, centimesLabel } from '../../../electron/shared/grocery.ts';
+import { BARIDI_PAY_MIN, centimesLabel, CHANGE_KEEP_MAX } from '../../../electron/shared/grocery.ts';
 import { methodAllowed, resolvePosControls } from '../../lib/posControls';
 import { formatMoney } from '../../i18n/format';
 import { t, currentLanguage } from '../../i18n';
@@ -26,6 +26,10 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
     const lang = currentLanguage();
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [smsReceived, setSmsReceived] = useState(false);
+    // Change under 5 DA: given (default) or written on the customer's name
+    const [keepChange, setKeepChange] = useState(false);
+    // Change kept for this customer on earlier tickets
+    const [changeBalance, setChangeBalance] = useState(0);
     const [cashAmount, setCashAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const [customers, setCustomers] = useState([]);
@@ -60,6 +64,10 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
             setPaymentMethod('cash');
             setCashAmount('');
             setSmsReceived(false);
+            setKeepChange(false);
+            setChangeBalance(0);
+            const customerId = useCartStore.getState().customer?.id;
+            if (customerId) window.electronAPI.changeBalance?.get(customerId).then(b => setChangeBalance(Number(b) || 0)).catch(() => {});
             // Reservation picked up: its deposit is already paid
             const reservation = useCartStore.getState().reservation;
             setSplitPayments(reservation && reservation.deposit > 0
@@ -139,6 +147,8 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
     // Nothing typed = the exact amount: the big button or Enter finishes the sale
     const cashValue = cashReceived(cashAmount, remainingDue);
     const change = cashValue - remainingDue;
+    const ticketCustomer = cart.customer || selectedCustomer;
+    const smallChange = paymentMethod === 'cash' && change > 0.004 && change < CHANGE_KEEP_MAX;
 
     const filteredCustomers = customers.filter(c =>
         c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
@@ -225,7 +235,9 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                 cart.setCustomer(selectedCustomer);
             }
 
-            await onComplete(allPayments, paymentMethod === 'credit' ? selectedCustomer : null, dueDate);
+            // Change under 5 DA written on the customer's name instead of given
+            const changeKept = paymentMethod === 'cash' && keepChange && smallChange && ticketCustomer ? Math.round(change * 100) / 100 : 0;
+            await onComplete(allPayments, paymentMethod === 'credit' ? selectedCustomer : null, dueDate, { changeKept });
             resetForm();
         } finally {
             setLoading(false);
@@ -295,6 +307,15 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                         ))}
                     </div>
 
+                    {/* Change kept for this customer on an earlier ticket: one press takes it off */}
+                    {changeBalance > 0 && remainingDue > 0.004 && !splitPayments.some(p => p.method === 'change_balance') && (
+                        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2" data-testid="change-balance">
+                            <span className="text-sm">{t('change.balanceOf', { name: cart.customer?.name || '', amount: formatCurrency(changeBalance) })}</span>
+                            <Button size="sm" onClick={() => setSplitPayments([...splitPayments, { method: 'change_balance', amount: Math.min(changeBalance, Math.round(remainingDue * 100) / 100) }])}>
+                                {t('change.use')}
+                            </Button>
+                        </div>
+                    )}
                     {paymentMethod === 'cash' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-3">
@@ -323,6 +344,16 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                                         {amountBox(cashValue > 0 ? Math.abs(change) : 0, '')}
                                     </span>
                                 </div>
+                                {/* Coins under 5 DA are rare: give it, or write it on the customer's name */}
+                                {smallChange && (
+                                    <div className="grid grid-cols-2 gap-2" data-testid="small-change">
+                                        <Button variant={keepChange ? 'secondary' : 'primary'} onClick={() => setKeepChange(false)}>{t('change.give')}</Button>
+                                        <Button variant={keepChange ? 'primary' : 'secondary'} onClick={() => setKeepChange(true)} disabled={!ticketCustomer}
+                                            title={ticketCustomer ? undefined : t('change.needCustomer')} data-testid="small-change-keep">
+                                            {ticketCustomer ? t('change.keepFor', { name: ticketCustomer.name }) : t('change.keep')}
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                             <NumPad value={cashAmount} onChange={setCashAmount} onEnter={handlePayment} thousand={showCentimes} />
                         </div>

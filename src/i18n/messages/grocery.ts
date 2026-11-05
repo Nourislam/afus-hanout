@@ -90,6 +90,14 @@ const messages: Record<string, [string, string, string]> = {
     'karni.all': ["Everything", "Tout", "الكل"],
     'karni.receive': ["Received", "Reçu", "قبضت"],
     'karni.paid': ["{amount} received, {left} left", "{amount} reçus, reste {left}", "قُبض {amount}، الباقي {left}"],
+    // Change under 5 DA
+    'change.give': ["Give it", "Rendre", "اتركه"],
+    'change.keep': ["Keep it for the customer", "Garder pour le client", "سجّله للزبون"],
+    'change.keepFor': ["Keep it for {name}", "Garder pour {name}", "سجّله لـ{name}"],
+    'change.needCustomer': ["Add the customer to the ticket to keep his change", "Ajoutez le client au ticket pour garder sa monnaie", "أضف الزبون للتذكرة لتسجيل صرفه"],
+    'change.balanceOf': ["{name} has {amount} of change kept", "{name} a {amount} de monnaie gardée", "لـ{name} رصيد صرف {amount}"],
+    'change.use': ["Use it", "L'utiliser", "استعمله"],
+    'pay.changeBalance': ["Change kept", "Monnaie gardée", "رصيد الصرف"],
 };
 
 export default messages;

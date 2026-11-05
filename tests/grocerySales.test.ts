@@ -117,6 +117,41 @@ describe('Baridi Pay', () => {
     });
 });
 
+describe('change under 5 DA kept for the customer', () => {
+    const ticket = (id: string, total: number, payments: unknown[], extra: Record<string, unknown> = {}) => call('db:sales:create', {
+        id, receipt_number: `T-${id}`, employee_id: 'boss', customer_id: 'c-change', subtotal: total, discount_amount: 0, tax_amount: 0, total,
+        items: [{ id: `${id}-0`, product_id: 'rice', product_name: 'Riz', quantity: total / 97 * 1, unit_price: 97, discount: 0, total }],
+        payments, ...extra,
+    });
+    const balance = () => require('../electron/services/changeBalanceService').balance(api, 'c-change');
+
+    it('97 DA paid with 100: «سجّله للزبون» keeps 3 DA for him; his next ticket uses them', () => {
+        api.run("INSERT INTO customers (id, name) VALUES ('c-change', 'Karim')");
+        api.run("INSERT INTO products (id, name, price, cost, stock_quantity) VALUES ('rice', 'Riz', 97, 80, 100)");
+        ticket('ch1', 97, [{ id: 'ch1-p', method: 'cash', amount: 97, reference: JSON.stringify({ tendered: 100 }) }], { change_kept: 3 });
+        expect(balance()).toBe(3);
+        ticket('ch2', 97, [{ id: 'ch2-a', method: 'change_balance', amount: 3 }, { id: 'ch2-b', method: 'cash', amount: 94 }]);
+        expect(balance()).toBe(0);
+    });
+
+    it('refused: 5 DA or more, more than the change given, no customer, or more than his balance', () => {
+        const cash = (id: string, tendered: number) => [{ id: `${id}-p`, method: 'cash', amount: 97, reference: JSON.stringify({ tendered }) }];
+        expect(() => ticket('ch3', 97, cash('ch3', 102), { change_kept: 5 })).toThrow(/CHANGE_KEEP/);
+        expect(() => ticket('ch4', 97, cash('ch4', 99), { change_kept: 3 })).toThrow(/CHANGE_KEEP/);
+        expect(() => ticket('ch5', 97, cash('ch5', 100), { change_kept: 3, customer_id: null })).toThrow(/CHANGE_KEEP/);
+        expect(() => ticket('ch6', 97, [{ id: 'ch6-a', method: 'change_balance', amount: 1 }, { id: 'ch6-b', method: 'cash', amount: 96 }])).toThrow(/CHANGE_BALANCE_LOW/);
+        expect(balance()).toBe(0);
+    });
+
+    it('the drawer counts the change kept: it stayed in the drawer', () => {
+        const ShiftService = require('../electron/services/shiftService');
+        api.run("INSERT INTO shifts (id, employee_id, start_time, opening_cash) VALUES ('sh-change', 'boss', '2000-01-01T00:00:00.000Z', 0)");
+        const before = new ShiftService().getShiftStats('sh-change').expected_cash;
+        ticket('ch7', 97, [{ id: 'ch7-p', method: 'cash', amount: 97, reference: JSON.stringify({ tendered: 100 }) }], { change_kept: 3 });
+        expect(new ShiftService().getShiftStats('sh-change').expected_cash).toBe(before + 100);
+    });
+});
+
 describe('selling by the carton', () => {
     it('the carton barcode is found as one carton of the article', () => {
         const found = catalog.lookupCode(api, '6130000000028');

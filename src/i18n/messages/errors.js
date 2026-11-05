@@ -79,6 +79,8 @@ export default {
     'errors.IMPORT_EXISTS': ["\"{name}\" is already in the shop — edit it in Articles", "« {name} » existe déjà — modifiez-le dans Articles", "«{name}» موجودة في المحل — عدّلها من صفحة السلع"],
     'errors.IMPORT_NO_PRICE': ["\"{name}\": the selling price is missing or wrong", "« {name} » : le prix de vente manque ou est faux", "«{name}»: سعر البيع ناقص أو خاطئ"],
     'errors.BARIDI_MIN': ["Baridi Pay takes {min} DA or more: take this one in cash", "Baridi Pay accepte {min} DA ou plus : encaissez celui-ci en espèces", "بريدي باي يقبل {min} دج فأكثر: اقبض هذا نقداً"],
+    'errors.CHANGE_KEEP': ["Only change under {max} DA, for a customer on the ticket, can be kept", "Seule une monnaie de moins de {max} DA, pour un client du ticket, peut être gardée", "يُسجَّل للزبون صرف أقل من {max} دج فقط، ولزبون مضاف للتذكرة"],
+    'errors.CHANGE_BALANCE_LOW': ["The customer has only {balance} DA of change kept", "Le client n'a que {balance} DA de monnaie gardée", "رصيد صرف الزبون {balance} دج فقط"],
     'errors.WEIGHT_REQUIRED': ["\"{product}\" is sold by weight: weigh it on the ticket", "« {product} » se vend au poids : pesez-le sur le ticket", "«{product}» يُباع بالوزن: زِنه في التذكرة"],
     'errors.IMPORT_DUPLICATE': ["\"{name}\" appears on several rows: one row per article", "« {name} » apparaît sur plusieurs lignes : une ligne par article", "«{name}» مكررة في عدة صفوف: صف واحد لكل سلعة"],
     'errors.IMPORT_UNIT': ["\"{name}\": «{value}» is not a way of selling: leave it empty (by the piece) or write kg (by weight)", "« {name} » : « {value} » n'est pas une façon de vendre : laissez vide (à la pièce) ou écrivez kg (au poids)", "«{name}»: «{value}» ليست طريقة بيع: اتركها فارغة (بالقطعة) أو اكتب كغ (بالوزن)"],

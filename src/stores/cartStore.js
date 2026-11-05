@@ -537,7 +537,7 @@ export const useCartStore = create((set, get) => ({
         });
     },
 
-    processPayment: async (payments, employeeId, employeeName = null, approval = null, credit = null) => {
+    processPayment: async (payments, employeeId, employeeName = null, approval = null, credit = null, changeKept = 0) => {
         const { items, customer, notes, serviceCharge, taxExempt } = get();
         if (items.length === 0) throw new Error(t('cart.empty'));
 
@@ -574,6 +574,8 @@ export const useCartStore = create((set, get) => ({
             approval: approval || null,
             // Reservation picked up (its deposit is one of the payments)
             reservation_id: get().reservation?.id || null,
+            // Change under 5 DA written on the customer's name (checked by the main process)
+            change_kept: changeKept > 0 ? changeKept : 0,
             // Kridi: written with the sale by the main process (customer, due date)
             credit: credit ? { ...credit, notes: credit.notes || t('pos.creditNote', { n: receiptNumber }) } : null,
             items: saleItems,

@@ -111,3 +111,6 @@ export function thousandKey(typed: string): string {
     if (!String(typed || '').trim() || !Number.isFinite(n)) return '';
     return String(Math.round(n * 10 * 100) / 100);
 }
+
+/** Change at or above this is given back (coins of 5 DA and more are common); under it, it may be kept for the customer. */
+export const CHANGE_KEEP_MAX = 5;

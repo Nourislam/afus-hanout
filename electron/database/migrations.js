@@ -736,6 +736,23 @@ const MIGRATIONS = [
             addColumnIfMissing(db, 'reservation_items', 'discount', 'REAL DEFAULT 0');
         },
     },
+    {
+        // Change under 5 DA written on a customer's name and used on a later ticket
+        version: '2026_11_hanout_change_balance',
+        description: 'Change kept for customers (+ kept, − used)',
+        up(db) {
+            db.run(`
+                CREATE TABLE IF NOT EXISTS change_balance_moves (
+                    id TEXT PRIMARY KEY,
+                    customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+                    amount REAL NOT NULL,
+                    sale_id TEXT REFERENCES sales(id) ON DELETE SET NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            db.run('CREATE INDEX IF NOT EXISTS idx_change_balance_customer ON change_balance_moves(customer_id)');
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {

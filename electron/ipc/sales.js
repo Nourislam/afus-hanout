@@ -1,6 +1,7 @@
 // IPC handlers: sales. Moved out of main.js unchanged; main.js passes what they use.
 const { stockUnits, weighedPrice, aboveCap, isWeighed, BARIDI_PAY_MIN } = require('../shared/grocery.ts');
 const { SHOP_DAY_SQL } = require('../shared/shopDay.ts');
+const changeBalance = require('../services/changeBalanceService');
 
 module.exports = function register(ctx) {
     const {
@@ -160,6 +161,14 @@ module.exports = function register(ctx) {
           }
         }
 
+        // Change under 5 DA written on the customer's name (it stays in the drawer)
+        if (Number(sale.change_kept) > 0) {
+          const cash = (sale.payments || []).filter(p => p.method === 'cash');
+          const tendered = cash.reduce((s, p) => { try { return s + (Number(JSON.parse(p.reference || '{}').tendered) || 0); } catch { return s; } }, 0);
+          const cashPaid = cash.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+          changeBalance.keep(dbApi, { customerId: sale.customer_id, amount: sale.change_kept, saleId: sale.id, changeGiven: tendered - cashPaid });
+        }
+
         // Paid with loyalty points turned into a card: earns no new points
         let paidWithPoints = 0;
         for (const payment of sale.payments || []) {
@@ -167,6 +176,9 @@ module.exports = function register(ctx) {
         INSERT INTO payments (id, sale_id, method, amount, reference)
         VALUES (?, ?, ?, ?, ?)
       `, [payment.id, sale.id, payment.method, payment.amount, payment.reference ?? null]);
+
+          // Paid with the change kept for this customer: never more than he has
+          if (payment.method === 'change_balance') changeBalance.use(dbApi, { customerId: sale.customer_id, amount: payment.amount, saleId: sale.id });
 
           // Handle Gift Card Redemption
           if (payment.method === 'gift_card') {
@@ -433,6 +445,9 @@ module.exports = function register(ctx) {
     });
 
     // INTELLIGENCE & REPORTS (Phase 4)
+    // Change kept for a customer (رصيد الصرف)
+    ipcMain.handle('change:balance', (_, customerId) => changeBalance.balance(dbApi, customerId));
+
     // Reservations with a deposit (services/reservationService.js)
     const reservations = require('../services/reservationService');
     ipcMain.handle('reservations:list', (_, params = {}) => reservations.listReservations(dbApi, params));

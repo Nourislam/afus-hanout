@@ -328,7 +328,7 @@ export default function POSPage() {
         return () => window.removeEventListener('keydown', onKey);
     });
 
-    const handlePaymentComplete = async (payments, creditCustomer = null, dueDate = null) => {
+    const handlePaymentComplete = async (payments, creditCustomer = null, dueDate = null, { changeKept = 0 } = {}) => {
         try {
             // Above the cashier's discount limit the main process asks for a manager's PIN
             // Kridi is saved with the sale (limit checked by the main process,
@@ -337,7 +337,7 @@ export default function POSPage() {
                 customer_id: creditCustomer.id,
                 due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
             } : null;
-            const sale = await withManagerApproval((approval) => cart.processPayment(payments, currentEmployee.id, currentEmployee.name, approval, credit));
+            const sale = await withManagerApproval((approval) => cart.processPayment(payments, currentEmployee.id, currentEmployee.name, approval, credit, changeKept));
 
             if (sale.credit_sale) {
                 sale.due_date = sale.credit_sale.due_date;
