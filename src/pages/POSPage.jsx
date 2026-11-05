@@ -570,8 +570,9 @@ export default function POSPage() {
                         <Button variant="secondary" size="sm" onClick={() => setShowReservations(true)} title={t('res.list')} aria-label={t('res.list')} data-testid="pos-reservations">
                             <Bookmark className="w-4 h-4" />
                         </Button>
-                        <Button variant="secondary" size="sm" onClick={() => setShowHeldModal(true)} title="F9">
-                            <History className="w-4 h-4" /> {t('pos.fittingRoom')}
+                        <Button variant="secondary" size="sm" onClick={() => setShowHeldModal(true)} title={`${t('pos.fittingRoom')} (F9)`}>
+                            {/* Icon only on a narrow screen: the ticket header stays on one line */}
+                            <History className="w-4 h-4" /> <span className="hidden xl:inline">{t('pos.fittingRoom')}</span>
                             {heldTransactions.length > 0 && <span className="badge bg-amber-500/20 text-amber-300">{heldTransactions.length}</span>}
                         </Button>
                     </div>
@@ -594,7 +595,8 @@ export default function POSPage() {
                             <span className="text-zinc-500">{t('pos.addCustomer')}</span>
                         )}
                     </button>
-                    {features?.commissions === true && <MyMonthLine refreshKey={lastSale?.id} />}
+                    {/* On a short screen the ticket lines come first: the month box folds away */}
+                    {features?.commissions === true && <div className="[@media(max-height:820px)]:hidden"><MyMonthLine refreshKey={lastSale?.id} /></div>}
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
@@ -641,14 +643,15 @@ export default function POSPage() {
                                     </button>
                                     <div className="flex flex-col items-end gap-1.5">
                                         <span className="font-semibold tabular text-sm">{money(item.total)}</span>
-                                        <div className="flex items-center gap-1">
+                                        {/* A weighing is one line of its weight: no − / + (remove it, or weigh again) */}
+                                        {item.sold_as !== 'weight' && <div className="flex items-center gap-1">
                                             <button onClick={() => cart.updateItemQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded-md bg-dark-secondary hover:bg-zinc-700 flex items-center justify-center" aria-label="-"><Minus className="w-3.5 h-3.5" /></button>
                                             <span className="w-7 text-center text-sm font-semibold tabular">{item.sold_as === 'carton' ? item.cartons : item.quantity}</span>
                                             <button
                                                 onClick={() => { const r = cart.updateItemQuantity(item.id, item.quantity + 1); if (r && !r.success) toast.error(r.message); }}
                                                 className="w-7 h-7 rounded-md bg-dark-secondary hover:bg-zinc-700 flex items-center justify-center" aria-label="+"
                                             ><Plus className="w-3.5 h-3.5" /></button>
-                                        </div>
+                                        </div>}
                                     </div>
                                 </div>
                                 {isEditing && (
@@ -695,19 +698,20 @@ export default function POSPage() {
                     {cart.reservation && (
                         <p className="text-xs text-sky-300 flex items-center gap-1.5" data-testid="pos-reservation"><Bookmark className="w-3.5 h-3.5" /> {t('res.inCart', { n: cart.reservation.number, amount: money(cart.reservation.deposit) })}</p>
                     )}
-                    <div className="grid grid-cols-2 gap-2">
+                    {/* On a short screen (1024 × 700) the four buttons take one row, icons only: the ticket lines keep the room */}
+                    <div className="grid grid-cols-2 [@media(max-height:820px)]:grid-cols-4 gap-2 [&_.btn-label]:[@media(max-height:820px)]:sr-only">
                         <Button variant="secondary" onClick={() => setShowOptionsModal(true)} disabled={cart.items.length === 0} title={t('pos.options')} data-testid="pos-options">
-                            <SlidersHorizontal className="w-4 h-4" /> {canDiscount ? t('pos.discountShort') : t('pos.options')}
+                            <SlidersHorizontal className="w-4 h-4" /> <span className="btn-label">{canDiscount ? t('pos.discountShort') : t('pos.options')}</span>
                         </Button>
-                        <Button variant="secondary" onClick={handleHoldTransaction} disabled={cart.items.length === 0} title="F8">
-                            <Pause className="w-4 h-4" /> {t('pos.hold')}
+                        <Button variant="secondary" onClick={handleHoldTransaction} disabled={cart.items.length === 0} title={`${t('pos.hold')} (F8)`}>
+                            <Pause className="w-4 h-4" /> <span className="btn-label">{t('pos.hold')}</span>
                         </Button>
                         {/* Reserve the pieces with a deposit (not for a reservation already picked up) */}
-                        <Button variant="secondary" onClick={() => setShowReserve(true)} disabled={cart.items.length === 0 || !!cart.reservation} data-testid="pos-reserve">
-                            <Bookmark className="w-4 h-4" /> {t('res.reserve')}
+                        <Button variant="secondary" onClick={() => setShowReserve(true)} disabled={cart.items.length === 0 || !!cart.reservation} data-testid="pos-reserve" title={t('res.reserve')}>
+                            <Bookmark className="w-4 h-4" /> <span className="btn-label">{t('res.reserve')}</span>
                         </Button>
-                        <Button variant="secondary" onClick={() => undoable(() => cart.clearCart(), t('pos.cleared'))} disabled={cart.items.length === 0} className="hover:!bg-red-500/15 hover:!text-red-300">
-                            <Trash2 className="w-4 h-4" /> {t('pos.clear')}
+                        <Button variant="secondary" onClick={() => undoable(() => cart.clearCart(), t('pos.cleared'))} disabled={cart.items.length === 0} title={t('pos.clear')} className="hover:!bg-red-500/15 hover:!text-red-300">
+                            <Trash2 className="w-4 h-4" /> <span className="btn-label">{t('pos.clear')}</span>
                         </Button>
                     </div>
                     <Button variant="success" size="lg" className="w-full h-14 text-lg" onClick={startPayment} disabled={cart.items.length === 0} data-testid="pos-pay">
@@ -715,7 +719,7 @@ export default function POSPage() {
                         {t('pos.pay', { amount: money(total) })}
                         <kbd className="ms-auto text-xs font-normal opacity-70 border border-white/30 rounded px-1.5">F4</kbd>
                     </Button>
-                    <p className="text-[11px] text-zinc-600 text-center">{t('pos.shortcuts')}</p>
+                    <p className="text-[11px] text-zinc-600 text-center [@media(max-height:820px)]:hidden">{t('pos.shortcuts')}</p>
                     {shift && (
                         <button type="button" onClick={() => setShowExpense(true)} className="text-xs text-zinc-400 hover:text-zinc-200 underline-offset-2 hover:underline self-center">
                             {t('expense.open')}
