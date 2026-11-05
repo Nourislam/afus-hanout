@@ -62,7 +62,7 @@ const CURRENT_STOCK = `CASE WHEN l.variant_id IS NOT NULL
 function countLines(api, countId) {
     const count = getCount(api, countId);
     const rows = api.all(`
-        SELECT l.*, p.name AS product_name, p.cost AS product_cost,
+        SELECT l.*, p.name AS product_name, p.cost AS product_cost, p.unit AS product_unit,
                v.color, v.size, v.sku AS variant_sku, v.cost AS variant_cost, p.sku AS product_sku,
                ${CURRENT_STOCK} AS current_stock
         FROM stock_count_lines l
@@ -78,6 +78,8 @@ function countLines(api, countId) {
         return {
             id: r.id, product_id: r.product_id, variant_id: r.variant_id,
             product_name: r.product_name, color: r.color, size: r.size, sku: r.variant_sku || r.product_sku || null,
+            // Sold by weight: quantities in grams, cost per kg
+            unit: !r.variant_id && r.product_unit === 'kg' ? 'kg' : 'piece',
             expected, counted, difference: counted - expected, cost,
         };
     });
@@ -100,7 +102,8 @@ function scan(api, countId, code, quantity = 1) {
     }
     const productId = found.product.id;
     const variantId = found.type === 'variant' ? found.variant.id : null;
-    const add = Math.max(1, parseInt(quantity, 10) || 1);
+    // A scan is a piece; an article sold by weight gets its line and its kg are typed
+    const add = found.type !== 'variant' && isWeighed(found.product) ? 0 : Math.max(1, parseInt(quantity, 10) || 1);
     const line = findLine(api, countId, productId, variantId);
     if (line) {
         api.run('UPDATE stock_count_lines SET counted = counted + ?, updated_at = ? WHERE id = ?', [add, new Date().toISOString(), line.id]);
@@ -152,7 +155,9 @@ function importCounted(api, countId, rows) {
 /** Type the number found for a line (0 is allowed: none on the shelf). */
 function setCounted(api, countId, lineId, counted) {
     openCountOrThrow(api, countId);
-    const value = parseInt(counted, 10);
+    // An article sold by weight: the kg found (4.5 or 4,5), kept in grams
+    const line = countLines(api, countId).find(l => l.id === lineId);
+    const value = line && line.unit === 'kg' ? countedGrams(counted) : Number(String(counted ?? '').trim() === '' ? NaN : counted);
     if (!Number.isInteger(value) || value < 0) throw err('COUNT_QUANTITY');
     api.run('UPDATE stock_count_lines SET counted = ?, updated_at = ? WHERE id = ? AND count_id = ?', [value, new Date().toISOString(), lineId, countId]);
     return countLines(api, countId).find(l => l.id === lineId) || null;
@@ -194,15 +199,23 @@ function summary(api, countId) {
     const short = lines.filter(l => l.difference < 0);
     const over = lines.filter(l => l.difference > 0);
     const round = (n) => Math.round(n * 100) / 100;
+    const isPiece = (l) => l.unit !== 'kg';
+    const per = (l) => (isPiece(l) ? 1 : 1000);
+    const pieces = lines.filter(isPiece);
+    const weighed = lines.filter(l => !isPiece(l));
     return {
         count: getCount(api, countId),
         lines,
         counted_lines: lines.length,
-        pieces_counted: lines.reduce((s, l) => s + l.counted, 0),
-        shortage_pieces: short.reduce((s, l) => s - l.difference, 0),
-        surplus_pieces: over.reduce((s, l) => s + l.difference, 0),
-        shortage_value: round(short.reduce((s, l) => s - l.difference * l.cost, 0)),
-        surplus_value: round(over.reduce((s, l) => s + l.difference * l.cost, 0)),
+        pieces_counted: pieces.reduce((s, l) => s + l.counted, 0),
+        shortage_pieces: short.filter(isPiece).reduce((s, l) => s - l.difference, 0),
+        surplus_pieces: over.filter(isPiece).reduce((s, l) => s + l.difference, 0),
+        grams_counted: weighed.reduce((s, l) => s + l.counted, 0),
+        shortage_grams: short.filter(l => !isPiece(l)).reduce((s, l) => s - l.difference, 0),
+        surplus_grams: over.filter(l => !isPiece(l)).reduce((s, l) => s + l.difference, 0),
+        // Grams × cost per kg / 1000
+        shortage_value: round(short.reduce((s, l) => s - l.difference * l.cost / per(l), 0)),
+        surplus_value: round(over.reduce((s, l) => s + l.difference * l.cost / per(l), 0)),
         unchanged: lines.filter(l => l.difference === 0).length,
         not_counted: notCounted(api, countId),
     };

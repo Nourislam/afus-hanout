@@ -179,6 +179,31 @@ const HOW_FIELD = {
     contact_person: ['Who to call there (optional)', "Qui appeler (facultatif)", 'من تتصل به (اختياري)'],
 };
 
+/**
+ * A number as a shop writes it: "1 250,00 DA", "7,50", "1,200", "1.250,5".
+ * Spaces are thousands; a lone comma is the decimal point when 1 or 2 digits
+ * follow it (7,50) and a thousands mark when 3 do (1,200), except for a
+ * quantity in kg where it is always the decimal point (12,5 / 1,250); with
+ * both marks, the last one is the decimal point. Returns plain "1250.5".
+ */
+function numberText(value, { kg = false } = {}) {
+    const compact = String(value)
+        .replace(/د\s*\.?\s*ج|\bDZD\b|\bDA\b|%/gi, '')
+        .replace(/[\s\u00a0\u202f]/g, '')
+        .replace(/[^0-9.,-]/g, '');
+    const comma = compact.lastIndexOf(',');
+    const dot = compact.lastIndexOf('.');
+    if (comma >= 0 && dot >= 0) {
+        return comma > dot ? compact.replace(/\./g, '').replace(',', '.') : compact.replace(/,/g, '');
+    }
+    if (comma >= 0) {
+        const parts = compact.split(',');
+        const decimal = parts.length === 2 && (kg || parts[1].length <= 2);
+        return decimal ? parts.join('.') : parts.join('');
+    }
+    return compact;
+}
+
 class ExcelService {
     /**
      * Read Excel file and return sheet data
@@ -379,17 +404,10 @@ class ExcelService {
         // Convert to string first
         value = String(value).trim();
 
-        // A stock in kg may be written the French way: 12,5
-        if (field === 'stock_quantity' && /^-?\d+,\d+$/.test(value.replace(/\s/g, ''))) {
-            return parseFloat(value.replace(/\s/g, '').replace(',', '.'));
-        }
-
         // Number fields
         const numberFields = ['price', 'cost', 'stock_quantity', 'min_stock_level', 'tax_rate', 'loyalty_points'];
         if (numberFields.includes(field)) {
-            // Remove currency symbols, commas, percentages, etc.
-            const cleanValue = value.replace(/[^0-9.-]/g, '');
-            const num = parseFloat(cleanValue);
+            const num = parseFloat(numberText(value, { kg: field === 'stock_quantity' || field === 'min_stock_level' }));
             return isNaN(num) ? 0 : num;
         }
 

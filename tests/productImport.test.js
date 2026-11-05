@@ -56,6 +56,23 @@ describe('Excel quick start', () => {
         expect(api.get("SELECT COUNT(*) AS n FROM inventory_logs WHERE type = 'initial'").n).toBeGreaterThanOrEqual(3);
     });
 
+    it('the minimum of an article sold by weight is in kg too (kept in grams)', () => {
+        run(api, [
+            row(2, { name: 'Tomates', unit: 'kg', stock_quantity: 12.5, price: 120, min_stock_level: 5 }),
+            row(3, { name: 'Oignons', unit: 'kg', stock_quantity: 3, price: 70 }),
+            row(4, { name: 'Levure', stock_quantity: 3, price: 20 }),
+        ]);
+        expect(api.get("SELECT min_stock_level FROM products WHERE name = 'Tomates'").min_stock_level).toBe(5000);
+        expect(api.get("SELECT min_stock_level FROM products WHERE name = 'Oignons'").min_stock_level).toBe(2000);
+        expect(api.get("SELECT min_stock_level FROM products WHERE name = 'Levure'").min_stock_level).toBe(2);
+    });
+
+    it('prices written the French way: 7,50 is 7.50 DA, 1 250,00 is 1250 DA, 1,200 is 1200 DA', () => {
+        const mappings = { name: 0, price: 1, cost: 2 };
+        const result = excel.validateAndTransform([['Pain', '7,50', '6,25'], ['Huile', '1 250,00', '1 100'], ['Riz', '1,200', '950']], mappings, 'products');
+        expect(result.valid.map(r => [r.name, r.price, r.cost])).toEqual([['Pain', 7.5, 6.25], ['Huile', 1250, 1100], ['Riz', 1200, 950]]);
+    });
+
     it('a bad article is rejected with its rows and the reason, the others are imported', async () => {
         api.run("INSERT INTO products (id, name, price, sku) VALUES ('sucre', 'Sucre 1 kg', 130, 'SUC-1')");
         const report = run(api, [
