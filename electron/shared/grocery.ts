@@ -57,3 +57,9 @@ export function aboveCap(product: CapOf, unitPrice: number, grams?: number | nul
     const allowed = g > 0 ? weighedPrice(Number(cap), g) : Number(cap);
     return (Number(unitPrice) || 0) > allowed + 0.005;
 }
+
+/** Price per kg of a weighed line from its price and its weight. */
+export function pricePerKg(linePrice: number, grams: number): number {
+    const g = Number(grams) || 0;
+    return g > 0 ? round2((Number(linePrice) || 0) * 1000 / g) : 0;
+}
