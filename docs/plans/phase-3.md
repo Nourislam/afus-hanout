@@ -40,3 +40,18 @@ Migration `2026_11_hanout_change_balance` (table `change_balance_moves`). At pay
 Stock reason `family` («استهلاك العائلة»), not counted as a loss.
 
 ### Task 8: verify, review, merge
+
+## Result (2026-11-05)
+
+Done on branch `phase-3-karni`:
+
+- `electron/services/karniService.js`: balances, «خلّص بعض» spread over the oldest debts first (never more than owed), the statement's lines; the credit page's payment of one ticket uses the same rule.
+- A new customer has the karni on at the shop's ceiling (5000 DA, Settings › Sales screen › Karni); a cashier cannot raise it.
+- The credit page opens on the karni: names, balances, since when, ceiling, «خلّص بعض» and «كشف بواتساب» (polite statement with each debt and its date, sent by the owner).
+- Change under 5 DA: «اتركه» or «سجّله لـ…» in the payment window; the drawer counts the change kept; «استعمله» on a later ticket.
+- Services (flexy…): amount typed at the till, the shop's margin, no stock.
+- «استهلاك العائلة» stock reason.
+
+Checks: lint, typecheck, `vite build`, 94 test files. Screens in the real app (demo shop): the karni list, «خلّص بعض» of 500 DA (1700 → 1200 DA, oldest debt first), the statement text.
+
+The uncle test (credit sale under 15 s, statement under 20 s) is for the owner to run on his computer.
