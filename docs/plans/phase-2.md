@@ -48,3 +48,24 @@ At 1024 × 700 the ticket shows at least 4 lines: the month goal box folds away 
 
 ### Task 9: verify, review, merge
 lint, typecheck, tests, screens, review, PR, merge, tick the study.
+
+## Result (2026-11-05)
+
+Done on branch `phase-2-sales-screen`:
+
+- Scale labels: `electron/shared/scaleBarcode.ts` reads the label (prefix 21–28, PLU of 4–6 digits, weight in grams or price with 0–2 decimals, check digit); the till finds the article by PLU. Settings › Label scale, with a field to try a real label. The program's own article codes now start with 20.
+- Weight on the ticket and the A4 invoice («0.500 kg × 70 DA/kg»), pieces and kg counted apart there and on the sales screen.
+- Picture buttons for articles without a barcode (bread, vegetables), best sellers first; the demo's bread has no barcode.
+- Payment: nothing typed = the exact amount (Enter finishes the sale); Baridi Pay replaces «BaridiMob / CCP», refuses less than 100 DA (screen and main process) and finishes only once «SMS received» is ticked.
+- Centimes option: «25 ألف» under 250 DA and a «ألف» key (25 then ألف = 250 DA).
+- «تراجع» for 10 s instead of the confirmation when emptying the ticket or removing a line.
+- The shop day runs from 04:00 to 04:00: home screen, charts, reports, today's sales.
+- At 1024 × 700 the ticket shows three lines instead of two (compact buttons on short screens).
+
+Moved to phase 3: the change under 5 DA «سجّله للزبون» needs the customer's karni balance, built there.
+
+Code review: five bugs found and fixed (undo restoring a sold ticket, price labels refused at the official price, charts losing days with the 04:00 start, the Baridi SMS tick surviving Cancel, report periods mixing midnight and 04:00), plus three small ones.
+
+Checks: lint, typecheck, `vite build`, 90 test files / 540 tests. Screens in the real Electron app (demo shop), Arabic and French, 1024 / 1366: sale by piece, carton, weight and scale label; scale settings with a label tried; Baridi Pay; centimes.
+
+The uncle test (5 articles including bread, paid in cash, under 30 s) and a full day in a real shop are for the owner to run on his computer.
