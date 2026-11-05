@@ -88,3 +88,6 @@ export function kgNumber(grams: number, lang: string, fixed = false): string {
         minimumFractionDigits: fixed ? 3 : 0, maximumFractionDigits: 3, useGrouping: false,
     }).format(kg);
 }
+
+/** Baridi Pay (Algérie Poste, since June 2025): no payment under 100 DA. */
+export const BARIDI_PAY_MIN = 100;

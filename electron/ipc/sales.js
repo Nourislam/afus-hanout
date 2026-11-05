@@ -1,5 +1,5 @@
 // IPC handlers: sales. Moved out of main.js unchanged; main.js passes what they use.
-const { stockUnits, weighedPrice, aboveCap, isWeighed } = require('../shared/grocery.ts');
+const { stockUnits, weighedPrice, aboveCap, isWeighed, BARIDI_PAY_MIN } = require('../shared/grocery.ts');
 
 module.exports = function register(ctx) {
     const {
@@ -43,6 +43,10 @@ module.exports = function register(ctx) {
       // nothing is saved and stock is left untouched.
       // A "deposit" payment only comes from a reservation picked up
       if (!sale.reservation_id && (sale.payments || []).some(p => p.method === 'deposit')) throw catalog.codedError('RESERVATION_NOT_FOUND', {});
+      // Baridi Pay (stored as 'transfer'): Algérie Poste refuses less than 100 DA
+      if ((sale.payments || []).some(p => p.method === 'transfer' && Number(p.amount) < BARIDI_PAY_MIN)) {
+        throw catalog.codedError('BARIDI_MIN', { min: BARIDI_PAY_MIN });
+      }
       runTransaction(() => {
         runInsert(`
       INSERT INTO sales (id, receipt_number, employee_id, customer_id, subtotal, tax_amount, discount_amount, total, status, notes, service_charge, tax_exempt, reservation_id)

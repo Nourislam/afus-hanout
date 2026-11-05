@@ -26,7 +26,7 @@ export default {
     'posControls.payment.text': ["Hide the methods your shop does not use. Cash is always offered.", "Masquez les moyens que votre magasin n'utilise pas. L'espèce est toujours proposée.", "أخفِ الطرق التي لا يستعملها محلك. الدفع نقداً متاح دائماً."],
     'posControls.payCard': ["Card (CIB / Edahabia)", "Carte (CIB / Edahabia)", "البطاقة (CIB / الذهبية)"],
     'posControls.payCardHint': ["Paid with a card terminal", "Payé avec un terminal de carte", "الدفع بجهاز البطاقات"],
-    'posControls.payTransfer': ["Transfer (BaridiMob…)", "Virement (BaridiMob…)", "تحويل (بريدي موب…)"],
+    'posControls.payTransfer': ["Baridi Pay", "Baridi Pay", "بريدي باي"],
     'posControls.payTransferHint': ["Paid by a transfer to the shop", "Payé par un virement au magasin", "الدفع بتحويل إلى المحل"],
     'posControls.payCredit': ["Kridi", "Crédit", "الكريدي"],
     'posControls.payCreditHint': ["Sold on credit to an allowed customer", "Vendu à crédit à un client autorisé", "البيع بالكريدي لزبون مسموح له"],

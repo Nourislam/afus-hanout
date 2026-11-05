@@ -55,7 +55,7 @@ const MESSAGES = {
     // Payment methods
     'pay.cash': ['Cash', 'Espèces', 'نقداً'],
     'pay.card': ['Card (CIB / Edahabia)', 'Carte (CIB / Edahabia)', 'بطاقة CIB أو الذهبية'],
-    'pay.transfer': ['BaridiMob / CCP', 'BaridiMob / CCP', 'بريدي موب أو CCP'],
+    'pay.transfer': ['Baridi Pay', 'Baridi Pay', 'بريدي باي'],
     'pay.credit': ['Credit', 'Crédit', 'كريدي'],
     'pay.gift_card': ['Gift card', 'Carte cadeau', 'بطاقة هدية'],
     'pay.exchange': ['Exchanged piece', 'Pièce échangée', 'قطعة مُبدّلة'],
@@ -161,7 +161,7 @@ const MESSAGES = {
     'xl.col.amountTtc': ['Amount incl. TVA', 'Montant TTC', 'المبلغ مع الرسم'],
     'xl.col.cash': ['Cash', 'Espèces', 'نقدًا'],
     'xl.col.card': ['Card (CIB / Edahabia)', 'Carte (CIB / Edahabia)', 'بطاقة (CIB / الذهبية)'],
-    'xl.col.transfer': ['Transfer / BaridiMob', 'Virement / BaridiMob', 'تحويل / بريدي موب'],
+    'xl.col.transfer': ['Baridi Pay', 'Baridi Pay', 'بريدي باي'],
     'xl.col.credit': ['Kridi', 'Crédit', 'كريدي'],
     'xl.col.giftCard': ['Gift card / avoir', 'Carte cadeau / avoir', 'بطاقة هدية / رصيد'],
     'xl.col.other': ['Other', 'Autre', 'أخرى'],
