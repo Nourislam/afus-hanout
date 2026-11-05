@@ -16,15 +16,18 @@ const { seedDemoShop } = require('../electron/services/groceryDemo.ts');
 const ShiftService = require('../electron/services/shiftService');
 
 describe('demo shop built on any day', () => {
-    it('never has a drawer below 0 nor a counted cash far from the expected', async () => {
+    it('never has a drawer below 0 nor a counted cash far from the expected; always one article sold out', async () => {
         vi.spyOn(console, 'log').mockImplementation(() => {});
         init.setProfile('demo');
         try {
-            for (const [i, day] of ['2026-10-11', '2026-11-03', '2027-01-01', '2027-02-14', '2026-12-25'].entries()) {
+            for (const [i, day] of ['2026-10-11', '2026-11-03', '2026-11-05', '2027-01-01', '2027-02-14', '2026-12-25'].entries()) {
                 init.closeDatabase();
                 try { fs.rmSync(init.getDbPath()); } catch { /* first one */ }
                 await init.initDatabase();
                 api.transaction(() => seedDemoShop(api, { lang: 'fr', imagesDir: path.join(dir, `img${i}`), now: new Date(`${day}T18:00:00`) }));
+                // The screens that show a sold-out and a low article always have one
+                expect(api.get("SELECT stock_quantity FROM products WHERE id = 'demo-prd-choco'").stock_quantity, day).toBe(0);
+                expect(api.get("SELECT stock_quantity FROM products WHERE id = 'demo-prd-tea'").stock_quantity, day).toBe(2);
                 const shifts = new ShiftService();
                 for (const s of api.all('SELECT id FROM shifts WHERE end_time IS NOT NULL')) {
                     const st = shifts.getShiftStats(s.id);

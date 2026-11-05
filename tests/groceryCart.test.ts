@@ -69,4 +69,41 @@ describe('cart with cartons and weighed lines', () => {
         expect(result.needsWeight).toBe(true);
         expect(cart().items).toHaveLength(0);
     });
+
+    it('a weighed line follows the customer: wholesale price per kg, and back to retail when the customer leaves', () => {
+        const veg = { ...tomato, wholesale_price: 100 };
+        cart().setCustomer({ id: 'w', name: 'Grossiste', is_wholesale: 1 });
+        cart().addWeighed(veg, 2000);
+        expect(cart().items[0]).toMatchObject({ unit_price: 200, price_per_kg: 100 });
+        cart().setCustomer(null);
+        expect(cart().items[0]).toMatchObject({ unit_price: 240, price_per_kg: 120, total: 240 });
+        cart().setCustomer({ id: 'w', name: 'Grossiste', is_wholesale: 1 });
+        expect(cart().items[0]).toMatchObject({ unit_price: 200, total: 200 });
+    });
+
+    it('a scale label\'s price stays whoever the customer is', () => {
+        cart().addWeighed({ ...tomato, wholesale_price: 100 }, 1250, 150);
+        cart().setCustomer({ id: 'w', name: 'Grossiste', is_wholesale: 1 });
+        expect(cart().items[0]).toMatchObject({ unit_price: 150, total: 150 });
+    });
+
+    it('a carton for a wholesale customer: never dearer than its pieces at the wholesale price', () => {
+        const wMilk = { ...milk, wholesale_price: 22 };
+        cart().setCustomer({ id: 'w', name: 'Grossiste', is_wholesale: 1 });
+        cart().addCarton(wMilk);
+        expect(cart().items[0]).toMatchObject({ unit_price: 22, discount: 0, total: 528 });
+        cart().setCustomer(null);
+        expect(cart().items[0]).toMatchObject({ unit_price: 25, discount: 30, total: 570 });
+    });
+
+    it('a price agreed on a carton line keeps the carton price as a ceiling, and + / − keep it right', () => {
+        cart().addCarton(milk);
+        const id = cart().items[0].id;
+        cart().setLinePrice(id, 24);
+        expect(cart().items[0]).toMatchObject({ unit_price: 24, discount: 6, total: 570 });
+        cart().setLinePrice(id, 20);
+        expect(cart().items[0]).toMatchObject({ discount: 0, total: 480 });
+        cart().updateItemQuantity(id, 48);
+        expect(cart().items[0]).toMatchObject({ cartons: 2, quantity: 48, discount: 0, total: 960 });
+    });
 });

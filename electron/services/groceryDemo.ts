@@ -455,7 +455,8 @@ function buildShop(api: Api, { lang = 'ar', imagesDir, now = new Date(), seed = 
                 s.returned = true;
                 returnCount++;
                 const returnId = api.uuid();
-                const sellable = random() < 0.6;
+                // The article kept sold out and the one kept low come back damaged (not on the shelf)
+                const sellable = random() < 0.6 && !['CHOCO', 'TEA'].includes(s.line.article.key);
                 const logsBefore = lastLogRow(api);
                 const saved = returnService.createReturn(api, {
                     id: returnId, sale_id: s.saleId, return_number: `RET-DEMO-${String(returnCount).padStart(3, '0')}`,

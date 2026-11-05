@@ -8,10 +8,11 @@ import { t } from '../../i18n';
 import { formatMoney } from '../../i18n/format';
 import { weighedPrice } from '../../../electron/shared/grocery.ts';
 import { weightLabel } from '../../lib/units';
+import { useCartStore } from '../../stores/cartStore';
 
 export { weightLabel };
 
-export interface Weighable { id: string; name: string; price: number }
+export interface Weighable { id: string; name: string; price: number; wholesale_price?: number | null }
 
 interface Props {
     product: Weighable | null;
@@ -27,8 +28,11 @@ const gramsOf = (kg: string): number => Math.round((parseFloat(kg) || 0) * 1000)
 
 export default function WeightModal({ product, onClose, onWeighed }: Props) {
     const [kg, setKg] = useState('');
+    const wholesale = useCartStore(state => !!state.customer?.is_wholesale);
     useEffect(() => { setKg(''); }, [product?.id]);
     if (!product) return null;
+    // The price per kg this customer pays (a wholesale customer: the wholesale one)
+    const perKg = wholesale && Number(product.wholesale_price) > 0 ? Number(product.wholesale_price) : product.price;
 
     const grams = gramsOf(kg);
     const add = (g: number) => { if (g > 0) onWeighed(g); };
@@ -40,7 +44,7 @@ export default function WeightModal({ product, onClose, onWeighed }: Props) {
                     <p className="text-4xl font-bold tabular ltr" data-testid="weight-value">
                         {kg || '0'} <span className="text-lg text-zinc-400">{t('pos.kg')}</span>
                     </p>
-                    <p className="text-zinc-400 tabular ltr">{formatMoney(weighedPrice(product.price, grams))}</p>
+                    <p className="text-zinc-400 tabular ltr">{formatMoney(weighedPrice(perKg, grams))}</p>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
                     {QUICK_GRAMS.map(g => (
