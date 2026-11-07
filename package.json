@@ -1,7 +1,7 @@
 {
   "name": "afus-hanout",
   "productName": "Afus Hanout",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Afus Hanout - offline sales and stock management for Algerian grocery shops (Windows and macOS desktop, Electron)",
   "main": "electron/main.js",
   "scripts": {

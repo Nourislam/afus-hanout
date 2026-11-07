@@ -1,52 +1,51 @@
 # Afus Hanout
 
-**Afus Hanout** (in development) is the [Afus](docs/NAMING.md) application for Algerian grocery shops (hanout,
+**Afus Hanout** is the [Afus](docs/NAMING.md) application for Algerian grocery shops (hanout,
 superette, mini-market): an offline point of sale and stock manager for Windows and macOS
 (Electron + React + SQLite). Every sale, stock movement and kridi is kept in a local database on
 the shop's computer; it works without an account and without internet. There is **no website, no
 online store and no online orders**.
 
-> **بالعربية:** أفوس حانوت (قيد البناء) برنامج من شركة Afus لمحلات المواد الغذائية: الحانوت، والسوبيرات،
+> **بالعربية:** أفوس حانوت برنامج من شركة Afus لمحلات المواد الغذائية: الحانوت، والسوبيرات،
 > والميني ماركت. يعمل بدون إنترنت وبدون حساب، وكل البيانات تبقى على حاسوب المحل. لا موقع إلكتروني، ولا متجر إلكتروني، ولا طلبات عبر الإنترنت.
 
 Afus Hanout starts from the code of Afus Boutique, with its history (`git remote` `boutique`, push
-disabled). The plans are in [docs/plans](docs/plans); until phase 1 is done, the sections below still
-describe what came from Boutique.
+disabled). The plans and each phase's result are in [docs/plans](docs/plans); what changed for the
+shops is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Features
 
-- **Shop setup on first launch** – name and logo, owner, address and wilaya, legal numbers,
-  currency (DZD by default), tax, ticket texts, printers. Editable later in *Settings*.
-- **Three languages** – Arabic (right to left), French and English; light, dark or system theme.
-- **Clothing catalogue** – articles with colour × size variants; each variant has its own SKU,
-  QR identifier, optional barcode, price, cost and stock. Brands, categories, the shop's own
-  colours and size sets, suppliers and customers in one *Catalogue* screen.
-- **Stock per variant** – sales, returns, goods receiving, purchase returns and manual
-  adjustments move the stock of the exact variant and are kept in the stock history; low-stock
-  alerts per variant. A sale can never take more than the stock, and a return never more
-  pieces than were sold.
-- **Labels and barcodes** – QR, EAN-13, Code 128, Code 39 or DataMatrix, one code per variant
-  or per article; codes missing on existing articles are created when printing. Label size,
-  shape and content are set once in *Settings*; roll printers or A4 sticker sheets, or PDF.
-  Codes only hold the article's identifier, never the price, so labels stay valid when prices
-  change.
-- **USB scanners** – any keyboard-mode (HID) barcode/QR scanner, no driver or SDK. Codes are
-  read correctly even when Windows uses an Arabic or French (AZERTY) keyboard layout.
-- **Tickets** – 58/80 mm thermal tickets with the shop logo, printed directly, previewed or
-  not printed, as chosen in *Settings*.
-- **Sales screen** – cash, card, transfer, gift card, split payment and customer credit
-  (*kridi*, allowed by a manager or admin), tickets on hold, cash drawer opened at login and
-  closed at logout.
-- Customers and credit, gift cards, promotions and packs, suppliers and purchase orders,
-  reports, employees with PIN login and roles (admin / manager / cashier), backups.
+- **Shop setup on first launch** – name and logo, owner, address and wilaya, legal numbers, tax,
+  ticket texts, printers. Editable later in *Settings*. Three languages: Arabic (right to left),
+  French and English.
+- **Grocery articles** – three fields (name, barcode, price), the rest under *More*: sold by the
+  piece, by weight (stock in grams, price per kg) or as a service (flexy, bills); cartons with
+  their own price and barcode; the scale's number (PLU); the official capped price.
+- **Sales screen** – weighed lines and cartons, scale labels (weight or price), picture buttons for
+  articles without a barcode, undo instead of confirmations, cash, card and Baridi Pay (SMS),
+  centimes as an option, small change kept for the customer, a 04:00 → 04:00 shop day.
+- **Karni (credit)** – who owes what, "pay part", a polite statement on WhatsApp, a limit per
+  customer, the old notebook typed in name by name.
+- **Suppliers and distributors** – quick receiving (stock, cost, debt, expiry), each supplier's
+  names remembered, visit days and the order in cartons on WhatsApp, price rises flagged,
+  "sell before it goes off".
+- **Offline smarts** – "Ask your shop" questions, at most three home cards a day, seasons by the
+  Hijri calendar (Ramadan, the Eids, the school start), Ramadan baskets for associations, the day
+  in three lines at closing, oddities and a zakat estimate for the owner.
+- **Devices** – USB scanners in keyboard mode, 58/80 mm tickets, labels; the label scale's PLU list
+  (file and printed sheet); the owner's phone ([mobile/](mobile), Expo) and a price-checker tablet
+  on the shop's WiFi, paired once by QR code (off until the owner turns it on).
+- Stock counts (also in kg), Excel files, reports, employees with PIN login and roles
+  (admin / manager / cashier), backups.
 
 ## Installing (shops)
 
-One installer, `Afus Boutique Setup <version>.exe`, for Windows 10 and 11 (64-bit, 32-bit and
-ARM), which can be copied to a USB key. The shop needs nothing else: no Node.js, no internet.
-The program is `AfusBoutique.exe`; uninstalling keeps the shop's data.
+One installer, `Afus Hanout Setup <version>.exe`, for Windows 10 and 11, which can be copied to a
+USB key. The shop needs nothing else: no Node.js, no internet. The program is `AfusHanout.exe`;
+uninstalling keeps the shop's data. macOS: `Afus Hanout.app` in `Afus-Hanout-<version>-<arch>-mac.dmg`.
 
-macOS: `Afus Boutique.app` in `Afus-Boutique-<version>-<arch>.dmg` (Intel and Apple silicon).
+Afus Hanout and Afus Boutique are made to be installed on the same computer: their programs, data folders
+and databases are separate.
 
 The printers (ticket and label) must be installed in Windows or macOS with their driver;
 scanners work in their default keyboard (HID) mode.
@@ -69,21 +68,21 @@ Actions. Nothing is ever published: the application has no auto-update.
 
 | Workflow | When | Result |
 |---|---|---|
-| `Build Windows Installer` | started by hand (*Actions › Run workflow*), or when the workflow file changes | artifact `Afus-Boutique-Setup-<version>-win-x64` |
+| `Build Windows Installer` | started by hand (*Actions › Run workflow*), or when the workflow file changes | artifact `Afus-Hanout-Setup-<version>-win` |
 | `Release` | a `v*` tag is pushed | Windows, macOS and Linux files as artifacts |
 | `CI` | pushes and pull requests to `main` | lint, tests, Windows build |
 
 ## Data
 
-- Database: `%APPDATA%\AfusBoutique\afus-boutique.db`; images and logo in
-  `%APPDATA%\AfusBoutique\images` (macOS: `~/Library/Application Support/AfusBoutique`).
+- Database: `%APPDATA%\AfusHanout\afus-hanout.db`; images and logo in
+  `%APPDATA%\AfusHanout\images` (macOS: `~/Library/Application Support/AfusHanout`).
   The folder also holds the window settings and browser storage. It is independent of any
   other application: nothing is imported automatically.
 - Every sale, return, payment and purchase order is written in one transaction: either all of
   it is saved or nothing is.
 - Schema changes are versioned in `electron/database/migrations.js`; a copy of the database
   file is written before an existing database is upgraded.
-- *Settings › Backup* exports (`afus-boutique-backup-<date>.db`) and restores the database.
+- *Settings › Backup* writes `afus-hanout-<date>_<time>.db` copies and restores the database.
 
 ## Identity
 
@@ -98,7 +97,8 @@ checks they match. Naming rules for the other Afus products: [docs/NAMING.md](do
 electron/
   main.js                 IPC handlers, window, printing entry points
   preload.js              contextIsolation bridge (window.electronAPI)
-  brand.js, shared/       product identity, clothing reference data
+  brand.js, shared/       product identity, grocery helpers (weights, scale labels, Hijri calendar)
+  server/                 the shop's own server on its WiFi (phone, price checker)
   database/               init (load/save, transactions), migrations, strict adapter
   services/               catalogue, labels, receipts, printing, shifts, ...
 src/
@@ -107,6 +107,7 @@ src/
   i18n/                   Arabic / French / English texts
   hooks/useBarcodeScanner.js, lib/scanner.js   keyboard-mode scanner handling
 tests/                    vitest tests (migrations, catalogue, scanner, printing, identity)
+mobile/                   the owner's phone app (Expo, TypeScript)
 docs/NAMING.md            naming rules for Afus products
 ```
 
