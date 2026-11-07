@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Smartphone, Tablet, Trash2, QrCode, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { toast } from '../ui/Toast';
-import { t } from '../../i18n';
+import { useT } from '../../i18n';
 import { translateError } from '../../i18n/errors';
 import { Switch } from './ModulesSettings';
 import { secondsLeft, countdown } from '../../lib/devices';
@@ -22,6 +22,7 @@ interface DevicesBridge {
 const bridge = (): DevicesBridge => (window as unknown as { electronAPI: { devices: DevicesBridge } }).electronAPI.devices;
 
 export function DevicesSettings() {
+    const { t } = useT();
     const [status, setStatus] = useState<DevicesStatus | null>(null);
     const [pairing, setPairing] = useState<Pairing | null>(null);
     const [busy, setBusy] = useState(false);
@@ -74,7 +75,7 @@ export function DevicesSettings() {
                     {status.running ? <Wifi className="w-5 h-5 text-emerald-400 flex-none" /> : <WifiOff className="w-5 h-5 text-zinc-500 flex-none" />}
                     <span className="min-w-0">
                         <span className="block font-medium text-white">{t('devices.enable')}</span>
-                        <span className="block text-sm text-zinc-400">{status.running ? t('devices.on', { address: address ? `${address}:${status.port}` : '—' }) : t('devices.off')}</span>
+                        <span className="block text-sm text-zinc-400">{!status.running ? t('devices.off') : address ? t('devices.on', { address: `${address}:${status.port}` }) : t('devices.onAlone')}</span>
                     </span>
                 </span>
                 <Switch checked={status.enabled} disabled={busy} onChange={toggle} label={t('devices.enable')} />

@@ -7,8 +7,9 @@
  * or this computer) and connects to nothing itself.
  *
  * A device pairs once: the computer shows a 6-digit code as a QR code
- * (afushanout://pair?host=…&port=…&code=…), valid 10 minutes and once. The
- * device gets a token; only its SHA-256 is kept (paired_devices). Roles:
+ * (afushanout://pair?host=…&port=…&code=…), valid 10 minutes and once;
+ * 5 wrong codes cancel it. The device gets a token; only its SHA-256 is
+ * kept (paired_devices). Roles:
  *   kiosk  the price checker: prices only;
  *   phone  prices, counting the shelves into the open stock count, the day.
  *
@@ -26,15 +27,17 @@ const DEFAULT_PORT = 4560;
 const CODE_MINUTES = 10;
 const MAX_BODY = 8 * 1024 * 1024; // a phone photo
 const ROLES = ['phone', 'kiosk'];
+// Wrong codes before the code is cancelled: 1 000 000 codes cannot be tried in 10 minutes
+const MAX_TRIES = 5;
 
-let pairing = null; // { code, expiresAt }
+let pairing = null; // { code, expiresAt, tries }
 
 const hash = (token) => crypto.createHash('sha256').update(String(token)).digest('hex');
 
 /** A new 6-digit pairing code, valid 10 minutes from `now`, once. */
 function newPairingCode(now = Date.now()) {
     const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
-    pairing = { code, expiresAt: now + CODE_MINUTES * 60000 };
+    pairing = { code, expiresAt: now + CODE_MINUTES * 60000, tries: 0 };
     return { code, expiresAt: pairing.expiresAt };
 }
 
@@ -115,7 +118,10 @@ async function handle(api, { method, path: target, body, headers = {}, remote },
 
     if (route === 'POST /api/pair') {
         const ok = pairing && body && String(body.code) === pairing.code && Date.now() <= pairing.expiresAt;
-        if (!ok) return json(403, { error: 'PAIR_CODE' });
+        if (!ok) {
+            if (pairing && ++pairing.tries >= MAX_TRIES) pairing = null; // cancelled: the owner makes a new one
+            return json(403, { error: 'PAIR_CODE' });
+        }
         pairing = null; // once
         const token = crypto.randomBytes(24).toString('hex');
         const role = ROLES.includes(body.role) ? body.role : 'kiosk';

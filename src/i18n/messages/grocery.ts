@@ -188,9 +188,11 @@ const messages: Record<string, [string, string, string]> = {
     'ask.line.outToday': ["{n} left, gone today", "{n} restant(s), épuisé aujourd'hui", "باقي {n}، يخلاص اليوم"],
     // Settings › Phone and price checker: the shop's own server on its WiFi
     'settings.tab.phone': ["Phone and price checker", "Téléphone et vérificateur de prix", "الهاتف وقارئ الأسعار"],
+    'settings.tabHint.phone': ["On the shop's WiFi, paired by QR code", "Sur le WiFi du magasin, associés par QR code", "على WiFi المحل، بالاقتران عبر QR"],
     'devices.text': ["Your phone and a tablet at the shelves read prices and count stock from this computer, on the shop's WiFi only", "Votre téléphone et une tablette en rayon lisent les prix et comptent le stock depuis cet ordinateur, sur le WiFi du magasin seulement", "هاتفك ولوحة عند الرفوف يقرآن الأسعار ويحسبان المخزون من هذا الحاسوب، على WiFi المحل فقط"],
     'devices.enable': ["Let the shop's devices connect", "Laisser les appareils du magasin se connecter", "اسمح لأجهزة المحل بالاتصال"],
     'devices.on': ["On, at {address}", "Activé, à {address}", "يعمل، على {address}"],
+    'devices.onAlone': ["On, but this computer is on no network yet", "Activé, mais cet ordinateur n'est encore sur aucun réseau", "يعمل، لكن الحاسوب ليس على أي شبكة بعد"],
     'devices.off': ["Off: no device can connect", "Désactivé : aucun appareil ne peut se connecter", "متوقف: لا يتصل أي جهاز"],
     'devices.noWifi': ["This computer is not on a WiFi or a local network: connect it to the shop's router", "Cet ordinateur n'est pas sur un WiFi ou un réseau local : branchez-le au routeur du magasin", "هذا الحاسوب غير متصل بـ WiFi أو شبكة محلية: صِله بموزّع المحل"],
     'devices.pair': ["Add a device", "Ajouter un appareil", "أضف جهازاً"],

@@ -46,6 +46,16 @@ describe('pairing', () => {
         expect((await req('POST', '/api/pair', { body: { code, name: 'late' } })).status).toBe(403);
     });
 
+    it('5 wrong codes cancel the code: nobody on the WiFi can try them all', async () => {
+        const { code } = server.newPairingCode();
+        const wrong = code === '000000' ? '111111' : '000000';
+        for (let i = 0; i < 5; i++) expect((await req('POST', '/api/pair', { body: { code: wrong, name: 'x' } })).status).toBe(403);
+        expect((await req('POST', '/api/pair', { body: { code, name: 'owner' } })).status).toBe(403);
+        // A new code works again
+        const fresh = server.newPairingCode().code;
+        expect((await req('POST', '/api/pair', { body: { code: fresh, name: 'owner' } })).status).toBe(200);
+    });
+
     it('the pairing link of the QR code carries the address, the port and the code', () => {
         expect(server.pairingLink({ host: '192.168.1.10', port: 4560, code: '123456' })).toBe('afushanout://pair?host=192.168.1.10&port=4560&code=123456');
         expect(server.kioskLink({ host: '192.168.1.10', port: 4560 })).toBe('http://192.168.1.10:4560/kiosk');

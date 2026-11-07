@@ -34,7 +34,8 @@
   const code = $('code');
   let token = '';
   try { token = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { token = ''; }
-  const money = (n) => new Intl.NumberFormat('fr-DZ', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 }).format(n) + ' دج';
+  // Like the till: 2 500 د.ج (narrow no-break spaces keep it in one piece)
+  const money = (n) => new Intl.NumberFormat('fr-FR', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 }).format(n).replace(/[\u202f\u00a0 ]/g, '\u202f') + '\u202fد.ج';
   let clearTimer = null;
   function show(html) {
     $('result').innerHTML = html;
@@ -46,7 +47,7 @@
     $('foot').textContent = 'أدخل رمز الاقتران الظاهر على الحاسوب (6 أرقام) · Code d’appairage';
   }
   async function pair(value) {
-    const res = await fetch('/api/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: value, name: 'Price checker', role: 'kiosk' }) });
+    const res = await fetch('/api/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: value, name: 'قارئ الأسعار', role: 'kiosk' }) });
     if (!res.ok) { show('<p class="warn">رمز خاطئ أو منتهٍ · Code invalide</p>'); return; }
     const data = await res.json();
     token = data.token;
