@@ -39,3 +39,18 @@ A ready list of capped articles (milk bag, bread, oil, sugar, semolina, flour) t
 The reorder suggestions and «runs out soon» use grams for weighed articles.
 
 ### Task 8: verify, review, merge
+
+## Result (2026-11-07)
+
+Done on branch `phase-4-suppliers`:
+
+- Quick receiving (`receiveService.js`): stock (pieces, cartons or grams), average cost, a purchase order received at once (the supplier's debt), last price per supplier, invoice names remembered, expiry batches, price rises over 5 % pointed out.
+- Visit days and the suggested order (`visitOrderService.js`): until the next visit and one day more, in cartons or kg; sent on WhatsApp. Reorder suggestions count weighed articles in grams.
+- «بِعها قبل ما تفسد» (`expiryService.js`), official prices to review and the scarcity limit per customer (`cappedService.js`, migration `2026_11_hanout_scarcity_limit`, checked by the cart and the main process).
+- Screens: the distributors page (days, order, receiving), the home cards (who comes today, what to sell soon), Settings › Sales screen › Official prices.
+
+Left for phase 5: learning the supplier's names from his Excel file and from the invoice entry (the memory table and its lookup are in place; the receiving screen has no field for the invoice name yet).
+
+Checks: lint, typecheck, `vite build`, 98 test files / 568 tests. Screens in the real app (demo shop): distributors list, the order (5 lines), a receiving that moved the stock, the home cards, the official prices list.
+
+The real-shop condition (the owner accepts the suggested order with at most two changes, two weeks in a row) is for the owner to check.
