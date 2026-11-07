@@ -769,6 +769,23 @@ const MIGRATIONS = [
             addColumnIfMissing(db, 'products', 'max_per_customer', 'INTEGER');
         },
     },
+    {
+        // The shop's own devices on its WiFi (phone, price checker): only the token's hash is kept
+        version: '2026_11_hanout_paired_devices',
+        description: 'Devices paired with the shop server',
+        up(db) {
+            db.run(`
+                CREATE TABLE IF NOT EXISTS paired_devices (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    role TEXT NOT NULL CHECK (role IN ('phone', 'kiosk')),
+                    token_hash TEXT NOT NULL UNIQUE,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    last_seen DATETIME
+                )
+            `);
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {
