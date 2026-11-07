@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Banknote, Receipt, AlertCircle, Clock, Package, Calculator, CheckCircle2 } from 'lucide-react';
+import { Banknote, Receipt, AlertCircle, Clock, Package, Calculator, CheckCircle2, Send } from 'lucide-react';
 import { toast } from '../ui/Toast';
 import { Button } from '../ui/Button';
 import { useAuthStore } from '../../stores/authStore';
@@ -7,6 +7,7 @@ import { useSettingsStore } from '../../stores/settingsStore';
 import { formatMoney, formatDate, currencySymbolFor } from '../../i18n/format';
 import { t, currentLanguage } from '../../i18n';
 import { useEscape } from '../../hooks/useEscape';
+import { closingText, whatsappShare } from '../../lib/whatsapp';
 
 // Algerian notes and coins, for counting the drawer
 const DENOMINATIONS = [2000, 1000, 500, 200, 100, 50, 20, 10, 5];
@@ -27,6 +28,8 @@ export const formatDuration = (minutes) => {
  */
 export default function ShiftSummaryDialog({ shiftId, onClose, onLogout, mode = 'logout', ownerName }) {
     const [stats, setStats] = useState(null);
+    // The shop's day in three lines (the profit only for the owner)
+    const [day, setDay] = useState(null);
     const [loading, setLoading] = useState(true);
     const [closingCash, setClosingCash] = useState('');
     const [counts, setCounts] = useState({});
@@ -44,6 +47,7 @@ export default function ShiftSummaryDialog({ shiftId, onClose, onLogout, mode = 
             .then(data => { if (!cancelled) setStats(data); })
             .catch(() => toast.error(t('shift.loadFailed')))
             .finally(() => { if (!cancelled) setLoading(false); });
+        window.electronAPI.smart?.daySummary().then(d => { if (!cancelled) setDay(d); }).catch(() => {});
         return () => { cancelled = true; };
     }, [shiftId]);
 
@@ -149,6 +153,8 @@ export default function ShiftSummaryDialog({ shiftId, onClose, onLogout, mode = 
                                 <span className="tabular" data-testid="shift-expected">{formatMoney(stats.expected_cash)}</span>
                             </div>
                         </div>
+
+                        {day && <DayInThreeLines day={day} shop={settings?.businessName} />}
                     </div>
 
                     {/* Counting */}
@@ -211,6 +217,22 @@ export default function ShiftSummaryDialog({ shiftId, onClose, onLogout, mode = 
                     </div>
                 </div>
             </div>
+        </div>
+    );
+}
+
+/** The shop's day in three lines, sent on WhatsApp to whoever the owner picks. */
+function DayInThreeLines({ day, shop }) {
+    const lang = currentLanguage();
+    const text = closingText({ shop: shop || '', lang, date: formatDate(new Date()), summary: day });
+    const [, ...lines] = text.split('\n');
+    return (
+        <div className="rounded-xl border border-dark-border p-4 space-y-2" data-testid="day-three-lines">
+            <div className="text-sm font-semibold">{t('closing.box')}</div>
+            {lines.map(line => <div key={line} className="text-sm text-zinc-300">{line}</div>)}
+            <Button size="sm" variant="secondary" onClick={() => window.electronAPI.shell.openExternal(whatsappShare(text))}>
+                <Send className="w-4 h-4" /> {t('closing.send')}
+            </Button>
         </div>
     );
 }

@@ -233,6 +233,15 @@ const messages: Record<string, [string, string, string]> = {
     'scaleList.hint': ["The file is read by the scale's program on this computer (CAS, DIGI, Aclas…); the sheet is for typing the numbers on the scale's keys", "Le fichier se lit dans le programme de la balance sur cet ordinateur (CAS, DIGI, Aclas…) ; la feuille sert à taper les numéros sur les touches de la balance", "الملف يُقرأ ببرنامج الميزان على هذا الحاسوب (CAS، DIGI، Aclas…)؛ والورقة لكتابة الأرقام على أزرار الميزان"],
     'home.scaleTitle': ["Scale prices to update", "Prix de la balance à mettre à jour", "أسعار الميزان تحتاج تحديثاً"],
     'home.scaleLine': ["{n} change(s) the scale does not have: it prints the old price", "{n} changement(s) que la balance n'a pas : elle imprime l'ancien prix", "{n} تغيير ليس في الميزان: يطبع السعر القديم"],
+    // The day's closing in three lines (the drawer's closing, WhatsApp)
+    'closing.box': ["The day in three lines", "La journée en trois lignes", "اليوم في ثلاثة أسطر"],
+    'closing.title': ["{shop} — {date}", "{shop} — {date}", "{shop} — {date}"],
+    'closing.sold': ["Sold {amount} ({n} tickets)", "Vendu {amount} ({n} tickets)", "بعت {amount} ({n} تذكرة)"],
+    'closing.profit': ["Earned about {amount}", "Gagné environ {amount}", "ربحت تقريباً {amount}"],
+    'closing.karniUp': ["The karni grew by {amount}", "Le karni a augmenté de {amount}", "الكريدي زاد {amount}"],
+    'closing.karniDown': ["The karni went down by {amount}", "Le karni a baissé de {amount}", "الكريدي نقص {amount}"],
+    'closing.karniSame': ["The karni did not change", "Le karni n'a pas bougé", "الكريدي لم يتغير"],
+    'closing.send': ["Send on WhatsApp", "Envoyer sur WhatsApp", "أرسل بواتساب"],
 };
 
 export default messages;
