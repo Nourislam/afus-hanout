@@ -145,6 +145,19 @@ const messages: Record<string, [string, string, string]> = {
     'dist.paid': ["Paid now", "Payé maintenant", "المدفوع الآن"],
     'dist.save': ["Into stock", "En stock", "أدخل للمخزون"],
     'dist.received': ["{total} received, {owed} still owed to him", "{total} reçus, {owed} restent dus", "استُلم {total}، والباقي له {owed}"],
+    // Home: the grocery's morning
+    'home.visitsTitle': ["Coming by today", "Passent aujourd'hui", "يمرّ اليوم"],
+    'home.visitLine': ["{name}: {n} article(s) to order", "{name} : {n} article(s) à commander", "{name}: ينقصك {n} سلعة"],
+    'home.sellSoonTitle': ["Sell before it goes off", "À vendre avant péremption", "بِعها قبل ما تفسد"],
+    'home.sellSoonLine': ["{name}: {n} left, {days} day(s) to go", "{name} : {n} restant(s), encore {days} jour(s)", "{name}: باقي {n}، بقي {days} يوم"],
+    'home.expired': ["{name}: {n} past its date by {days} day(s)", "{name} : {n} périmé(s) depuis {days} jour(s)", "{name}: {n} انتهت صلاحيتها منذ {days} يوم"],
+    // Official prices
+    'capped.title': ["Official prices", "Prix officiels", "الأسعار الرسمية"],
+    'capped.text': ["Milk bag, bread, oil, sugar, semolina, flour: enter today's official price (selling above it is refused) and, when short, how many per customer", "Lait en sachet, pain, huile, sucre, semoule, farine : saisissez le prix officiel du jour (vendre au-dessus est refusé) et, en pénurie, combien par client", "حليب الكيس، الخبز، الزيت، السكر، السميد، الفرينة: اكتب السعر الرسمي الحالي (البيع فوقه مرفوض)، ووقت الندرة كم لكل زبون"],
+    'capped.none': ["No subsidised article found among yours", "Aucun article subventionné parmi les vôtres", "لا توجد سلعة مدعّمة بين سلعك"],
+    'capped.cap': ["Official price", "Prix officiel", "السعر الرسمي"],
+    'capped.limit': ["Per customer", "Par client", "لكل زبون"],
+    'capped.saved': ["{name} saved", "{name} enregistré", "حُفظت {name}"],
 };
 
 export default messages;
