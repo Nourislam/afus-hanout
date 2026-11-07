@@ -761,6 +761,14 @@ const MIGRATIONS = [
             addColumnIfMissing(db, 'products', 'service_margin', 'REAL');
         },
     },
+    {
+        // When an article runs short: how many one customer may take on a ticket
+        version: '2026_11_hanout_scarcity_limit',
+        description: 'Scarcity limit per customer',
+        up(db) {
+            addColumnIfMissing(db, 'products', 'max_per_customer', 'INTEGER');
+        },
+    },
 ];
 
 function ensureMigrationsTable(db) {

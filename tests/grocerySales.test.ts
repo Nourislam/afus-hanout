@@ -162,6 +162,19 @@ describe('a service (flexy)', () => {
     });
 });
 
+describe('scarcity limit', () => {
+    it('more than the limit per customer on one ticket is refused by the main process', () => {
+        api.run("INSERT INTO products (id, name, price, cost, stock_quantity, max_per_customer) VALUES ('oil-s', 'Huile', 650, 600, 20, 2)");
+        expect(() => sell([
+            { product_id: 'oil-s', product_name: 'Huile', quantity: 2, unit_price: 650, discount: 0, total: 1300 },
+            { product_id: 'oil-s', product_name: 'Huile', quantity: 1, unit_price: 650, discount: 0, total: 650 },
+        ])).toThrow(/SCARCITY_LIMIT/);
+        expect(stock('oil-s')).toBe(20);
+        sell([{ product_id: 'oil-s', product_name: 'Huile', quantity: 2, unit_price: 650, discount: 0, total: 1300 }]);
+        expect(stock('oil-s')).toBe(18);
+    });
+});
+
 describe('selling by the carton', () => {
     it('the carton barcode is found as one carton of the article', () => {
         const found = catalog.lookupCode(api, '6130000000028');

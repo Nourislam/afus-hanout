@@ -104,6 +104,7 @@ const messages: Record<string, [string, string, string]> = {
     'article.service': ["Service (flexy…)", "Service (flexy…)", "خدمة (فليكسي…)"],
     'article.margin': ["Your margin (%)", "Votre marge (%)", "ربحك (%)"],
     'article.serviceHint': ["The amount is typed at the till; no stock. A flexy at 5 %: 1000 DA sold earns 50 DA", "Le montant se tape à la caisse ; pas de stock. Un flexy à 5 % : 1000 DA vendus rapportent 50 DA", "المبلغ يُكتب في الصندوق؛ بلا مخزون. فليكسي بـ 5٪: بيع 1000 دج يربحك 50 دج"],
+    'cart.scarcity': ["In short supply: {n} per customer", "En pénurie : {n} par client", "ندرة: {n} لكل زبون"],
 };
 
 export default messages;
