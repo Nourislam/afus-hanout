@@ -48,6 +48,7 @@ describe('pairing', () => {
 
     it('the pairing link of the QR code carries the address, the port and the code', () => {
         expect(server.pairingLink({ host: '192.168.1.10', port: 4560, code: '123456' })).toBe('afushanout://pair?host=192.168.1.10&port=4560&code=123456');
+        expect(server.kioskLink({ host: '192.168.1.10', port: 4560 })).toBe('http://192.168.1.10:4560/kiosk');
     });
 });
 
@@ -101,8 +102,9 @@ describe('the real server', () => {
     afterEach(async () => { await running?.stop(); running = null; });
 
     it('listens on the given port and serves the price checker page', async () => {
-        running = await server.start({ api, port: 0 });
-        const res = await fetch(`http://127.0.0.1:${running.port}/kiosk`);
+        const started = await server.start({ api, port: 0 });
+        running = started;
+        const res = await fetch(`http://127.0.0.1:${started.port}/kiosk`);
         expect(res.status).toBe(200);
         expect(await res.text()).toContain('<html');
     });

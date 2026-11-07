@@ -45,6 +45,11 @@ function pairingLink({ host, port, code }) {
     return `afushanout://pair?host=${host}&port=${port}&code=${code}`;
 }
 
+/** The price checker page, opened on the tablet's browser (this computer's own address). */
+function kioskLink({ host, port }) {
+    return `http://${host}:${port}/kiosk`;
+}
+
 /** This computer's addresses on the shop's network (IPv4, not the loopback). */
 function lanAddresses() {
     return Object.values(os.networkInterfaces()).flat()
@@ -214,4 +219,4 @@ function start({ api, port = DEFAULT_PORT, ctx = {} }) {
     });
 }
 
-module.exports = { handle, start, newPairingCode, resetPairing, pairingLink, lanAddresses, isPrivate, devices, removeDevice, DEFAULT_PORT };
+module.exports = { handle, start, newPairingCode, resetPairing, pairingLink, kioskLink, lanAddresses, isPrivate, devices, removeDevice, DEFAULT_PORT };

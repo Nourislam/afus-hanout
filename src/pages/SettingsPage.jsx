@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
     Building, Receipt, Percent, Database, Save, Upload, CheckCircle, Printer, ScanLine, Hash,
     Languages, Tags, ToggleRight, ScrollText, Settings as SettingsIcon, Palette, Moon, Sun, Monitor, Eye, FlaskConical, ShoppingCart, Info,
-    Scale,
+    Scale, Smartphone,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input, TextArea } from '../components/ui/Input';
@@ -27,6 +27,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { SystemLogs } from '../components/settings/SystemLogs';
 import { PosControlsSettings } from '../components/settings/PosControlsSettings';
 import { ScaleSettings } from '../components/settings/ScaleSettings';
+import { DevicesSettings } from '../components/settings/DevicesSettings';
 import { AboutSettings } from '../components/settings/AboutSettings';
 import { LANGUAGES, setLanguage, useT } from '../i18n';
 import { formatMoney } from '../i18n/format';
@@ -40,7 +41,7 @@ const PAGE_SAVED_TABS = ['business', 'language', 'receipt', 'labelPrinter', 'sca
 
 const SECTION_GROUPS = [
     { id: 'shop', ids: ['business', 'language', 'appearance'] },
-    { id: 'devices', ids: ['receipt', 'labelPrinter', 'scanner', 'scale'] },
+    { id: 'devices', ids: ['receipt', 'labelPrinter', 'scanner', 'scale', 'phone'] },
     { id: 'sales', ids: ['posScreen'] },
     { id: 'catalog', ids: ['sku'] },
     { id: 'modules', ids: ['modules'] },
@@ -48,7 +49,7 @@ const SECTION_GROUPS = [
 ];
 
 const SECTION_ICONS = {
-    business: Building, language: Languages, appearance: Palette, receipt: Receipt, labelPrinter: Tags, scanner: ScanLine, scale: Scale,
+    business: Building, language: Languages, appearance: Palette, receipt: Receipt, labelPrinter: Tags, scanner: ScanLine, scale: Scale, phone: Smartphone,
     sku: Hash, posScreen: ShoppingCart, modules: ToggleRight, backup: Database, logs: ScrollText, about: Info,
 };
 
@@ -98,6 +99,8 @@ export default function SettingsPage() {
     const { isAdmin } = useAuthStore();
     const tabIds = [
         'business', 'language', 'appearance', 'receipt', 'labelPrinter', 'scanner', 'scale',
+        // The shop's devices on its WiFi: the owner pairs them
+        ...(isAdmin() ? ['phone'] : []),
         // What the sales screen offers: the owner's choice
         ...(isAdmin() ? ['posScreen'] : []),
         'sku', 'modules',
@@ -518,6 +521,13 @@ export default function SettingsPage() {
                             <Card className="space-y-6">
                                 <SectionHeader icon={Scale} color="bg-emerald-500/20 text-emerald-400" title={t('settings.tab.scale')} text={t('scale.text')} />
                                 <ScaleSettings />
+                            </Card>
+                        )}
+
+                        {currentTab === 'phone' && (
+                            <Card className="space-y-6">
+                                <SectionHeader icon={Smartphone} color="bg-emerald-500/20 text-emerald-400" title={t('settings.tab.phone')} text={t('devices.text')} />
+                                <DevicesSettings />
                             </Card>
                         )}
 

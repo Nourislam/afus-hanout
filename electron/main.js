@@ -206,6 +206,7 @@ if (!gotTheLock) {
     // hanging without a window.
     try {
       await initDatabase();
+      devices.autoStart();
     } catch (error) {
       console.error('Database initialization failed:', error);
       // The shop's language is not known yet: show the message in the three languages
@@ -530,3 +531,5 @@ require('./ipc/charges')(ipcContext);
 require('./ipc/commissions')(ipcContext);
 require('./ipc/figures')(ipcContext);
 require('./ipc/exports')(ipcContext);
+// The shop's devices on its WiFi (phone, price checker): off until the owner turns it on
+const devices = require('./ipc/devices')(ipcContext);

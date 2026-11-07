@@ -471,6 +471,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
         generateInvoiceNumber: () => ipcRenderer.invoke('db:creditSales:generateInvoiceNumber'),
     },
 
+    // The shop's devices on its WiFi (phone, price checker)
+    devices: {
+        status: () => ipcRenderer.invoke('devices:status'),
+        enable: (on) => ipcRenderer.invoke('devices:enable', on),
+        pairingCode: () => ipcRenderer.invoke('devices:pairingCode'),
+        remove: (id) => ipcRenderer.invoke('devices:remove', id),
+    },
+
     // «اسأل حانوتك»: ready questions answered from the shop's figures
     ask: {
         answer: (id) => ipcRenderer.invoke('ask:answer', id),

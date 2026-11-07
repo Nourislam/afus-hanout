@@ -48,8 +48,10 @@ describe('offline-first core', () => {
     it('no server address is built into the program (only WhatsApp links)', () => {
         const urls = CODE.flatMap(f => [...read(f).matchAll(/https?:\/\/[^\s'"`)]+/g)].map(m => [f, m[0]]))
             .filter(([, url]) => !/^https?:\/\/(localhost|127\.0\.0\.1|www\.w3\.org)/.test(url));
-        // wa.me: the credit reminder only hands a WhatsApp link to the system (the program connects to nothing)
-        expect(urls.filter(([, url]) => !/^https:\/\/wa\.me\b/.test(url))).toEqual([]);
+        // wa.me: the credit reminder only hands a WhatsApp link to the system (the program connects to nothing).
+        // The shop's own server shows its price checker page at this computer's own address on the WiFi.
+        const own = ([f, url]) => SERVER_ALLOWED.includes(f) && url.startsWith('http://${host}:${port}/');
+        expect(urls.filter(([f, url]) => !/^https:\/\/wa\.me\b/.test(url) && !own([f, url]))).toEqual([]);
     });
 
     it('runs no server but the shop\'s own, on its WiFi (phone and price checker)', () => {

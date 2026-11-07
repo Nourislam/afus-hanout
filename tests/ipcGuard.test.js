@@ -75,6 +75,14 @@ describe('role checks on the main process channels', () => {
         expect(ipcGuard.allows(ipcGuard.RULES['loyalty:redeem'], null)).toBe(false);
     });
 
+    it('the phone and the price checker: only the owner turns the server on and pairs a device', () => {
+        for (const channel of ['devices:enable', 'devices:pairingCode', 'devices:remove']) {
+            expect(ipcGuard.allows(ipcGuard.RULES[channel], MANAGER), channel).toBe(false);
+            expect(ipcGuard.allows(ipcGuard.RULES[channel], ADMIN), channel).toBe(true);
+        }
+        expect(ipcGuard.allows(ipcGuard.RULES['db:settings:set'], MANAGER, { key: 'local_server' })).toBe(false);
+    });
+
     it('backups are the owner\'s; stock changes need a manager', () => {
         expect(ipcGuard.allows(ipcGuard.RULES['backup:restore'], MANAGER)).toBe(false);
         expect(ipcGuard.allows(ipcGuard.RULES['backup:restore'], ADMIN)).toBe(true);
