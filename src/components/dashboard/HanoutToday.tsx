@@ -1,9 +1,10 @@
 // The grocery's morning: who comes by today (with what is missing for his
-// order) and what to sell before it goes off. At most these two cards, never
-// during a sale (the home screen only).
+// order), what to sell before it goes off, and scale prices the scale does
+// not have yet. At most these three cards, never during a sale (the home
+// screen only).
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Truck, Clock } from 'lucide-react';
+import { Truck, Clock, Scale } from 'lucide-react';
 import { t } from '../../i18n';
 import { weightLabel } from '../../lib/units';
 
@@ -12,21 +13,26 @@ interface Soon { product_id: string; name: string; left: number; days_left: numb
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const hanout = (): any => (window as any).electronAPI?.hanout;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const scale = (): any => (window as any).electronAPI?.scale;
 
 export default function HanoutToday({ canOrder }: { canOrder: boolean }) {
     const navigate = useNavigate();
     const [visits, setVisits] = useState<Visit[]>([]);
     const [soon, setSoon] = useState<Soon[]>([]);
+    const [scaleChanges, setScaleChanges] = useState(0);
 
     useEffect(() => {
         let cancelled = false;
         if (!hanout()) return undefined;
         if (canOrder) hanout().visitsToday().then((v: Visit[]) => { if (!cancelled) setVisits(v.filter(x => x.lines > 0)); }).catch(() => {});
         hanout().sellSoon(3).then((s: Soon[]) => { if (!cancelled) setSoon(s); }).catch(() => {});
+        // Only once the shop keeps its scale from the program (it said so once)
+        scale()?.plu().then((l: { sentAt: string | null; changed: number }) => { if (!cancelled && l.sentAt) setScaleChanges(l.changed); }).catch(() => {});
         return () => { cancelled = true; };
     }, [canOrder]);
 
-    if (!visits.length && !soon.length) return null;
+    if (!visits.length && !soon.length && !scaleChanges) return null;
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3" data-testid="hanout-today">
             {visits.length > 0 && (
@@ -50,6 +56,15 @@ export default function HanoutToday({ canOrder }: { canOrder: boolean }) {
                         ))}
                     </span>
                 </div>
+            )}
+            {scaleChanges > 0 && (
+                <button type="button" onClick={() => navigate('/settings?tab=scale')} className="card text-start hover:bg-dark-tertiary/60 flex gap-3 items-start" data-testid="card-scale">
+                    <Scale className="w-6 h-6 text-amber-300 flex-none" />
+                    <span>
+                        <span className="block font-semibold">{t('home.scaleTitle')}</span>
+                        <span className="block text-sm text-zinc-300">{t('home.scaleLine', { n: scaleChanges })}</span>
+                    </span>
+                </button>
             )}
         </div>
     );
