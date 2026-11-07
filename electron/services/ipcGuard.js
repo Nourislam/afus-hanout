@@ -138,6 +138,7 @@ const RULES = {
     'db:creditSales:update': 'login',
     'db:creditPayments:create': 'login',
     'karni:payPart': 'login',
+    'karni:openingDebt': P.CUSTOMERS_CREDIT,
 
     // Offers
     'db:giftCards:create': P.GIFT_CARDS_CREATE,

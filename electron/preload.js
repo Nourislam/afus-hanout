@@ -471,11 +471,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
         generateInvoiceNumber: () => ipcRenderer.invoke('db:creditSales:generateInvoiceNumber'),
     },
 
+    // «اسأل حانوتك»: ready questions answered from the shop's figures
+    ask: {
+        answer: (id) => ipcRenderer.invoke('ask:answer', id),
+    },
+
     // Hanout: the distributor's quick receiving, his days and order, expiry, official prices
     hanout: {
         receive: (input) => ipcRenderer.invoke('hanout:receive', input),
         priceRises: (input) => ipcRenderer.invoke('hanout:priceRises', input),
         supplierPrices: (productId) => ipcRenderer.invoke('hanout:supplierPrices', productId),
+        matchName: (input) => ipcRenderer.invoke('hanout:matchName', input),
         lastCost: (input) => ipcRenderer.invoke('hanout:lastCost', input),
         visits: () => ipcRenderer.invoke('hanout:visits'),
         setVisits: (input) => ipcRenderer.invoke('hanout:setVisits', input),
@@ -496,6 +502,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         balances: () => ipcRenderer.invoke('karni:balances'),
         lines: (customerId) => ipcRenderer.invoke('karni:lines', customerId),
         payPart: (input) => ipcRenderer.invoke('karni:payPart', input),
+        openingDebt: (input) => ipcRenderer.invoke('karni:openingDebt', input),
     },
 
     // Credit Payments

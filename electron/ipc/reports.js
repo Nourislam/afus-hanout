@@ -24,6 +24,9 @@ module.exports = function register(ctx) {
     const markdowns = require('../services/markdownService');
 
     // Reports
+    // «اسأل حانوتك»: ready questions answered from the shop's figures
+    ipcMain.handle('ask:answer', (_, id) => require('../services/askService').answer(dbApi, id));
+
     ipcMain.handle('db:reports:salesByDate', (_, { startDate, endDate, employeeId }) => {
       let query = `
     SELECT 

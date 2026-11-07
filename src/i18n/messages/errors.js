@@ -82,6 +82,7 @@ export default {
     'errors.CHANGE_KEEP': ["Only change under {max} DA, for a customer on the ticket, can be kept", "Seule une monnaie de moins de {max} DA, pour un client du ticket, peut être gardée", "يُسجَّل للزبون صرف أقل من {max} دج فقط، ولزبون مضاف للتذكرة"],
     'errors.CHANGE_BALANCE_LOW': ["The customer has only {balance} DA of change kept", "Le client n'a que {balance} DA de monnaie gardée", "رصيد صرف الزبون {balance} دج فقط"],
     'errors.SCARCITY_LIMIT': ["\"{product}\" is in short supply: {n} per customer", "« {product} » est en pénurie : {n} par client", "«{product}» نادرة: {n} لكل زبون"],
+    'errors.ASK_UNKNOWN': ["This question is not known", "Cette question n'est pas connue", "هذا السؤال غير معروف"],
     'errors.WEIGHT_REQUIRED': ["\"{product}\" is sold by weight: weigh it on the ticket", "« {product} » se vend au poids : pesez-le sur le ticket", "«{product}» يُباع بالوزن: زِنه في التذكرة"],
     'errors.IMPORT_DUPLICATE': ["\"{name}\" appears on several rows: one row per article", "« {name} » apparaît sur plusieurs lignes : une ligne par article", "«{name}» مكررة في عدة صفوف: صف واحد لكل سلعة"],
     'errors.IMPORT_UNIT': ["\"{name}\": «{value}» is not a way of selling: leave it empty (by the piece) or write kg (by weight)", "« {name} » : « {value} » n'est pas une façon de vendre : laissez vide (à la pièce) ou écrivez kg (au poids)", "«{name}»: «{value}» ليست طريقة بيع: اتركها فارغة (بالقطعة) أو اكتب كغ (بالوزن)"],

@@ -17,6 +17,7 @@ import TransactionsPage from './pages/TransactionsPage';
 import PurchaseOrdersPage from './pages/PurchaseOrdersPage';
 import CreditSalesPage from './pages/CreditSalesPage';
 import DistributorsPage from './pages/DistributorsPage';
+import AskPage from './pages/AskPage';
 import CatalogPage from './pages/CatalogPage';
 import CustomersPage from './pages/CustomersPage';
 import SuppliersPage from './pages/SuppliersPage';
@@ -162,6 +163,9 @@ function App() {
                         <ProtectedRoute permission={PERMISSIONS.CUSTOMERS_VIEW}>
                             <ModuleGate module="customers"><CustomersPage /></ModuleGate>
                         </ProtectedRoute>
+                    } />
+                    <Route path="/ask" element={
+                        <ProtectedRoute permission={PERMISSIONS.REPORTS_VIEW}><AskPage /></ProtectedRoute>
                     } />
                     <Route path="/distributors" element={
                         <ProtectedRoute permission={PERMISSIONS.INVENTORY_ADJUST}>

@@ -16,7 +16,7 @@ import type { ArticleRow } from '../types/electronAPI';
 
 interface Distributor { id: string; name: string; phone?: string | null; weekdays: number[] }
 interface OrderLine { product_id: string; name: string; unit: string; stock: number; quantity: number; cartons?: number; carton_qty?: number; cost: number }
-interface ReceiveLine { productId: string; name: string; weighed: boolean; cartonQty: number; quantity: string; byCarton: boolean; unitCost: string; expiresOn: string }
+interface ReceiveLine { productId: string; name: string; weighed: boolean; cartonQty: number; quantity: string; byCarton: boolean; unitCost: string; expiresOn: string; invoiceName?: string }
 
 /** Algerian week order: Saturday first (0 = Sunday … 6 = Saturday). */
 const WEEK = [6, 0, 1, 2, 3, 4, 5];
@@ -123,6 +123,8 @@ function QuickReceive({ state, onClose, onDone }: { state: { who: Distributor; l
     const [query, setQuery] = useState('');
     const [paid, setPaid] = useState('');
     const [rises, setRises] = useState<{ productId: string; before: number; now: number; percent: number }[]>([]);
+    // The name as written on his invoice, already linked to an article of the shop
+    const [remembered, setRemembered] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const who = state?.who;
 
@@ -152,11 +154,22 @@ function QuickReceive({ state, onClose, onDone }: { state: { who: Distributor; l
         })().catch(() => {});
     }, [state, lineOf]);
 
+    useEffect(() => {
+        const q = query.trim();
+        if (!who || q.length < 2) { setRemembered(null); return undefined; }
+        let cancelled = false;
+        api().matchName({ supplierId: who.id, name: q }).then((id: string | null) => { if (!cancelled) setRemembered(id); }).catch(() => {});
+        return () => { cancelled = true; };
+    }, [who, query]);
+
     const found = useMemo(() => {
         const q = query.trim().toLowerCase();
         if (!q) return [];
-        return articles.filter(a => a.name.toLowerCase().includes(q) || String(a.barcode || '') === q).slice(0, 6);
-    }, [articles, query]);
+        const byName = articles.filter(a => a.name.toLowerCase().includes(q) || String(a.barcode || '') === q);
+        // The article this name on his invoice was linked to last time comes first
+        const known = remembered ? articles.find(a => a.id === remembered) : null;
+        return (known ? [known, ...byName.filter(a => a.id !== known.id)] : byName).slice(0, 6);
+    }, [articles, query, remembered]);
 
     // Units in stock terms: grams, or pieces (× carton)
     const unitsOf = (l: ReceiveLine) => {
@@ -176,9 +189,12 @@ function QuickReceive({ state, onClose, onDone }: { state: { who: Distributor; l
     }, [who, lines]);
 
     const add = async (p: ArticleRow) => {
+        const typed = query.trim();
         setQuery('');
         if (lines.some(l => l.productId === p.id)) return;
-        setLines([...lines, await lineOf(p, '1')]);
+        // What was typed (his invoice's name) is remembered for this supplier, unless it was a barcode
+        const invoiceName = typed && typed !== String(p.barcode || '') ? typed : undefined;
+        setLines([...lines, { ...(await lineOf(p, '1')), invoiceName }]);
     };
     const update = (i: number, patch: Partial<ReceiveLine>) => setLines(lines.map((l, k) => (k === i ? { ...l, ...patch } : l)));
 
@@ -189,7 +205,7 @@ function QuickReceive({ state, onClose, onDone }: { state: { who: Distributor; l
             const result = await api().receive({
                 supplierId: who.id,
                 paid: paid === '' ? Math.round(total * 100) / 100 : Number(paid) || 0,
-                lines: lines.filter(l => unitsOf(l) > 0).map(l => ({ productId: l.productId, quantity: unitsOf(l), unitCost: Math.round(costOf(l) * 100) / 100, expiresOn: l.expiresOn || undefined })),
+                lines: lines.filter(l => unitsOf(l) > 0).map(l => ({ productId: l.productId, quantity: unitsOf(l), unitCost: Math.round(costOf(l) * 100) / 100, expiresOn: l.expiresOn || undefined, invoiceName: l.invoiceName })),
             });
             toast.success(t('dist.received', { total: formatMoney(result.total), owed: formatMoney(result.owed) }));
             onDone();
@@ -204,11 +220,15 @@ function QuickReceive({ state, onClose, onDone }: { state: { who: Distributor; l
         <Modal isOpen={!!state} onClose={onClose} title={who ? t('dist.receiveTitle', { name: who.name }) : ''} size="xl" closeOnOverlay={false}>
             <ModalBody className="space-y-3">
                 <div className="relative">
-                    <input className="input w-full" autoFocus placeholder={t('dist.search')} value={query} onChange={(e) => setQuery(e.target.value)}
+                    <input className="input w-full" autoFocus placeholder={t('dist.searchInvoice')} value={query} onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter' && found[0]) add(found[0]); }} data-testid="receive-search" />
                     {found.length > 0 && (
                         <ul className="absolute z-10 mt-1 w-full card p-1 shadow-xl">
-                            {found.map(a => <li key={a.id}><button type="button" className="w-full text-start px-3 py-2 rounded hover:bg-dark-tertiary" onClick={() => add(a)}>{a.name}</button></li>)}
+                            {found.map(a => (
+                                <li key={a.id}><button type="button" className="w-full text-start px-3 py-2 rounded hover:bg-dark-tertiary" onClick={() => add(a)}>
+                                    {a.name}{a.id === remembered && <span className="ms-2 text-xs text-emerald-300">{t('dist.fromInvoice')}</span>}
+                                </button></li>
+                            ))}
                         </ul>
                     )}
                 </div>

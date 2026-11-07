@@ -1,7 +1,7 @@
 // The karni (كارني): who owes what, since when; «خلّص بعض» and the statement
 // on WhatsApp in two presses. Reads services/karniService.js.
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MessageCircle, Coins, Search, BookOpen } from 'lucide-react';
+import { MessageCircle, Coins, Search, BookOpen, PenLine } from 'lucide-react';
 import { Modal, ModalBody, ModalFooter } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { NumPad } from '../ui/NumPad';
@@ -19,6 +19,7 @@ export default function KarniList({ onChanged }: Props) {
     const [rows, setRows] = useState<KarniBalance[] | null>(null);
     const [query, setQuery] = useState('');
     const [paying, setPaying] = useState<KarniBalance | null>(null);
+    const [entering, setEntering] = useState(false);
     const shopName = useSettingsStore((state: { settings: { businessName?: string } }) => state.settings.businessName) || '';
 
     const load = useCallback(async () => {
@@ -46,6 +47,7 @@ export default function KarniList({ onChanged }: Props) {
         <section className="card space-y-3" data-testid="karni">
             <div className="flex flex-wrap items-center gap-3">
                 <h2 className="font-semibold flex items-center gap-2"><BookOpen className="w-5 h-5 text-sky-300" /> {t('karni.title')}</h2>
+                <Button size="sm" variant="secondary" onClick={() => setEntering(true)} data-testid="karni-old"><PenLine className="w-4 h-4" /> {t('karni.old')}</Button>
                 <span className="text-sm text-zinc-400">{t('karni.total', { n: (rows || []).length, amount: formatMoney(total) })}</span>
                 <div className="relative ms-auto w-full sm:w-64">
                     <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
@@ -78,6 +80,7 @@ export default function KarniList({ onChanged }: Props) {
                 </ul>
             )}
             <PayPartModal row={paying} onClose={() => setPaying(null)} onPaid={() => { setPaying(null); load(); onChanged?.(); }} />
+            <OldKarniModal isOpen={entering} names={(rows || []).map(r => r.name)} onClose={() => { setEntering(false); load(); onChanged?.(); }} />
         </section>
     );
 }
@@ -117,6 +120,52 @@ function PayPartModal({ row, onClose, onPaid }: { row: KarniBalance | null; onCl
             <ModalFooter>
                 <Button variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
                 <Button variant="success" onClick={pay} loading={busy} disabled={!(value > 0) || value > row.owed + 0.004} data-testid="karni-confirm">{t('karni.receive')}</Button>
+            </ModalFooter>
+        </Modal>
+    );
+}
+
+/** The old paper karni, typed in one name after the other: name, what he owes, since when. */
+function OldKarniModal({ isOpen, names, onClose }: { isOpen: boolean; names: string[]; onClose: () => void }) {
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [amount, setAmount] = useState('');
+    const [date, setDate] = useState('');
+    const [added, setAdded] = useState(0);
+    const [busy, setBusy] = useState(false);
+    useEffect(() => { if (isOpen) { setName(''); setPhone(''); setAmount(''); setDate(''); setAdded(0); } }, [isOpen]);
+    const add = async () => {
+        const value = Number(amount.replace(',', '.')) || 0;
+        if (!name.trim() || !(value > 0)) return;
+        setBusy(true);
+        try {
+            await window.electronAPI.karni.openingDebt({ name, phone, amount: value, date: date || undefined });
+            setAdded(n => n + 1);
+            // Ready for the next name of the notebook
+            setName(''); setPhone(''); setAmount('');
+        } catch (error) {
+            toast.error(translateError(error));
+        } finally {
+            setBusy(false);
+        }
+    };
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title={t('karni.oldTitle')} size="md">
+            <ModalBody className="space-y-3">
+                <p className="text-sm text-zinc-400">{t('karni.oldText')}</p>
+                <input className="input w-full" autoFocus list="karni-names" placeholder={t('karni.oldName')} value={name} onChange={(e) => setName(e.target.value)} data-testid="karni-old-name" />
+                <datalist id="karni-names">{names.map(n => <option key={n} value={n} />)}</datalist>
+                <div className="grid grid-cols-3 gap-2">
+                    <input className="input tabular ltr" inputMode="decimal" placeholder={t('karni.oldAmount')} value={amount} onChange={(e) => setAmount(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') add(); }} data-testid="karni-old-amount" />
+                    <input className="input ltr" inputMode="tel" placeholder="05 / 06 / 07 …" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <input className="input ltr" type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label={t('karni.oldDate')} />
+                </div>
+                {added > 0 && <p className="text-sm text-emerald-300">{t('karni.oldAdded', { n: added })}</p>}
+            </ModalBody>
+            <ModalFooter>
+                <Button variant="secondary" onClick={onClose}>{t('common.close')}</Button>
+                <Button onClick={add} loading={busy} disabled={!name.trim() || !(Number(amount.replace(',', '.')) > 0)} data-testid="karni-old-add">{t('karni.oldAdd')}</Button>
             </ModalFooter>
         </Modal>
     );

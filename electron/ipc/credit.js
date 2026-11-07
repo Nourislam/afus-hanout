@@ -11,6 +11,7 @@ module.exports = function register(ctx) {
         runTransaction,
         uuid,
         dbApi,
+        getSettingValue,
     } = ctx;
     const karni = require('../services/karniService');
 
@@ -117,6 +118,9 @@ module.exports = function register(ctx) {
     // The karni: who owes what, «خلّص بعض» against the whole balance, the statement's lines
     ipcMain.handle('karni:balances', () => karni.balances(dbApi));
     ipcMain.handle('karni:lines', (_, customerId) => karni.openLines(dbApi, customerId));
+    ipcMain.handle('karni:openingDebt', (_, input = {}) => runTransaction(() => karni.openingDebt(dbApi, {
+      name: input.name, phone: input.phone, amount: input.amount, date: input.date, defaultLimit: getSettingValue('karni_default_limit'),
+    })));
     ipcMain.handle('karni:payPart', (_, input = {}) => runTransaction(() => karni.payPart(dbApi, {
       customerId: input.customerId, amount: input.amount, method: input.method === 'card' ? 'card' : 'cash', receivedBy: input.receivedBy || null,
     })));
