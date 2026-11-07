@@ -64,7 +64,7 @@ describe('the stock file', () => {
     });
 
     it('each article: name, codes, pieces or kg, purchase and sale price, totals as formulas = the program figures', async () => {
-        const { wb } = await open('stock');
+        const { wb, file } = await open('stock');
         const ws = wb.getWorksheet('المخزون');
         const { header, labels, cell } = table(ws, 'الرقم');
         // A grocery: no brand, colour, size or QR; pieces and kilograms in their own columns
@@ -79,7 +79,16 @@ describe('the stock file', () => {
         expect(cell(first, 'الباركود').value).toBe(String(lines[0].barcode));
         const value = cell(first, 'المجموع بسعر الشراء').value;
         expect(value.formula).toMatch(/^MAX\(0,G\d+\+H\d+\)\*I\d+$/);
-        expect(value.result).toBe(lines[0].cost_value);
+        // The demo's stock changes with the day: a sold-out first article is worth 0, and ExcelJS
+        // saves no value for a 0 (the file asks Excel to compute everything on opening)
+        expect(value.result ?? 0).toBe(lines[0].cost_value);
+        const workbookXml = await (await require('jszip').loadAsync(file.buffer)).file('xl/workbook.xml').async('string');
+        expect(workbookXml).toMatch(/<calcPr[^>]*fullCalcOnLoad="1"/);
+        // A line with stock: its saved value is the program's figure
+        const k = lines.findIndex(l => l.cost_value > 0);
+        expect(k).toBeGreaterThanOrEqual(0);
+        expect(cell(first + k, 'السلعة').value).toBe(lines[k].name);
+        expect(cell(first + k, 'المجموع بسعر الشراء').value).toMatchObject({ formula: `MAX(0,G${first + k}+H${first + k})*I${first + k}`, result: lines[k].cost_value });
         // Totals row: SUBTOTAL formulas, saved value = the program's total
         const totalRow = header + lines.length + 1;
         expect(cell(totalRow, 'الرقم').value).toBe(`المجموع (${lines.length})`);
