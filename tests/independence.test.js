@@ -5,7 +5,9 @@ import path from 'path';
 // Afus Hanout is a stand-alone, offline-first product: nothing in it may need
 // an account, an activation or a server. It has no website, no online store
 // and no e-mail. The only network connection is the update check the shop asks
-// for (Settings › About); WhatsApp is only handed a wa.me link.
+// for (Settings › About); WhatsApp is only handed a wa.me link. The one server
+// is the shop's own, on its WiFi: the phone and the price checker read the
+// till computer (off until the owner turns it on; private networks only).
 const ROOT = path.resolve(__dirname, '..');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
@@ -26,7 +28,11 @@ const NETWORK_ALLOWED = {
     // Asked by the shop (Settings › About › check), only when the reseller's
     // installer profile gives an https address; nothing is installed by itself
     'electron/services/updateService.js': 'optional update check, on demand',
+    // The price checker page asks the shop's own computer (same address it was loaded from)
+    'electron/server/kiosk.html': 'the price checker asks the till computer, on the shop WiFi',
 };
+// The only file that may listen for connections: the shop's own server
+const SERVER_ALLOWED = ['electron/server/localServer.js'];
 const NETWORK = /\bfetch\s*\(|node-fetch|nodemailer|axios|XMLHttpRequest|new WebSocket|EventSource|\bhttps?\.(request|get)\s*\(|net\.request|autoUpdater|electron-updater|sendBeacon/;
 
 describe('offline-first core', () => {
@@ -42,12 +48,16 @@ describe('offline-first core', () => {
     it('no server address is built into the program (only WhatsApp links)', () => {
         const urls = CODE.flatMap(f => [...read(f).matchAll(/https?:\/\/[^\s'"`)]+/g)].map(m => [f, m[0]]))
             .filter(([, url]) => !/^https?:\/\/(localhost|127\.0\.0\.1|www\.w3\.org)/.test(url));
-        // wa.me: the credit reminder only hands a WhatsApp link to the system (the program connects to nothing)
-        expect(urls.filter(([, url]) => !/^https:\/\/wa\.me\b/.test(url))).toEqual([]);
+        // wa.me: the credit reminder only hands a WhatsApp link to the system (the program connects to nothing).
+        // The shop's own server shows its price checker page at this computer's own address on the WiFi.
+        const own = ([f, url]) => SERVER_ALLOWED.includes(f) && url.startsWith('http://${host}:${port}/');
+        expect(urls.filter(([f, url]) => !/^https:\/\/wa\.me\b/.test(url) && !own([f, url]))).toEqual([]);
     });
 
-    it('runs no server: nothing listens for connections', () => {
-        expect(CODE.filter(f => /createServer\s*\(|\.listen\s*\(/.test(read(f)))).toEqual([]);
+    it('runs no server but the shop\'s own, on its WiFi (phone and price checker)', () => {
+        expect(CODE.filter(f => /createServer\s*\(|\.listen\s*\(/.test(read(f)) && !SERVER_ALLOWED.includes(f))).toEqual([]);
+        // That server connects to nothing outside: it only answers
+        expect(read('electron/server/localServer.js')).not.toMatch(NETWORK);
     });
 
     it('needs no account, activation, subscription or plan limit', () => {

@@ -25,6 +25,7 @@ const SETTING_RULES = {
     security: 'admin',
     pos_controls: 'admin',
     loyalty: 'admin',
+    local_server: 'admin',
 };
 
 const RULES = {
@@ -139,6 +140,10 @@ const RULES = {
     'db:creditPayments:create': 'login',
     'karni:payPart': 'login',
     'karni:openingDebt': P.CUSTOMERS_CREDIT,
+    // The shop's devices: the owner's choice
+    'devices:enable': 'admin',
+    'devices:pairingCode': 'admin',
+    'devices:remove': 'admin',
 
     // Offers
     'db:giftCards:create': P.GIFT_CARDS_CREATE,

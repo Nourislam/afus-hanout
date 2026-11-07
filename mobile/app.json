@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Afus Hanout",
+    "slug": "afus-hanout",
+    "scheme": "afushanout",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#09090b",
+    "ios": {
+      "bundleIdentifier": "dz.afus.hanout",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "The camera scans barcodes and takes the articles' pictures.",
+        "NSLocalNetworkUsageDescription": "The app reads prices and counts from the shop's computer, on the shop's WiFi.",
+        "NSAppTransportSecurity": { "NSAllowsLocalNetworking": true }
+      }
+    },
+    "android": {
+      "package": "dz.afus.hanout",
+      "permissions": ["android.permission.CAMERA"],
+      "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#09090b" }
+    },
+    "plugins": [
+      ["expo-camera", { "cameraPermission": "The camera scans barcodes and takes the articles' pictures.", "recordAudioAndroid": false }],
+      "expo-secure-store",
+      ["expo-build-properties", { "android": { "usesCleartextTraffic": true } }]
+    ]
+  }
+}

@@ -186,6 +186,27 @@ const messages: Record<string, [string, string, string]> = {
     'dist.searchInvoice': ["Scan, or type the name as on his invoice…", "Scannez, ou tapez le nom comme sur sa facture…", "امسح، أو اكتب الاسم كما في فاتورته…"],
     'dist.fromInvoice': ["his name for it", "son nom pour cet article", "اسمها عنده"],
     'ask.line.outToday': ["{n} left, gone today", "{n} restant(s), épuisé aujourd'hui", "باقي {n}، يخلاص اليوم"],
+    // Settings › Phone and price checker: the shop's own server on its WiFi
+    'settings.tab.phone': ["Phone and price checker", "Téléphone et vérificateur de prix", "الهاتف وقارئ الأسعار"],
+    'settings.tabHint.phone': ["On the shop's WiFi, paired by QR code", "Sur le WiFi du magasin, associés par QR code", "على WiFi المحل، بالاقتران عبر QR"],
+    'devices.text': ["Your phone and a tablet at the shelves read prices and count stock from this computer, on the shop's WiFi only", "Votre téléphone et une tablette en rayon lisent les prix et comptent le stock depuis cet ordinateur, sur le WiFi du magasin seulement", "هاتفك ولوحة عند الرفوف يقرآن الأسعار ويحسبان المخزون من هذا الحاسوب، على WiFi المحل فقط"],
+    'devices.enable': ["Let the shop's devices connect", "Laisser les appareils du magasin se connecter", "اسمح لأجهزة المحل بالاتصال"],
+    'devices.on': ["On, at {address}", "Activé, à {address}", "يعمل، على {address}"],
+    'devices.onAlone': ["On, but this computer is on no network yet", "Activé, mais cet ordinateur n'est encore sur aucun réseau", "يعمل، لكن الحاسوب ليس على أي شبكة بعد"],
+    'devices.off': ["Off: no device can connect", "Désactivé : aucun appareil ne peut se connecter", "متوقف: لا يتصل أي جهاز"],
+    'devices.noWifi': ["This computer is not on a WiFi or a local network: connect it to the shop's router", "Cet ordinateur n'est pas sur un WiFi ou un réseau local : branchez-le au routeur du magasin", "هذا الحاسوب غير متصل بـ WiFi أو شبكة محلية: صِله بموزّع المحل"],
+    'devices.pair': ["Add a device", "Ajouter un appareil", "أضف جهازاً"],
+    'devices.scan': ["Scan this code with the Afus Hanout app on your phone", "Scannez ce code avec l'application Afus Hanout sur votre téléphone", "امسح هذا الرمز بتطبيق أفوس حانوت على هاتفك"],
+    'devices.validFor': ["Valid once, {time} left", "Valable une fois, encore {time}", "صالح مرة واحدة، باقي {time}"],
+    'devices.kioskHint': ["Price checker tablet: open this address in its browser and type the 6 digits", "Tablette vérificateur de prix : ouvrez cette adresse dans son navigateur et tapez les 6 chiffres", "لوحة قارئ الأسعار: افتح هذا العنوان في متصفحها واكتب الأرقام الستة"],
+    'devices.paired': ["Paired devices", "Appareils associés", "الأجهزة المقترنة"],
+    'devices.none': ["No device yet", "Aucun appareil pour l'instant", "لا يوجد جهاز بعد"],
+    'devices.role.phone': ["Phone: prices, counting, the day", "Téléphone : prix, comptage, la journée", "هاتف: الأسعار، الجرد، اليوم"],
+    'devices.role.kiosk': ["Price checker: prices only", "Vérificateur de prix : prix seulement", "قارئ الأسعار: الأسعار فقط"],
+    'devices.lastSeen': ["last seen {date}", "vu le {date}", "آخر اتصال {date}"],
+    'devices.remove': ["Remove {name}", "Retirer {name}", "أزل {name}"],
+    'devices.removed': ["{name} can no longer connect", "{name} ne peut plus se connecter", "{name} لم يعد يستطيع الاتصال"],
+    'devices.privacy': ["Nothing leaves the shop: the devices talk to this computer only, and only on the shop's own network", "Rien ne sort du magasin : les appareils ne parlent qu'à cet ordinateur, et seulement sur le réseau du magasin", "لا يخرج شيء من المحل: الأجهزة تتصل بهذا الحاسوب فقط، وعلى شبكة المحل فقط"],
 };
 
 export default messages;

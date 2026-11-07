@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Afus Hanout — قارئ الأسعار</title>
+<style>
+  :root { --bg: #0b0b0d; --card: #16161a; --text: #f4f4f5; --muted: #a1a1aa; --accent: #6366f1; --ok: #34d399; --warn: #fbbf24; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: "Segoe UI", Tahoma, Arial, sans-serif; }
+  main { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 24px; text-align: center; }
+  h1 { font-size: 28px; margin: 0; color: var(--muted); font-weight: 600; }
+  .price { font-size: clamp(64px, 14vw, 160px); font-weight: 800; color: var(--ok); line-height: 1; }
+  .name { font-size: clamp(28px, 5vw, 56px); font-weight: 700; }
+  .hint { font-size: 22px; color: var(--muted); }
+  .warn { color: var(--warn); font-size: 22px; }
+  input { font-size: 28px; padding: 14px 18px; border-radius: 14px; border: 2px solid #27272a; background: var(--card); color: var(--text); width: min(520px, 90vw); text-align: center; }
+  input:focus { outline: none; border-color: var(--accent); }
+  .small { font-size: 16px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">قارئ الأسعار · Prix</h1>
+  <div id="result" aria-live="polite"><p class="hint">امسح الباركود · Scannez le code-barres</p></div>
+  <input id="code" autocomplete="off" inputmode="numeric" autofocus aria-label="barcode">
+  <p class="small" id="foot"></p>
+</main>
+<script>
+  // The price checker asks the shop's own computer (the address this page came from).
+  // It pairs once with the 6-digit code shown on the computer.
+  const TOKEN_KEY = 'afus-hanout-kiosk-token';
+  const $ = (id) => document.getElementById(id);
+  const code = $('code');
+  let token = '';
+  try { token = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { token = ''; }
+  // Like the till: 2 500 د.ج (narrow no-break spaces keep it in one piece)
+  const money = (n) => new Intl.NumberFormat('fr-FR', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 }).format(n).replace(/[\u202f\u00a0 ]/g, '\u202f') + '\u202fد.ج';
+  let clearTimer = null;
+  function show(html) {
+    $('result').innerHTML = html;
+    clearTimeout(clearTimer);
+    clearTimer = setTimeout(() => { $('result').innerHTML = '<p class="hint">امسح الباركود · Scannez le code-barres</p>'; }, 10000);
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function askPairing() {
+    $('foot').textContent = 'أدخل رمز الاقتران الظاهر على الحاسوب (6 أرقام) · Code d’appairage';
+  }
+  async function pair(value) {
+    const res = await fetch('/api/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: value, name: 'قارئ الأسعار', role: 'kiosk' }) });
+    if (!res.ok) { show('<p class="warn">رمز خاطئ أو منتهٍ · Code invalide</p>'); return; }
+    const data = await res.json();
+    token = data.token;
+    try { localStorage.setItem(TOKEN_KEY, token); } catch (e) { /* kept for this page only */ }
+    if (data.shop) $('title').textContent = data.shop;
+    $('foot').textContent = '';
+    show('<p class="hint">تم الاقتران · Appairé</p>');
+  }
+  async function lookup(value) {
+    const res = await fetch('/api/price?code=' + encodeURIComponent(value), { headers: { Authorization: 'Bearer ' + token } });
+    if (res.status === 401) { token = ''; askPairing(); show('<p class="warn">أعد الاقتران · Appairez à nouveau</p>'); return; }
+    if (!res.ok) { show('<p class="warn">غير موجود · Article inconnu</p>'); return; }
+    const p = await res.json();
+    const unit = p.unit === 'kg' ? ' / كغ' : '';
+    const label = p.scale && p.scale.price ? money(p.scale.price) : money(p.price) + unit;
+    show('<p class="name">' + esc(p.name) + '</p><p class="price">' + label + '</p>' + (p.capped ? '<p class="hint">سعر رسمي · Prix officiel</p>' : ''));
+  }
+  code.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const value = code.value.trim();
+    code.value = '';
+    if (!value) return;
+    if (!token && /^\d{6}$/.test(value)) pair(value).catch(() => show('<p class="warn">الحاسوب لا يجيب · Ordinateur injoignable</p>'));
+    else if (!token) askPairing();
+    else lookup(value).catch(() => show('<p class="warn">الحاسوب لا يجيب · Ordinateur injoignable</p>'));
+  });
+  document.addEventListener('click', () => code.focus());
+  if (!token) askPairing();
+</script>
+</body>
+</html>

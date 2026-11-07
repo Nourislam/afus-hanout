@@ -4,6 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { createRequire } from 'node:module';
 import { MESSAGES } from '../src/i18n/messages';
+import { TEXTS as PHONE } from '../mobile/src/texts';
 
 const require = createRequire(import.meta.url);
 const main = require('../electron/i18n') as { MESSAGES: Record<string, string[]> };
@@ -32,6 +33,11 @@ describe('the shop\'s words', () => {
 
     it('nor in the tickets, documents and Excel files of the main process', () => {
         expect(offending(main.MESSAGES)).toEqual([]);
+    });
+
+    it('nor in the phone app', () => {
+        expect(offending(PHONE)).toEqual([]);
+        expect(offending(PHONE, CLOTHING)).toEqual([]);
     });
 
     it('no clothes: no garments, no colour or size of an article, in the interface or the documents', () => {
