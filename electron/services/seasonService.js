@@ -2,7 +2,9 @@
  * The seasons (المواسم): three weeks before Ramadan, the Eids and the school
  * start, the list to prepare from what the shop sold in the same season last
  * year (by the Hijri calendar: Ramadan moves 11 days a year), minus what is
- * in stock, rounded to whole cartons or kg. A shop with no year behind it
+ * in stock, rounded to whole cartons or kg. Only what sold more in the season
+ * than in the 4 weeks before it (×1.3), or only then: bread or milk, brought
+ * by their distributors every week, are not the season's. A shop with no year behind it
  * gets the general list of what groceries sell more of then, with its own
  * articles found by their names. `api` is the { all, get } adapter.
  */
@@ -11,6 +13,9 @@ const { seasonsAhead, seasonOf, lastYear, hijriOf } = require('../shared/hijri.t
 const STAPLES = require('../shared/seasonStaples.json');
 
 const toDb = (d) => d.toISOString().replace('T', ' ').slice(0, 19);
+/** Sold this much more a day in the season than in the 4 weeks before: the season's. */
+const UPLIFT = 1.3;
+const BEFORE_DAYS = 28;
 const dayAfter = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
@@ -49,7 +54,8 @@ function generalList(api, id) {
 /**
  * The list to prepare for a season.
  * @returns {{ season: { id, start, end, daysLeft }, last: { start, end }, source: 'lastYear'|'general',
- *             lines: { product_id, name, unit, sold, stock, quantity, cartons?, carton_qty?, cost }[], general: object[] }}
+ *             lines: { product_id, name, unit, sold, stock, quantity, cartons?, carton_qty?, cost, uplift }[], general: object[] }}
+ *   uplift: how many times more a day than in the 4 weeks before (null: sold only in the season, or nothing to compare)
  */
 function prepList(api, id, { now = new Date() } = {}) {
     const season = seasonFor(id, now);
@@ -61,9 +67,21 @@ function prepList(api, id, { now = new Date() } = {}) {
         WHERE ${countedSale('s')} AND p.is_active = 1 AND COALESCE(p.unit, 'piece') <> 'service'
           AND datetime(s.created_at) >= datetime(?) AND datetime(s.created_at) < datetime(?)
         GROUP BY p.id ORDER BY sold DESC`, [toDb(last.start), toDb(dayAfter(last.end))]);
+    // The 4 weeks before last year's season, to tell the season's articles from the everyday ones
+    const before = new Map(api.all(`
+        SELECT si.product_id AS id, SUM(CASE WHEN COALESCE(si.weight_grams, 0) > 0 THEN si.weight_grams ELSE si.quantity END) AS sold
+        FROM sale_items si JOIN sales s ON s.id = si.sale_id
+        WHERE ${countedSale('s')} AND datetime(s.created_at) >= datetime(?) AND datetime(s.created_at) < datetime(?)
+        GROUP BY si.product_id`, [toDb(new Date(last.start.getFullYear(), last.start.getMonth(), last.start.getDate() - BEFORE_DAYS)), toDb(last.start)])
+        .map(r => [r.id, Number(r.sold) || 0]));
+    const seasonDays = Math.round((dayAfter(last.end) - last.start) / 86400000);
     const lines = [];
     for (const p of rows) {
         const sold = Number(p.sold) || 0;
+        // Nothing sold before the season (the shop's history starts there): nothing to compare with
+        const usual = before.size ? (before.get(p.id) || 0) / BEFORE_DAYS : null;
+        const uplift = usual ? Math.round((sold / seasonDays) / usual * 10) / 10 : null;
+        if (before.size && uplift !== null && uplift < UPLIFT) continue;
         const stock = Math.max(0, Number(p.stock_quantity) || 0);
         const need = sold - stock;
         if (!(need > 0)) continue;
@@ -75,7 +93,7 @@ function prepList(api, id, { now = new Date() } = {}) {
         else if (cartonQty) { cartons = Math.ceil(need / cartonQty); quantity = cartons * cartonQty; }
         lines.push({
             product_id: p.id, name: p.name, unit: weighed ? 'kg' : 'piece', sold, stock, quantity,
-            ...(cartons ? { cartons, carton_qty: cartonQty } : {}), cost: Number(p.cost) || 0,
+            ...(cartons ? { cartons, carton_qty: cartonQty } : {}), cost: Number(p.cost) || 0, uplift,
         });
     }
     const source = rows.length ? 'lastYear' : 'general';

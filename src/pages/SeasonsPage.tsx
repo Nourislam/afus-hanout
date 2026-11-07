@@ -11,7 +11,7 @@ import { toast } from '../components/ui/Toast';
 import { weightLabel } from '../lib/units';
 
 type SeasonId = 'ramadan' | 'eidFitr' | 'eidAdha' | 'rentree';
-interface PrepLine { product_id: string; name: string; unit: 'kg' | 'piece'; sold: number; stock: number; quantity: number; cartons?: number; carton_qty?: number }
+interface PrepLine { product_id: string; name: string; unit: 'kg' | 'piece'; sold: number; stock: number; quantity: number; cartons?: number; carton_qty?: number; uplift: number | null }
 interface General { label: { ar: string; fr: string; en: string }; articles: { id: string; name: string; unit: 'kg' | 'piece'; stock: number }[] }
 interface Prep {
     season: { id: SeasonId; start: string; end: string; daysLeft: number };
@@ -89,6 +89,7 @@ export default function SeasonsPage() {
                                         <tr>
                                             <th className="px-3 py-2 text-start">{t('seasons.col.article')}</th>
                                             <th className="px-3 py-2 text-start">{t('seasons.col.soldLast')}</th>
+                                            <th className="px-3 py-2 text-start">{t('seasons.col.more')}</th>
                                             <th className="px-3 py-2 text-start">{t('seasons.col.stock')}</th>
                                             <th className="px-3 py-2 text-start">{t('seasons.col.buy')}</th>
                                         </tr>
@@ -98,6 +99,7 @@ export default function SeasonsPage() {
                                             <tr key={l.product_id}>
                                                 <td className="px-3 py-2 text-white">{l.name}</td>
                                                 <td className="px-3 py-2 tabular">{qty(l.sold, l.unit)}</td>
+                                                <td className="px-3 py-2 tabular text-zinc-400">{l.uplift ? `×${l.uplift}` : t('seasons.onlySeason')}</td>
                                                 <td className="px-3 py-2 tabular">{qty(l.stock, l.unit)}</td>
                                                 <td className="px-3 py-2 tabular font-semibold text-amber-300">
                                                     {l.cartons ? t('seasons.cartons', { n: l.cartons, qty: l.carton_qty ?? 0 }) : qty(l.quantity, l.unit)}

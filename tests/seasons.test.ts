@@ -24,6 +24,7 @@ beforeEach(async () => {
     api.run("INSERT INTO products (id, name, price, cost, stock_quantity) VALUES ('milk', 'Lait sachet', 25, 22, 200)");
     api.run("INSERT INTO products (id, name, price, cost, stock_quantity, unit) VALUES ('frik', 'فريك', 300, 220, 1500, 'kg')");
     api.run("INSERT INTO products (id, name, price, cost, stock_quantity) VALUES ('soap', 'Savon', 80, 60, 3)");
+    api.run("INSERT INTO products (id, name, price, cost, stock_quantity) VALUES ('bread', 'Pain', 15, 10, 0)");
 });
 
 describe('the list to prepare a season', () => {
@@ -32,6 +33,9 @@ describe('the list to prepare a season', () => {
         sale('r2', db(2026, 3, 15), [['dates', 10], ['frik', 1, 1100]]);
         sale('before', db(2026, 2, 10), [['soap', 50]]); // before Ramadan: not counted
         sale('after', db(2026, 3, 25), [['dates', 99]]); // after: not counted
+        // Bread sells as much in Ramadan as before it: the distributor brings it, it is not on the list
+        sale('b1', db(2026, 1, 25), [['bread', 280]]);
+        sale('b2', db(2026, 3, 1), [['bread', 300]]);
         const list = seasons.prepList(api, 'ramadan', { now: NOW });
         expect(list.season).toMatchObject({ id: 'ramadan', start: '2027-02-08', daysLeft: 19 });
         expect(list.last.start).toBe('2026-02-18');
@@ -41,7 +45,22 @@ describe('the list to prepare a season', () => {
             expect.objectContaining({ product_id: 'frik', sold: 5300, stock: 1500, quantity: 4000, unit: 'kg' }),
             expect.objectContaining({ product_id: 'dates', sold: 40, stock: 4, quantity: 36, cartons: 3, carton_qty: 12 }),
         ]);
+        // Sold only in the season: shown as such
+        expect(list.lines[1].uplift).toBeNull();
         expect(list.general).toEqual([]);
+    });
+
+    it('a shop whose history starts with the season: everything sold is kept (nothing to compare with)', () => {
+        sale('b2', db(2026, 3, 1), [['bread', 300]]);
+        const list = seasons.prepList(api, 'ramadan', { now: NOW });
+        expect(list.lines.map((l: { product_id: string }) => l.product_id)).toEqual(['bread']);
+    });
+
+    it('an article that sold more in the season than in the 4 weeks before is kept, with how much more', () => {
+        sale('d0', db(2026, 2, 1), [['dates', 4]]); // 4 in 28 days before, 40 in 30 days of Ramadan
+        sale('d1', db(2026, 2, 20), [['dates', 40]]);
+        const [dates] = seasons.prepList(api, 'ramadan', { now: NOW }).lines;
+        expect(dates).toMatchObject({ product_id: 'dates', uplift: 9.3 });
     });
 
     it('a shop with no year behind it: the general list, with its articles found by their names', () => {
