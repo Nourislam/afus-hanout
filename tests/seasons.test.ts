@@ -47,6 +47,7 @@ describe('the list to prepare a season', () => {
         ]);
         // Sold only in the season: shown as such
         expect(list.lines[1].uplift).toBeNull();
+        expect(list.compared).toBe(true);
         expect(list.general).toEqual([]);
     });
 
@@ -54,6 +55,7 @@ describe('the list to prepare a season', () => {
         sale('b2', db(2026, 3, 1), [['bread', 300]]);
         const list = seasons.prepList(api, 'ramadan', { now: NOW });
         expect(list.lines.map((l: { product_id: string }) => l.product_id)).toEqual(['bread']);
+        expect(list.compared).toBe(false);
     });
 
     it('an article that sold more in the season than in the 4 weeks before is kept, with how much more', () => {

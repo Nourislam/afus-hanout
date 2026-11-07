@@ -17,6 +17,7 @@ interface Prep {
     season: { id: SeasonId; start: string; end: string; daysLeft: number };
     last: { start: string; end: string };
     source: 'lastYear' | 'general';
+    compared: boolean;
     lines: PrepLine[];
     general: General[];
 }
@@ -99,7 +100,7 @@ export default function SeasonsPage() {
                                             <tr key={l.product_id}>
                                                 <td className="px-3 py-2 text-white">{l.name}</td>
                                                 <td className="px-3 py-2 tabular">{qty(l.sold, l.unit)}</td>
-                                                <td className="px-3 py-2 tabular text-zinc-400">{l.uplift ? `×${l.uplift}` : t('seasons.onlySeason')}</td>
+                                                <td className="px-3 py-2 tabular text-zinc-400">{l.uplift ? `×${l.uplift}` : prep.compared ? t('seasons.onlySeason') : '—'}</td>
                                                 <td className="px-3 py-2 tabular">{qty(l.stock, l.unit)}</td>
                                                 <td className="px-3 py-2 tabular font-semibold text-amber-300">
                                                     {l.cartons ? t('seasons.cartons', { n: l.cartons, qty: l.carton_qty ?? 0 }) : qty(l.quantity, l.unit)}

@@ -101,6 +101,8 @@ function prepList(api, id, { now = new Date() } = {}) {
         season: { id, start: iso(season.start), end: iso(season.end), daysLeft: season.daysLeft },
         last: { start: iso(last.start), end: iso(last.end) },
         source, lines,
+        // false: the shop's history starts with the season, nothing to compare with
+        compared: before.size > 0,
         general: source === 'general' ? generalList(api, id) : [],
     };
 }
