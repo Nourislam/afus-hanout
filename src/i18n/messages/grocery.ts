@@ -183,6 +183,8 @@ const messages: Record<string, [string, string, string]> = {
     'karni.oldDate': ["Since", "Depuis", "منذ"],
     'karni.oldAdd': ["Add", "Ajouter", "أضف"],
     'karni.oldAdded': ["{n} name(s) added", "{n} nom(s) ajouté(s)", "أُضيف {n} اسم"],
+    'dist.searchInvoice': ["Scan, or type the name as on his invoice…", "Scannez, ou tapez le nom comme sur sa facture…", "امسح، أو اكتب الاسم كما في فاتورته…"],
+    'dist.fromInvoice': ["his name for it", "son nom pour cet article", "اسمها عنده"],
 };
 
 export default messages;

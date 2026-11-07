@@ -481,6 +481,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         receive: (input) => ipcRenderer.invoke('hanout:receive', input),
         priceRises: (input) => ipcRenderer.invoke('hanout:priceRises', input),
         supplierPrices: (productId) => ipcRenderer.invoke('hanout:supplierPrices', productId),
+        matchName: (input) => ipcRenderer.invoke('hanout:matchName', input),
         lastCost: (input) => ipcRenderer.invoke('hanout:lastCost', input),
         visits: () => ipcRenderer.invoke('hanout:visits'),
         setVisits: (input) => ipcRenderer.invoke('hanout:setVisits', input),

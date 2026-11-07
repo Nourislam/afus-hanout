@@ -475,6 +475,7 @@ module.exports = function register(ctx) {
     })));
     ipcMain.handle('hanout:priceRises', (_, { supplierId, lines } = {}) => receiveService.priceRises(dbApi, supplierId, lines || []));
     ipcMain.handle('hanout:supplierPrices', (_, productId) => receiveService.supplierPrices(dbApi, productId));
+    ipcMain.handle('hanout:matchName', (_, { supplierId, name } = {}) => receiveService.matchInvoiceName(dbApi, supplierId, name));
     ipcMain.handle('hanout:lastCost', (_, { supplierId, productId } = {}) =>
       dbApi.get('SELECT last_cost FROM product_suppliers WHERE product_id = ? AND supplier_id = ?', [productId, supplierId])?.last_cost ?? null);
     ipcMain.handle('hanout:visits', () => dbApi.all('SELECT id, name, phone FROM suppliers WHERE COALESCE(is_active, 1) = 1 ORDER BY name')
