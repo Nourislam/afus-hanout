@@ -1,0 +1,44 @@
+{
+    "//": "What a grocery sells more of in each season, for a shop with no year behind it. Each line: its name in the 3 languages and the words that find it in the shop's articles (Arabic, French, Darija in Latin letters).",
+    "ramadan": [
+        { "ar": "التمر", "fr": "Dattes", "en": "Dates", "words": ["تمر", "دقلة", "datte", "deglet"] },
+        { "ar": "الفريك والشربة", "fr": "Frik (chorba)", "en": "Frik (chorba)", "words": ["فريك", "شربة", "frik", "chorba"] },
+        { "ar": "الحمص", "fr": "Pois chiches", "en": "Chickpeas", "words": ["حمص", "pois chiche", "chickpea"] },
+        { "ar": "الشعرية", "fr": "Vermicelle", "en": "Vermicelli", "words": ["شعرية", "vermicelle", "vermicelli"] },
+        { "ar": "الدقيق والسميد", "fr": "Farine et semoule", "en": "Flour and semolina", "words": ["دقيق", "فرينة", "سميد", "farine", "semoule"] },
+        { "ar": "الزيت", "fr": "Huile", "en": "Oil", "words": ["زيت", "huile"] },
+        { "ar": "السكر", "fr": "Sucre", "en": "Sugar", "words": ["سكر", "sucre"] },
+        { "ar": "الحليب واللبن", "fr": "Lait et lben", "en": "Milk and lben", "words": ["حليب", "لبن", "lait", "lben"] },
+        { "ar": "الطماطم المصبرة", "fr": "Concentré de tomate", "en": "Tomato paste", "words": ["طماطم مصبرة", "مركز الطماطم", "concentré", "tomate"] },
+        { "ar": "الزيتون", "fr": "Olives", "en": "Olives", "words": ["زيتون", "olive"] },
+        { "ar": "العصير والمشروبات", "fr": "Jus et boissons", "en": "Juice and drinks", "words": ["عصير", "مشروب", "jus", "boisson", "limonade"] },
+        { "ar": "القهوة والشاي", "fr": "Café et thé", "en": "Coffee and tea", "words": ["قهوة", "شاي", "café", "thé"] },
+        { "ar": "الجبن والياغورت", "fr": "Fromage et yaourt", "en": "Cheese and yoghurt", "words": ["جبن", "ياغورت", "fromage", "yaourt"] },
+        { "ar": "التوابل", "fr": "Épices", "en": "Spices", "words": ["توابل", "فلفل أسود", "كمون", "épice", "cumin"] }
+    ],
+    "eidFitr": [
+        { "ar": "الدقيق", "fr": "Farine", "en": "Flour", "words": ["دقيق", "فرينة", "farine"] },
+        { "ar": "السكر وسكر الحلويات", "fr": "Sucre et sucre glace", "en": "Sugar and icing sugar", "words": ["سكر", "sucre"] },
+        { "ar": "الزبدة والسمن", "fr": "Beurre et smen", "en": "Butter and smen", "words": ["زبدة", "سمن", "beurre", "smen", "margarine"] },
+        { "ar": "البيض", "fr": "Œufs", "en": "Eggs", "words": ["بيض", "œuf", "oeuf"] },
+        { "ar": "اللوز والجوز والكاوكاو", "fr": "Amandes, noix, cacahuètes", "en": "Almonds, nuts, peanuts", "words": ["لوز", "جوز", "كاوكاو", "amande", "noix", "cacahu"] },
+        { "ar": "الشوكولاطة", "fr": "Chocolat", "en": "Chocolate", "words": ["شوكولاطة", "chocolat"] },
+        { "ar": "الخميرة والفانيليا", "fr": "Levure et vanille", "en": "Yeast and vanilla", "words": ["خميرة", "فانيليا", "levure", "vanill"] },
+        { "ar": "المشروبات", "fr": "Boissons", "en": "Drinks", "words": ["عصير", "مشروب", "jus", "boisson", "limonade"] }
+    ],
+    "eidAdha": [
+        { "ar": "الفحم", "fr": "Charbon", "en": "Charcoal", "words": ["فحم", "charbon"] },
+        { "ar": "التوابل", "fr": "Épices", "en": "Spices", "words": ["توابل", "كمون", "رأس الحانوت", "épice", "cumin"] },
+        { "ar": "الملح", "fr": "Sel", "en": "Salt", "words": ["ملح", "sel"] },
+        { "ar": "البصل والثوم", "fr": "Oignons et ail", "en": "Onions and garlic", "words": ["بصل", "ثوم", "oignon", "ail"] },
+        { "ar": "أكياس التجميد", "fr": "Sacs de congélation", "en": "Freezer bags", "words": ["أكياس", "sac", "congél"] },
+        { "ar": "المشروبات", "fr": "Boissons", "en": "Drinks", "words": ["عصير", "مشروب", "jus", "boisson", "limonade"] }
+    ],
+    "rentree": [
+        { "ar": "الكراريس", "fr": "Cahiers", "en": "Exercise books", "words": ["كراس", "كراريس", "cahier"] },
+        { "ar": "الأقلام", "fr": "Stylos et crayons", "en": "Pens and pencils", "words": ["قلم", "أقلام", "stylo", "crayon"] },
+        { "ar": "البسكويت والكيك", "fr": "Biscuits et gâteaux", "en": "Biscuits and cakes", "words": ["بسكويت", "كيك", "biscuit", "gâteau", "gateau"] },
+        { "ar": "العصير الصغير", "fr": "Petits jus", "en": "Small juices", "words": ["عصير", "jus"] },
+        { "ar": "الحليب والجبن", "fr": "Lait et fromage", "en": "Milk and cheese", "words": ["حليب", "جبن", "lait", "fromage"] }
+    ]
+}
