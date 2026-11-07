@@ -124,6 +124,9 @@ const RULES = {
     'db:purchaseOrders:delete': P.INVENTORY_ADJUST,
     'db:purchaseOrders:receiveStock': P.INVENTORY_ADJUST,
     'db:receivings:create': P.INVENTORY_ADJUST,
+    'hanout:receive': P.INVENTORY_ADJUST,
+    'hanout:setVisits': P.INVENTORY_ADJUST,
+    'hanout:setCap': P.PRODUCTS_EDIT,
     'db:supplierInvoices:create': P.INVENTORY_ADJUST,
 
     // Customers and kridi

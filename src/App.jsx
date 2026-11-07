@@ -16,6 +16,7 @@ import TransactionsPage from './pages/TransactionsPage';
 
 import PurchaseOrdersPage from './pages/PurchaseOrdersPage';
 import CreditSalesPage from './pages/CreditSalesPage';
+import DistributorsPage from './pages/DistributorsPage';
 import CatalogPage from './pages/CatalogPage';
 import CustomersPage from './pages/CustomersPage';
 import SuppliersPage from './pages/SuppliersPage';
@@ -160,6 +161,11 @@ function App() {
                     <Route path="/customers" element={
                         <ProtectedRoute permission={PERMISSIONS.CUSTOMERS_VIEW}>
                             <ModuleGate module="customers"><CustomersPage /></ModuleGate>
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/distributors" element={
+                        <ProtectedRoute permission={PERMISSIONS.INVENTORY_ADJUST}>
+                            <ModuleGate module="suppliers"><DistributorsPage /></ModuleGate>
                         </ProtectedRoute>
                     } />
                     <Route path="/suppliers" element={

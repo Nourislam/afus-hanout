@@ -27,3 +27,22 @@ describe('karni statement on WhatsApp', () => {
         expect(text).toContain('3 autres');
     });
 });
+
+describe('the order to a distributor on WhatsApp', async () => {
+    const { orderText } = await import('../src/lib/whatsapp');
+    it('greets him, one line per article in cartons, pieces or kg, and thanks', () => {
+        const text = orderText({
+            supplier: 'Laiterie', shop: 'حانوت النور', lang: 'ar', lines: [
+                { name: 'حليب كيس', quantity: 48, cartons: 2, unit: 'piece' },
+                { name: 'طماطم', quantity: 5000, unit: 'kg' },
+                { name: 'ياغورت', quantity: 6, unit: 'piece' },
+            ],
+        });
+        const lines = text.split('\n');
+        expect(lines[0]).toContain('Laiterie');
+        expect(text).toContain('• حليب كيس: 2 كرطونة');
+        expect(text).toContain('• طماطم: 5 كغ');
+        expect(text).toContain('• ياغورت: 6');
+        expect(lines[lines.length - 1]).toContain('حانوت النور');
+    });
+});

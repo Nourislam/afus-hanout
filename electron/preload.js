@@ -471,6 +471,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
         generateInvoiceNumber: () => ipcRenderer.invoke('db:creditSales:generateInvoiceNumber'),
     },
 
+    // Hanout: the distributor's quick receiving, his days and order, expiry, official prices
+    hanout: {
+        receive: (input) => ipcRenderer.invoke('hanout:receive', input),
+        priceRises: (input) => ipcRenderer.invoke('hanout:priceRises', input),
+        supplierPrices: (productId) => ipcRenderer.invoke('hanout:supplierPrices', productId),
+        lastCost: (input) => ipcRenderer.invoke('hanout:lastCost', input),
+        visits: () => ipcRenderer.invoke('hanout:visits'),
+        setVisits: (input) => ipcRenderer.invoke('hanout:setVisits', input),
+        visitsToday: () => ipcRenderer.invoke('hanout:visitsToday'),
+        suggestedOrder: (supplierId) => ipcRenderer.invoke('hanout:suggestedOrder', supplierId),
+        sellSoon: (days) => ipcRenderer.invoke('hanout:sellSoon', days),
+        capped: () => ipcRenderer.invoke('hanout:capped'),
+        setCap: (input) => ipcRenderer.invoke('hanout:setCap', input),
+    },
+
     // Change kept for a customer (رصيد الصرف)
     changeBalance: {
         get: (customerId) => ipcRenderer.invoke('change:balance', customerId),

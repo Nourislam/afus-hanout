@@ -60,7 +60,7 @@ module.exports = function register(ctx) {
         if (sale.reservation_id) reservations.completeForSale(dbApi, sale);
 
         for (const item of sale.items) {
-          const product = getOne('SELECT id, name, cost, has_variants, stock_quantity, unit, capped_price, service_margin FROM products WHERE id = ?', [item.product_id]);
+          const product = getOne('SELECT id, name, cost, has_variants, stock_quantity, unit, capped_price, service_margin, max_per_customer FROM products WHERE id = ?', [item.product_id]);
           // Not an article: a pack (its own column, product_id only ever points at an article)
           const bundle = product ? null : getOne('SELECT * FROM bundles WHERE id = ?', [item.product_id]);
           const variant = item.variant_id
@@ -99,6 +99,12 @@ module.exports = function register(ctx) {
                 available,
               });
             }
+          }
+
+          // In short supply: no more than its limit per customer on this ticket (every line of it)
+          if (product && Number(product.max_per_customer) > 0) {
+            const taken = (sale.items || []).filter(i => i.product_id === product.id && !i.variant_id).reduce((n, i) => n + stockUnits(i), 0);
+            if (taken > Number(product.max_per_customer)) throw catalog.codedError('SCARCITY_LIMIT', { product: product.name, n: product.max_per_customer });
           }
 
           // Never above the official price (capped articles: bread, milk, oil...)

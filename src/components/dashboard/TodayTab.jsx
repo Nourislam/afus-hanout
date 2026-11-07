@@ -10,6 +10,7 @@ import { formatDate, formatMoney } from '../../i18n/format';
 import { compare, profitState, isFirstDay, daysWithoutSale, MAX_ALERTS } from '../../lib/dashboard';
 import { DASHBOARD_LINKS } from '../../lib/listFilters';
 import { Money, Section, Tile, CompareLine, Row, Empty, Spinner } from './parts';
+import HanoutToday from './HanoutToday';
 
 const ALERT_ICONS = { printer: Printer, drawer: Wallet, stock: Boxes, credit: CreditCard, backup: Archive, price: Tag, offer: Percent };
 const TONES = {
@@ -218,6 +219,8 @@ export default function TodayTab({ access, features, user, ranges, home, alerts,
 
     return (
         <div className="space-y-4">
+            {/* A grocery's morning: the distributors of the day, what to sell before it goes off */}
+            {!first && <HanoutToday canOrder={!!access.shop} />}
             {first ? <FirstSteps steps={home.firstSteps} /> : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 xl:gap-4" data-testid="tiles">
                     <Tile icon={Banknote} label={access.shop ? t('dash.tile.sales') : t('dash.tile.mySales')} value={figures ? money(now.total_revenue || 0) : '…'} testId="tile-sales">

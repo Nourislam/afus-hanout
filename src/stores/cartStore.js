@@ -21,6 +21,12 @@ const usedElsewhere = (items, productId, exceptId = null) => items
     .filter(i => i.product_id === productId && !i.variant_id && i.id !== exceptId)
     .reduce((sum, i) => sum + (Number(i.weight_grams) > 0 ? Number(i.weight_grams) : Number(i.quantity) || 0), 0);
 
+/** A scarce article: more than its limit per customer on this ticket? (pieces of every line) */
+const overLimit = (items, product, adding) => {
+    const max = Number(product.max_per_customer) || 0;
+    return max > 0 && usedElsewhere(items, product.id) + adding > max;
+};
+
 /** The fields every new line of an article starts with. */
 const baseLine = (product) => ({
     id: uuid(),
@@ -138,6 +144,10 @@ export const useCartStore = create((set, get) => ({
         const unitPrice = get().customer?.is_wholesale && wholesalePrice ? wholesalePrice : retailPrice;
         const available = variant ? (variant.stock_quantity ?? 0) : product.stock_quantity;
 
+        // An article in short supply: no more than its limit per customer
+        if (!variant && overLimit(items, product, quantity)) {
+            return { success: false, message: t('cart.scarcity', { n: product.max_per_customer }) };
+        }
         if (existingIndex >= 0) {
             const newItems = [...items];
             const line = newItems[existingIndex];
@@ -241,6 +251,9 @@ export const useCartStore = create((set, get) => ({
         const listPrice = get().customer?.is_wholesale && wholesale ? wholesale : Number(product.price) || 0;
         const deal = cartonDeal({ ...product, price: existing ? existing.unit_price : listPrice }, count);
         if (!deal) return { success: false, message: t('cart.noCarton') };
+        if (overLimit(items, product, deal.quantity - (existing?.quantity || 0))) {
+            return { success: false, message: t('cart.scarcity', { n: product.max_per_customer }) };
+        }
         const stock = Number(product.stock_quantity) || 0;
         if (deal.quantity + usedElsewhere(items, product.id, existing?.id) > stock) {
             return { success: false, message: t('cart.insufficientStock') };
