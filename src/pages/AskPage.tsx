@@ -37,7 +37,7 @@ export default function AskPage() {
         switch (a.id) {
             case 'bestThisWeek': return t('ask.line.best', { amount: formatMoney(r.amount || 0), n: qty(r.quantity, r.unit) });
             case 'whoOwes': return formatMoney(r.amount || 0);
-            case 'runningOut': return t('ask.line.runningOut', { n: qty(r.stock, r.unit), days: r.days ?? 0 });
+            case 'runningOut': return t(r.days ? 'ask.line.runningOut' : 'ask.line.outToday', { n: qty(r.stock, r.unit), days: r.days ?? 0 });
             case 'notSelling': return t('ask.line.notSelling', { n: qty(r.stock, r.unit), value: formatMoney(r.value || 0) });
             default: return '';
         }
