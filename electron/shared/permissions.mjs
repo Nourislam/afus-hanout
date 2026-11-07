@@ -61,6 +61,9 @@ export const PERMISSIONS = {
 
     // Settings
     SETTINGS_VIEW: 'settings.view',
+
+    // The zakat estimate: the owner's figures (no other role has it)
+    ZAKAT_VIEW: 'zakat.view',
 };
 
 // Role-Permission mapping

@@ -46,3 +46,25 @@ describe('the order to a distributor on WhatsApp', async () => {
         expect(lines[lines.length - 1]).toContain('حانوت النور');
     });
 });
+
+describe('the day\'s closing in three lines', () => {
+    it('sold, earned about, the karni grew or shrank', async () => {
+        const { closingText, whatsappShare } = await import('../src/lib/whatsapp');
+        const text = closingText({ shop: 'حانوت النور', lang: 'ar', date: '07/11/2026', summary: { sales: 12500, profit: 2100, karniChange: 900, tickets: 54 } });
+        const lines = text.split('\n');
+        expect(lines).toHaveLength(4);
+        expect(lines[0]).toBe('حانوت النور — 07/11/2026');
+        expect(lines[1]).toMatch(/^• بعت .*12\u202f500\u202fد\.ج.*54/);
+        expect(lines[2]).toMatch(/^• ربحت تقريباً .*2\u202f100\u202fد\.ج/);
+        expect(lines[3]).toMatch(/^• الكريدي زاد .*900\u202fد\.ج/);
+        expect(text).toContain('بعت');
+        expect(text).toContain('ربحت تقريباً');
+        expect(text).toContain('الكريدي زاد');
+        // Without the profit (not the owner): two figures only
+        const fr = closingText({ shop: 'Hanout', lang: 'fr', date: '07/11/2026', summary: { sales: 500, karniChange: -200, tickets: 3 } });
+        expect(fr.split('\n')).toHaveLength(3);
+        expect(fr).toContain('Le karni a baissé de 200');
+        expect(fr).not.toContain('Gagné');
+        expect(whatsappShare('a b')).toBe('https://wa.me/?text=a%20b');
+    });
+});

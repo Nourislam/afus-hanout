@@ -18,6 +18,8 @@ import PurchaseOrdersPage from './pages/PurchaseOrdersPage';
 import CreditSalesPage from './pages/CreditSalesPage';
 import DistributorsPage from './pages/DistributorsPage';
 import AskPage from './pages/AskPage';
+import SeasonsPage from './pages/SeasonsPage';
+import ZakatPage from './pages/ZakatPage';
 import CatalogPage from './pages/CatalogPage';
 import CustomersPage from './pages/CustomersPage';
 import SuppliersPage from './pages/SuppliersPage';
@@ -166,6 +168,12 @@ function App() {
                     } />
                     <Route path="/ask" element={
                         <ProtectedRoute permission={PERMISSIONS.REPORTS_VIEW}><AskPage /></ProtectedRoute>
+                    } />
+                    <Route path="/seasons" element={
+                        <ProtectedRoute permission={PERMISSIONS.INVENTORY_ADJUST}><SeasonsPage /></ProtectedRoute>
+                    } />
+                    <Route path="/zakat" element={
+                        <ProtectedRoute permission={PERMISSIONS.ZAKAT_VIEW}><ZakatPage /></ProtectedRoute>
                     } />
                     <Route path="/distributors" element={
                         <ProtectedRoute permission={PERMISSIONS.INVENTORY_ADJUST}>

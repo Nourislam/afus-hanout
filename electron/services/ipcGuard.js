@@ -26,6 +26,7 @@ const SETTING_RULES = {
     pos_controls: 'admin',
     loyalty: 'admin',
     local_server: 'admin',
+    zakat: 'admin',
 };
 
 const RULES = {
@@ -141,6 +142,10 @@ const RULES = {
     'db:creditPayments:create': 'login',
     'karni:payPart': 'login',
     'karni:openingDebt': P.CUSTOMERS_CREDIT,
+    // The seasons' lists show purchase prices; what looks odd and the zakat are the owner's
+    'seasons:prep': P.INVENTORY_ADJUST,
+    'day:oddities': 'admin',
+    'zakat:figures': P.ZAKAT_VIEW,
     // The label scale's list: numbers given and the scale said up to date by who edits articles
     'scale:assignNumbers': P.PRODUCTS_EDIT,
     'scale:markSent': P.PRODUCTS_EDIT,

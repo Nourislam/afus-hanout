@@ -471,6 +471,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
         generateInvoiceNumber: () => ipcRenderer.invoke('db:creditSales:generateInvoiceNumber'),
     },
 
+    // Seasons, the day's summary, what looks odd, the zakat's figures (read only)
+    smart: {
+        upcomingSeasons: () => ipcRenderer.invoke('seasons:upcoming'),
+        seasonPrep: (id) => ipcRenderer.invoke('seasons:prep', id),
+        daySummary: () => ipcRenderer.invoke('day:summary'),
+        oddities: () => ipcRenderer.invoke('day:oddities'),
+        zakatFigures: () => ipcRenderer.invoke('zakat:figures'),
+    },
+
     // The label scale's list (PLU): the file, the sheet, what changed
     scale: {
         plu: () => ipcRenderer.invoke('scale:plu'),

@@ -71,3 +71,27 @@ export function orderText({ supplier, shop, lang, lines = [] }) {
         tr('order.thanks', { shop: shop || '' }),
     ].join('\n');
 }
+
+/**
+ * The day's closing in three lines, for the owner: sold, earned about (only
+ * when the summary carries it: the owner's figure), the karni grew or shrank.
+ * @param {{ shop: string, lang: string, date: string, summary: { sales: number, profit?: number, karniChange: number, tickets: number } }} input
+ */
+export function closingText({ shop, lang, date, summary }) {
+    const tr = (key, params) => translate(lang, key, params);
+    const money = (n) => formatMoney(n, { lang });
+    const karni = summary.karniChange > 0 ? tr('closing.karniUp', { amount: money(summary.karniChange) })
+        : summary.karniChange < 0 ? tr('closing.karniDown', { amount: money(-summary.karniChange) })
+            : tr('closing.karniSame');
+    return [
+        tr('closing.title', { shop: shop || '', date }),
+        `• ${tr('closing.sold', { amount: money(summary.sales), n: summary.tickets })}`,
+        ...(summary.profit !== undefined && summary.profit !== null ? [`• ${tr('closing.profit', { amount: money(summary.profit) })}`] : []),
+        `• ${karni}`,
+    ].join('\n');
+}
+
+/** A wa.me link with the text only: WhatsApp asks who to send it to. */
+export function whatsappShare(text) {
+    return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
