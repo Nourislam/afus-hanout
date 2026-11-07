@@ -501,6 +501,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         balances: () => ipcRenderer.invoke('karni:balances'),
         lines: (customerId) => ipcRenderer.invoke('karni:lines', customerId),
         payPart: (input) => ipcRenderer.invoke('karni:payPart', input),
+        openingDebt: (input) => ipcRenderer.invoke('karni:openingDebt', input),
     },
 
     // Credit Payments

@@ -26,6 +26,7 @@ export interface ElectronAPI {
         balances(): Promise<KarniBalance[]>;
         lines(customerId: string): Promise<{ date: string; left: number; invoice: string }[]>;
         payPart(input: { customerId: string; amount: number; method?: 'cash' | 'card'; receivedBy?: string | null }): Promise<{ paid: number; left: number }>;
+        openingDebt(input: { name: string; phone?: string; amount: number; date?: string }): Promise<{ customerId: string }>;
     };
     shell: { openExternal(url: string): Promise<{ success?: boolean } | undefined> };
     settings: {

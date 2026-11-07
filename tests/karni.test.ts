@@ -69,3 +69,19 @@ describe('a new customer', () => {
         expect(karni.DEFAULT_KARNI_LIMIT).toBe(5000);
     });
 });
+
+describe('the old paper karni', () => {
+    it('each name and what he owes goes in once: a known name gets the debt, a new one is created', () => {
+        karni.openingDebt(api, { name: 'amine ', amount: 400, date: '2026-09-15' });
+        karni.openingDebt(api, { name: 'Ali le voisin', phone: '0661 22 33 44', amount: 750.5, date: '2026-10-01' });
+        expect(karni.owed(api, 'amine')).toBe(1590 + 400);
+        const ali = api.get("SELECT id, phone, credit_enabled, credit_limit FROM customers WHERE name = 'Ali le voisin'");
+        expect(ali).toMatchObject({ phone: '0661 22 33 44', credit_enabled: 1, credit_limit: 5000 });
+        expect(karni.openLines(api, ali.id)).toEqual([{ date: '2026-10-01 00:00:00', left: 750.5, invoice: expect.stringMatching(/^KO-/) }]);
+    });
+
+    it('refuses no name or no amount', () => {
+        expect(() => karni.openingDebt(api, { name: '', amount: 100 })).toThrow(/KARNI_OLD_LINE/);
+        expect(() => karni.openingDebt(api, { name: 'Ali', amount: 0 })).toThrow(/KARNI_OLD_LINE/);
+    });
+});

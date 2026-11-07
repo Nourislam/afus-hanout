@@ -175,6 +175,14 @@ const messages: Record<string, [string, string, string]> = {
     'ask.none.whoOwes': ["Nobody owes anything", "Personne ne doit rien", "لا أحد عليه شيء"],
     'ask.none.runningOut': ["Nothing runs out this week at this pace", "Rien ne s'épuise cette semaine à ce rythme", "لا شيء يخلاص هذا الأسبوع بهذا الرتم"],
     'ask.none.notSelling': ["Everything in stock sold in the last 30 days", "Tout le stock s'est vendu ces 30 derniers jours", "كل ما في المخزون تباع في آخر 30 يوم"],
+    'karni.old': ["Old karni", "Ancien carnet", "الكارني القديم"],
+    'karni.oldTitle': ["Type the old karni in", "Saisir l'ancien carnet", "أدخل الكارني القديم"],
+    'karni.oldText': ["One name after the other, as written in the notebook: what he owes and since when. A name you already have gets the debt.", "Un nom après l'autre, comme dans le carnet : ce qu'il doit et depuis quand. Un nom connu reçoit la dette.", "اسم بعد اسم كما في الدفتر: ما عليه ومنذ متى. الاسم الموجود يُضاف له الدين."],
+    'karni.oldName': ["Name as you know him", "Nom comme vous le connaissez", "الاسم كما تعرفه"],
+    'karni.oldAmount': ["Owes (DA)", "Doit (DA)", "عليه (دج)"],
+    'karni.oldDate': ["Since", "Depuis", "منذ"],
+    'karni.oldAdd': ["Add", "Ajouter", "أضف"],
+    'karni.oldAdded': ["{n} name(s) added", "{n} nom(s) ajouté(s)", "أُضيف {n} اسم"],
 };
 
 export default messages;

@@ -102,4 +102,30 @@ function newCustomerCredit(customer = {}, { allowed = false, defaultLimit } = {}
     return [1, Number(customer.credit_limit) > 0 ? Number(customer.credit_limit) : limit];
 }
 
-module.exports = { openCredits, owed, recordPayment, payPart, balances, openLines, newCustomerCredit, DEFAULT_KARNI_LIMIT };
+/**
+ * The old paper karni, written in once (at setup or any day): a name, what
+ * he owes, since when. A name the shop knows (case and spaces do not matter)
+ * gets the debt; a new one is created with the karni on at the shop's ceiling.
+ * @returns {{ customerId: string, creditId: string }}
+ */
+function openingDebt(api, { name, phone = '', amount, date = null, defaultLimit } = {}) {
+    const clean = String(name || '').trim().replace(/\s+/g, ' ');
+    const value = r2(amount);
+    if (!clean || !(value > 0)) throw catalog.codedError('KARNI_OLD_LINE', {});
+    const known = api.all('SELECT id, name FROM customers').find(c => String(c.name || '').trim().replace(/\s+/g, ' ').toLowerCase() === clean.toLowerCase());
+    let customerId = known?.id;
+    if (!customerId) {
+        customerId = api.uuid();
+        const [enabled, limit] = newCustomerCredit({}, { allowed: false, defaultLimit });
+        api.run('INSERT INTO customers (id, name, phone, credit_enabled, credit_limit) VALUES (?, ?, ?, ?, ?)', [customerId, clean, String(phone || '').trim(), enabled, limit]);
+    }
+    const when = /^\d{4}-\d{2}-\d{2}$/.test(String(date || '')) ? `${date} 00:00:00` : new Date().toISOString().replace('T', ' ').slice(0, 19);
+    const n = api.get("SELECT COUNT(*) AS n FROM credit_sales WHERE invoice_number LIKE 'KO-%'").n + 1;
+    const creditId = api.uuid();
+    api.run(`INSERT INTO credit_sales (id, sale_id, customer_id, invoice_number, amount_due, amount_paid, status, due_date, notes, created_at)
+             VALUES (?, NULL, ?, ?, ?, 0, 'pending', ?, ?, ?)`, [creditId, customerId, `KO-${String(n).padStart(4, '0')}`, value, when, 'old karni', when]);
+    api.run('UPDATE customers SET credit_balance = ROUND(COALESCE(credit_balance, 0) + ?, 2) WHERE id = ?', [value, customerId]);
+    return { customerId, creditId };
+}
+
+module.exports = { openCredits, owed, recordPayment, payPart, balances, openLines, newCustomerCredit, openingDebt, DEFAULT_KARNI_LIMIT };
