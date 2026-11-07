@@ -3,7 +3,7 @@
 // Shared by the menu and by Settings › Modules (pages of the simple menu).
 import {
     LayoutDashboard, ShoppingCart, Package, Boxes, UserCog, BarChart3, Percent, QrCode,
-    History, CreditCard, FileText, LibraryBig, Users, Truck, CalendarClock, MessageCircleQuestion,
+    History, CreditCard, FileText, LibraryBig, Users, Truck, CalendarClock, MessageCircleQuestion, MoonStar, Landmark,
 } from 'lucide-react';
 import { PERMISSIONS } from '../../stores/authStore';
 import { offerTabs } from '../../lib/modules';
@@ -28,6 +28,8 @@ export const NAV_GROUPS = [
             { path: '/customers', icon: Users, label: 'nav.customers', permission: PERMISSIONS.CUSTOMERS_VIEW, feature: 'customers' },
             // The distributors' days, their order and the quick receiving
             { path: '/distributors', icon: CalendarClock, label: 'nav.distributors', permission: PERMISSIONS.INVENTORY_ADJUST, feature: 'suppliers' },
+            // Ramadan, the Eids, the school start: what to buy before
+            { path: '/seasons', icon: MoonStar, label: 'nav.seasons', permission: PERMISSIONS.INVENTORY_ADJUST },
             { path: '/suppliers', icon: Truck, label: 'nav.suppliers', permission: PERMISSIONS.INVENTORY_ADJUST, feature: 'suppliers' },
             { path: '/purchase-orders', icon: FileText, label: 'nav.purchases', permission: PERMISSIONS.INVENTORY_ADJUST, feature: 'purchaseOrders' },
         ],
@@ -46,6 +48,8 @@ export const NAV_GROUPS = [
             { path: '/reports', icon: BarChart3, label: 'nav.reports', permission: PERMISSIONS.REPORTS_VIEW },
             // Ready questions about the shop, answered without the internet
             { path: '/ask', icon: MessageCircleQuestion, label: 'nav.ask', permission: PERMISSIONS.REPORTS_VIEW },
+            // The owner's zakat estimate
+            { path: '/zakat', icon: Landmark, label: 'nav.zakat', permission: PERMISSIONS.ZAKAT_VIEW },
         ],
     },
 ];
