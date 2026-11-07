@@ -7,6 +7,7 @@ module.exports = function register(ctx) {
         catalog,
         dbApi,
         getOne,
+        getSettingValue,
         ipcGuard,
         ipcMain,
         isFirstSetup,
@@ -55,7 +56,12 @@ module.exports = function register(ctx) {
 
     ipcMain.handle('db:customers:create', (_, customer) => {
       // Wholesale customer (pays the wholesale prices): same rule as kridi
-      const [creditEnabled, creditLimit, wholesale] = creditFields(customer);
+      const [, , wholesale] = creditFields(customer);
+      // A hanout's karni is the rule: a new customer has it on, at the shop's ceiling
+      const [creditEnabled, creditLimit] = require('../services/karniService').newCustomerCredit(customer, {
+        allowed: ipcGuard.allows(PERMISSIONS.CUSTOMERS_CREDIT, session.getEmployee()) || isFirstSetup(),
+        defaultLimit: getSettingValue('karni_default_limit'),
+      });
       runInsert(`
     INSERT INTO customers (id, name, email, phone, address, loyalty_points, notes, credit_enabled, credit_limit, is_wholesale, receipt_language, is_synced)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)

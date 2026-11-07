@@ -1,7 +1,7 @@
 // Credit reminder sent through WhatsApp, the way shops already do it by hand:
 // the program only opens WhatsApp (app or web) on the customer's number with
 // a ready message; the cashier presses Send. No account, no server, no API.
-import { t } from '../i18n';
+import { t, translate } from '../i18n';
 import { formatMoney, formatDate } from '../i18n/format';
 
 /**
@@ -27,4 +27,28 @@ export function reminderMessage({ customerName, amount, shopName, dueDate }) {
 export function whatsappLink(phone, text) {
     const number = whatsappNumber(phone);
     return number ? `https://wa.me/${number}?text=${encodeURIComponent(text)}` : null;
+}
+
+/** At most this many debts written in a statement; the rest are counted. */
+const STATEMENT_LINES = 10;
+
+/**
+ * @param {{ name: string, shop: string, lines?: { date: string, left: number }[], owed: number, lang: string }} input
+ * The karni statement, polite and ready to send: greeting, each open debt
+ * with its date (the oldest first), what is left, thanks. The owner sends it
+ * himself: no automatic reminder, to keep the relationship.
+ */
+export function statementText({ name, shop, lines = [], owed, lang }) {
+    const tr = (key, params) => translate(lang, key, params);
+    const money = (n) => formatMoney(n, { lang });
+    const shown = lines.slice(0, STATEMENT_LINES).map(l => `• ${formatDate(l.date, 'date', { lang })}: ${money(l.left)}`);
+    const more = lines.length > STATEMENT_LINES ? [tr('karni.statement.more', { n: lines.length - STATEMENT_LINES })] : [];
+    return [
+        tr('karni.statement.hello', { name: name || '' }),
+        tr('karni.statement.intro', { shop: shop || '' }),
+        ...shown,
+        ...more,
+        tr('karni.statement.left', { amount: money(owed) }),
+        tr('karni.statement.thanks'),
+    ].join('\n');
 }

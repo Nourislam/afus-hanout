@@ -10,9 +10,9 @@ module.exports = function register(ctx) {
         runQuery,
         runTransaction,
         uuid,
-        catalog,
+        dbApi,
     } = ctx;
-    const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+    const karni = require('../services/karniService');
 
     ipcMain.handle('db:creditSales:getAll', (_, params = {}) => {
       let query = `
@@ -103,64 +103,23 @@ module.exports = function register(ctx) {
     });
 
     // Credit Payments
+    // One ticket's debt paid (the same rule as «خلّص بعض»: services/karniService.js)
     ipcMain.handle('db:creditPayments:create', (_, input) => runTransaction(() => {
-      let payment = input || {};
-      const id = payment.id || uuid();
-
-      // Get the credit sale
-      const creditSale = getOne('SELECT * FROM credit_sales WHERE id = ?', [payment.credit_sale_id]);
-      if (!creditSale) {
-        throw new Error('Credit sale not found');
-      }
-      // More than 0 and never more than what is still owed (to the cent)
-      const left = r2((creditSale.amount_due || 0) - (creditSale.amount_paid || 0));
-      const amount = r2(payment.amount);
-      if (!(amount > 0) || amount > left + 0.004) throw catalog.codedError('CREDIT_PAYMENT_AMOUNT', { left });
-      payment = { ...payment, amount };
-
-      // Record the payment
-      runInsert(`
-    INSERT INTO credit_payments (id, credit_sale_id, amount, payment_method, reference, received_by, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `, [
-        id,
-        payment.credit_sale_id,
-        payment.amount,
-        payment.payment_method,
-        payment.reference || null,
-        payment.received_by || null,
-        payment.notes || null
-      ]);
-
-      // Update credit sale
-      const newAmountPaid = r2((creditSale.amount_paid || 0) + payment.amount);
-      let newStatus = 'partial';
-
-      // Fix for floating point precision issues
-      // Compare rounded values (cents)
-      const paidCents = Math.round(newAmountPaid * 100);
-      const dueCents = Math.round(creditSale.amount_due * 100);
-
-      if (paidCents >= dueCents) {
-        newStatus = 'paid';
-      }
-
-      runInsert(`
-    UPDATE credit_sales 
-    SET amount_paid = ?, status = ?, updated_at = CURRENT_TIMESTAMP, is_synced = 0
-    WHERE id = ?
-  `, [newAmountPaid, newStatus, payment.credit_sale_id]);
-
-      // Update customer credit_balance
-      runInsert(`
-    UPDATE customers 
-    SET credit_balance = ROUND(MAX(0, COALESCE(credit_balance, 0) - ?), 2), updated_at = CURRENT_TIMESTAMP, is_synced = 0
-    WHERE id = ?
-  `, [payment.amount, creditSale.customer_id]);
-
+      const payment = input || {};
+      const saved = karni.recordPayment(dbApi, {
+        id: payment.id || uuid(), creditSaleId: payment.credit_sale_id, amount: payment.amount, method: payment.payment_method,
+        reference: payment.reference || null, receivedBy: payment.received_by || null, notes: payment.notes || null,
+      });
       SyncManager.triggerSync();
-      return { ...payment, id };
+      return { ...payment, ...saved };
     }));
+
+    // The karni: who owes what, «خلّص بعض» against the whole balance, the statement's lines
+    ipcMain.handle('karni:balances', () => karni.balances(dbApi));
+    ipcMain.handle('karni:lines', (_, customerId) => karni.openLines(dbApi, customerId));
+    ipcMain.handle('karni:payPart', (_, input = {}) => runTransaction(() => karni.payPart(dbApi, {
+      customerId: input.customerId, amount: input.amount, method: input.method === 'card' ? 'card' : 'cash', receivedBy: input.receivedBy || null,
+    })));
 
     ipcMain.handle('db:creditPayments:getByCreditSale', (_, creditSaleId) => {
       return runQuery(`

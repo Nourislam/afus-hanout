@@ -21,7 +21,7 @@ function stockLines(api) {
         SELECT p.id, p.name, p.sku, p.barcode, p.price, p.cost, p.stock_quantity, p.min_stock_level, p.unit, p.plu,
                COALESCE(p.has_variants, 0) AS has_variants, p.brand, p.season, p.collection, c.name AS category
         FROM products p LEFT JOIN categories c ON c.id = p.category_id
-        WHERE COALESCE(p.is_active, 1) = 1
+        WHERE COALESCE(p.is_active, 1) = 1 AND COALESCE(p.unit, 'piece') <> 'service'
         ORDER BY c.name, p.name`);
     const variants = new Map();
     for (const v of api.all(`

@@ -214,7 +214,14 @@ class ShiftService {
                 WHERE closed_by = ? AND status = 'cancelled' AND datetime(closed_at) BETWEEN datetime(?) AND datetime(?)`,
             [shift.employee_id, shift.start_time, endTime])?.total || 0);
         } catch { /* database before reservations */ }
-        const expectedCash = round2(openingCash + totalCashSales + totalCreditCollected + depositsCash - totalCashRefunds - totalExpenses - depositRefunds);
+        // Change under 5 DA kept for customers: it stayed in the drawer
+        let changeKept = 0;
+        try {
+            changeKept = round2(getOne(`SELECT COALESCE(SUM(m.amount), 0) AS total FROM change_balance_moves m JOIN sales s ON s.id = m.sale_id
+                WHERE m.amount > 0 AND s.employee_id = ? AND datetime(s.created_at) BETWEEN datetime(?) AND datetime(?) AND ${countedSale('s')}`,
+            [shift.employee_id, shift.start_time, endTime])?.total || 0);
+        } catch { /* database before the change balance */ }
+        const expectedCash = round2(openingCash + totalCashSales + totalCreditCollected + depositsCash + changeKept - totalCashRefunds - totalExpenses - depositRefunds);
         const durationMinutes = Math.max(0, Math.round((new Date(endTime) - new Date(shift.start_time)) / 60000));
 
         return {
@@ -231,6 +238,7 @@ class ShiftService {
             credit_collected_cash: totalCreditCollected,
             total_expenses: totalExpenses,
             deposits_cash: depositsCash,
+            change_kept: changeKept,
             deposit_refunds: depositRefunds,
             opening_cash: openingCash,
             expected_cash: expectedCash,

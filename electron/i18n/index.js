@@ -57,6 +57,7 @@ const MESSAGES = {
     'pay.card': ['Card (CIB / Edahabia)', 'Carte (CIB / Edahabia)', 'بطاقة CIB أو الذهبية'],
     'pay.transfer': ['Baridi Pay', 'Baridi Pay', 'بريدي باي'],
     'pay.credit': ['Credit', 'Crédit', 'كريدي'],
+    'pay.change_balance': ['Change kept', 'Monnaie gardée', 'رصيد الصرف'],
     'pay.gift_card': ['Gift card', 'Carte cadeau', 'بطاقة هدية'],
     'pay.exchange': ['Exchanged piece', 'Pièce échangée', 'قطعة مُبدّلة'],
     'pay.deposit': ['Deposit paid', 'Acompte versé', 'العربون المدفوع'],

@@ -3,7 +3,7 @@ import { isTaxEnabled } from '../lib/tax';
 import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
 import { bestPromotion } from '../lib/promotions';
-import { isWeighed, weighedPrice, cartonDeal, lineCounts, pricePerKg } from '../../electron/shared/grocery.ts';
+import { isWeighed, isService, weighedPrice, cartonDeal, lineCounts, pricePerKg } from '../../electron/shared/grocery.ts';
 
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 const lineTotal = (quantity, unitPrice, discount = 0) => round2(quantity * unitPrice - (discount || 0));
@@ -122,6 +122,8 @@ export const useCartStore = create((set, get) => ({
         const { items, globalTaxRate } = get();
         // An article sold by weight is weighed first (addWeighed)
         if (!variant && isWeighed(product)) return { success: false, needsWeight: true, message: t('cart.needsWeight') };
+        // A service (flexy…): its amount is typed first (addService)
+        if (!variant && isService(product)) return { success: false, needsAmount: true, message: t('cart.needsAmount') };
         const variantId = variant ? variant.id : null;
         // Pieces only: a carton or a weighed line of the same article is its own line
         const existingIndex = items.findIndex(item =>
@@ -271,6 +273,26 @@ export const useCartStore = create((set, get) => ({
         };
         set({ items: [...items, line], lastAddedId: line.id });
         return { success: true, quantity: deal.quantity };
+    },
+
+    /** A service (flexy…): one line of the amount typed, no stock. */
+    addService: (product, amount) => {
+        const value = round2(amount);
+        if (!(value > 0)) return { success: false, message: t('cart.needsAmount') };
+        const { items, globalTaxRate } = get();
+        const line = {
+            ...baseLine(product),
+            sold_as: 'service',
+            quantity: 1,
+            unit_price: value,
+            original_price: value,
+            tax_rate: (product.tax_rate && product.tax_rate > 0) ? product.tax_rate : globalTaxRate,
+            discount: 0,
+            total: value,
+            max_stock: 1,
+        };
+        set({ items: [...items, line], lastAddedId: line.id });
+        return { success: true, quantity: 1 };
     },
 
     /**
@@ -537,7 +559,7 @@ export const useCartStore = create((set, get) => ({
         });
     },
 
-    processPayment: async (payments, employeeId, employeeName = null, approval = null, credit = null) => {
+    processPayment: async (payments, employeeId, employeeName = null, approval = null, credit = null, changeKept = 0) => {
         const { items, customer, notes, serviceCharge, taxExempt } = get();
         if (items.length === 0) throw new Error(t('cart.empty'));
 
@@ -574,6 +596,8 @@ export const useCartStore = create((set, get) => ({
             approval: approval || null,
             // Reservation picked up (its deposit is one of the payments)
             reservation_id: get().reservation?.id || null,
+            // Change under 5 DA written on the customer's name (checked by the main process)
+            change_kept: changeKept > 0 ? changeKept : 0,
             // Kridi: written with the sale by the main process (customer, due date)
             credit: credit ? { ...credit, notes: credit.notes || t('pos.creditNote', { n: receiptNumber }) } : null,
             items: saleItems,

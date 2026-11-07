@@ -2,7 +2,8 @@
 // Known reasons are shown in the interface language; others as typed.
 import { t } from '../i18n';
 
-export const MANUAL_REASONS = ['received', 'count', 'damaged', 'returned', 'shrinkage', 'other'];
+// family: what the family takes from the shop, not a loss
+export const MANUAL_REASONS = ['received', 'count', 'damaged', 'returned', 'shrinkage', 'family', 'other'];
 
 // Values saved by older versions of the stock adjustment form
 const LEGACY = {

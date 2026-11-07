@@ -5,6 +5,7 @@ export default {
     'stock.reason.count': ["Stock count", "Inventaire", "جرد"],
     'stock.reason.damaged': ["Damaged", "Abîmé", "تالف"],
     'stock.reason.returned': ["Returned by customer", "Retour client", "إرجاع من الزبون"],
+    'stock.reason.family': ["Family consumption", "Consommation de la famille", "استهلاك العائلة"],
     'stock.reason.shrinkage': ["Loss / theft", "Perte / vol", "ضياع / سرقة"],
     'stock.reason.other': ["Other", "Autre", "أخرى"],
     'stock.reason.sale': ["Sale no. {a}", "Vente n° {a}", "بيع رقم {a}"],

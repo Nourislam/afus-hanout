@@ -191,7 +191,15 @@ function checkGroceryFields(api, product) {
 /** Grocery fields of the article, written when the form sends them. */
 function saveGroceryFields(api, product) {
     const set = (column, value) => api.run(`UPDATE products SET ${column} = ? WHERE id = ?`, [value, product.id]);
-    if (product.unit !== undefined) set('unit', product.unit === 'kg' ? 'kg' : 'piece');
+    if (product.unit !== undefined) set('unit', ['kg', 'service'].includes(product.unit) ? product.unit : 'piece');
+    // A service: its margin, and no stock to keep
+    if (product.unit === 'service') {
+        const margin = Number(product.service_margin);
+        set('service_margin', Number.isFinite(margin) && margin >= 0 && margin < 100 ? margin : 0);
+        set('stock_quantity', 0);
+    } else if (product.unit !== undefined) {
+        set('service_margin', null);
+    }
     let cartonQty = null;
     if (product.carton_qty !== undefined) {
         const qty = parseInt(product.carton_qty, 10);
@@ -925,6 +933,7 @@ function getLowStock(api) {
                stock_quantity, min_stock_level
         FROM products
         WHERE is_active = 1 AND COALESCE(has_variants, 0) = 0 AND stock_quantity <= min_stock_level
+          AND COALESCE(unit, 'piece') <> 'service'
     `);
     return [...variants, ...products].sort((a, b) => a.stock_quantity - b.stock_quantity);
 }

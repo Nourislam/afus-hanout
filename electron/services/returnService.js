@@ -95,8 +95,8 @@ function createReturn(api, data) {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [api.uuid(), data.id, item.sale_item_id, productId ?? null, variantId, lines[i].quantity, item.refund_amount, item.condition ?? null, saleItem.weight_grams || null]);
 
-        // Restock if sellable
-        if (item.condition === 'sellable' && productId && api.get('SELECT id FROM products WHERE id = ?', [productId])) {
+        // Restock if sellable (a service, flexy…, has no stock)
+        if (item.condition === 'sellable' && productId && saleItem.sold_as !== 'service' && api.get('SELECT id FROM products WHERE id = ?', [productId])) {
             catalog.adjustStock(api, {
                 productId,
                 variantId,

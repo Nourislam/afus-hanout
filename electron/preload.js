@@ -471,6 +471,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
         generateInvoiceNumber: () => ipcRenderer.invoke('db:creditSales:generateInvoiceNumber'),
     },
 
+    // Change kept for a customer (رصيد الصرف)
+    changeBalance: {
+        get: (customerId) => ipcRenderer.invoke('change:balance', customerId),
+    },
+
+    // The karni: balances, «خلّص بعض», the statement's lines
+    karni: {
+        balances: () => ipcRenderer.invoke('karni:balances'),
+        lines: (customerId) => ipcRenderer.invoke('karni:lines', customerId),
+        payPart: (input) => ipcRenderer.invoke('karni:payPart', input),
+    },
+
     // Credit Payments
     creditPayments: {
         create: (payment) => ipcRenderer.invoke('db:creditPayments:create', payment),
