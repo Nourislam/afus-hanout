@@ -115,6 +115,18 @@ const MESSAGES = {
     // Shop legal identifiers
     // Excel files (services/excelReport.js, services/exportService.js)
     'xl.save': ['Save the Excel file', 'Enregistrer le fichier Excel', 'حفظ ملف الإكسال'],
+    // The label scale's list (PLU): the file and the sheet to type it in
+    'plu.title': ['Articles of the label scale (PLU)', 'Articles de la balance étiqueteuse (PLU)', 'سلع ميزان الملصقات (PLU)'],
+    'plu.col.plu': ['No.', 'N°', 'الرقم'],
+    'plu.col.name': ['Article', 'Article', 'السلعة'],
+    'plu.col.price': ['Price per kg', 'Prix au kg', 'سعر الكيلوغرام'],
+    'plu.new': ['New in the scale', 'Nouveau dans la balance', 'جديدة في الميزان'],
+    'plu.was': ['Was {price}', 'Avant {price}', 'كان {price}'],
+    'plu.renamed': ['New name', 'Nouveau nom', 'اسم جديد'],
+    'plu.gone': ['To empty in the scale', 'À vider dans la balance', 'تُفرغ من الميزان'],
+    'plu.lastSent': ['scale updated {date}', 'balance mise à jour le {date}', 'آخر تحديث للميزان {date}'],
+    'plu.save': ['Save the file for the scale', 'Enregistrer le fichier pour la balance', 'حفظ ملف الميزان'],
+    'plu.file': ['Scale PLU', 'PLU balance', 'PLU الميزان'],
     'xl.period': ['Period', 'Période', 'الفترة'],
     'xl.madeOn': ['Made on', 'Établi le', 'تاريخ الإنشاء'],
     'xl.by': ['By', 'Par', 'بواسطة'],

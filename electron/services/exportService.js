@@ -240,6 +240,19 @@ function supplierSheets(api, T) {
     }];
 }
 
+/** The label scale's list (PLU), for the scale's program or to read it. */
+function scalePluSheets(api, T) {
+    const list = require('./scalePluService').pluList(api);
+    return [{
+        name: T('plu.file'), title: T('plu.title'), period: T('xl.asOf', { date: day(new Date(), T) }),
+        columns: [
+            { key: 'plu', label: 'PLU', type: 'int', width: 8 },
+            { key: 'name', label: T('plu.col.name'), type: 'text' },
+            { key: 'price', label: T('plu.col.price'), type: 'money' },
+        ],
+        rows: list.rows.map(r => ({ plu: r.plu, name: r.name, price: r.price })),
+    }];
+}
 
 /** A month 'YYYY-MM' on the shop's clock: its first and last instant, and its name ("octobre 2026"). */
 function monthRange(month, lang = 'ar', now = new Date()) {
@@ -393,6 +406,7 @@ const EXPORTS = {
     suppliers: { sheets: (api, T) => supplierSheets(api, T), file: 'xl.suppliers.sheet' },
     accountant: { sheets: (api, T, args) => accountantSheets(api, T, args), file: 'xl.acc.file', fileArgs: (api, T, args) => ({ month: monthRange(args.month, T.lang).name }) },
     customerStatement: { sheets: (api, T, args) => customerStatementSheets(api, T, args), file: 'xl.st.file', fileArgs: (api, T, args) => ({ name: api.get('SELECT name FROM customers WHERE id = ?', [args.customerId])?.name || '' }) },
+    scalePlu: { sheets: (api, T) => scalePluSheets(api, T), file: 'plu.file' },
 };
 
-module.exports = { EXPORTS, monthRange, kridiPaidIn, accountantSheets, customerStatementSheets, stockSheets, productSheets, journalSheets, salesLineSheets, customerSheets, kridiSheets, supplierSheets };
+module.exports = { EXPORTS, scalePluSheets, monthRange, kridiPaidIn, accountantSheets, customerStatementSheets, stockSheets, productSheets, journalSheets, salesLineSheets, customerSheets, kridiSheets, supplierSheets };

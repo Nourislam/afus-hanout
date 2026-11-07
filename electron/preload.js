@@ -471,6 +471,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
         generateInvoiceNumber: () => ipcRenderer.invoke('db:creditSales:generateInvoiceNumber'),
     },
 
+    // The label scale's list (PLU): the file, the sheet, what changed
+    scale: {
+        plu: () => ipcRenderer.invoke('scale:plu'),
+        assignNumbers: () => ipcRenderer.invoke('scale:assignNumbers'),
+        markSent: () => ipcRenderer.invoke('scale:markSent'),
+        saveFile: (format) => ipcRenderer.invoke('scale:saveFile', format),
+        printSheet: (onlyChanged) => ipcRenderer.invoke('scale:printSheet', onlyChanged),
+    },
+
     // The shop's devices on its WiFi (phone, price checker)
     devices: {
         status: () => ipcRenderer.invoke('devices:status'),

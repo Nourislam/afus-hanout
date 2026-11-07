@@ -28,6 +28,7 @@ import { SystemLogs } from '../components/settings/SystemLogs';
 import { PosControlsSettings } from '../components/settings/PosControlsSettings';
 import { ScaleSettings } from '../components/settings/ScaleSettings';
 import { DevicesSettings } from '../components/settings/DevicesSettings';
+import { ScaleList } from '../components/settings/ScaleList';
 import { AboutSettings } from '../components/settings/AboutSettings';
 import { LANGUAGES, setLanguage, useT } from '../i18n';
 import { formatMoney } from '../i18n/format';
@@ -521,6 +522,12 @@ export default function SettingsPage() {
                             <Card className="space-y-6">
                                 <SectionHeader icon={Scale} color="bg-emerald-500/20 text-emerald-400" title={t('settings.tab.scale')} text={t('scale.text')} />
                                 <ScaleSettings />
+                            </Card>
+                        )}
+                        {currentTab === 'scale' && (
+                            <Card className="space-y-6 mt-6">
+                                <SectionHeader icon={Hash} color="bg-emerald-500/20 text-emerald-400" title={t('scaleList.title')} text={t('scaleList.text')} />
+                                <ScaleList />
                             </Card>
                         )}
 
