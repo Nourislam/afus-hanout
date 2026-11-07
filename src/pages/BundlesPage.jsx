@@ -1,8 +1,8 @@
-import { t } from '../i18n';
+import { t, currentLanguage } from '../i18n';
 import { translateError } from '../i18n/errors';
-import { formatMoney } from '../i18n/format';
+import { formatMoney, formatDate } from '../i18n/format';
 import { useState, useEffect } from 'react';
-import { PackageOpen, Plus, Search, Edit2, Trash2, Package, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
+import { PackageOpen, Plus, Search, Edit2, Trash2, Package, ArrowDownCircle, ArrowUpCircle, Printer } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal, ModalBody } from '../components/ui/Modal';
@@ -12,6 +12,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { toast } from '../components/ui/Toast';
 import { v4 as uuid } from 'uuid';
 import { useSettingsStore } from '../stores/settingsStore';
+import { qoffaSheetHtml } from '../lib/qoffa';
 
 export default function BundlesPage() {
     const [bundles, setBundles] = useState([]);
@@ -28,6 +29,9 @@ export default function BundlesPage() {
     const [assemblyType, setAssemblyType] = useState('assemble'); // 'assemble' or 'disassemble'
     const [assemblyQuantity, setAssemblyQuantity] = useState(1);
     const [selectedBundleForAssembly, setSelectedBundleForAssembly] = useState(null);
+    // قفة رمضان for an association: N baskets, their list printed
+    const [qoffaFor, setQoffaFor] = useState(null);
+    const [qoffaCount, setQoffaCount] = useState('10');
 
     const [formData, setFormData] = useState({
         name: '',
@@ -40,7 +44,7 @@ export default function BundlesPage() {
     const [bundleItems, setBundleItems] = useState([]);
     const [selectedProduct, setSelectedProduct] = useState('');
     const [selectedQuantity, setSelectedQuantity] = useState(1);
-    const { loadSettings } = useSettingsStore();
+    const { loadSettings, settings } = useSettingsStore();
 
     useEffect(() => {
         loadBundles();
@@ -319,6 +323,10 @@ export default function BundlesPage() {
                                                 </button>
                                             </>
                                         )}
+                                        <button type="button" onClick={() => setQoffaFor(bundle)} data-testid="qoffa-association"
+                                            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs text-indigo-300 hover:bg-indigo-500/10">
+                                            <Printer className="w-3.5 h-3.5" /> {t('qoffa.forAssociation')}
+                                        </button>
                                         <div className="flex-1" />
                                         <button type="button" title={t('common.edit')} onClick={() => handleOpenEdit(bundle)} className="p-2 rounded-lg hover:bg-dark-tertiary text-zinc-400 hover:text-white">
                                             <Edit2 className="w-4 h-4" />
@@ -531,6 +539,20 @@ export default function BundlesPage() {
             )}
 
             {/* Delete Confirmation Dialog */}
+            <Modal isOpen={!!qoffaFor} onClose={() => setQoffaFor(null)} title={qoffaFor ? `${qoffaFor.name} — ${t('qoffa.forAssociation')}` : ''} size="sm">
+                <ModalBody className="space-y-4">
+                    <Input label={t('qoffa.howMany')} type="number" min="1" value={qoffaCount} onChange={(e) => setQoffaCount(e.target.value)} data-testid="qoffa-count" />
+                    <Button className="w-full" onClick={async () => {
+                        try {
+                            await window.electronAPI.printers.printHtml(qoffaSheetHtml(qoffaFor, Number(qoffaCount), { shop: settings?.businessName || '', lang: currentLanguage(), date: formatDate(new Date()) }));
+                            setQoffaFor(null);
+                        } catch (error) {
+                            toast.error(translateError(error));
+                        }
+                    }}><Printer className="w-4 h-4" /> {t('qoffa.print')}</Button>
+                </ModalBody>
+            </Modal>
+
             <ConfirmDialog
                 isOpen={showDeleteConfirm}
                 onClose={() => { setShowDeleteConfirm(false); setDeletingId(null); }}

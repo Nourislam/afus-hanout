@@ -319,6 +319,15 @@ const messages: Record<string, [string, string, string]> = {
     'home.oddCashOver': ["{name}'s drawer had {amount} extra at closing", "Caisse de {name} : {amount} en trop à la clôture", "صندوق {name} زاد {amount} عند الغلق"],
     'home.oddBelowCost': ["{name} sold under its purchase price ({n} times, {amount} lost)", "{name} vendu sous son prix d'achat ({n} fois, {amount} perdus)", "{name} بيعت تحت سعر الشراء ({n} مرة، خسارة {amount})"],
     'home.oddRefunds': ["{name} gave {n} refunds ({amount}), more than the others", "{name} a fait {n} remboursements ({amount}), plus que les autres", "{name} أرجع {n} مرة ({amount})، أكثر من الآخرين"],
+    // قفة رمضان for an association
+    'qoffa.forAssociation': ["For an association", "Pour une association", "للجمعية"],
+    'qoffa.howMany': ["How many baskets?", "Combien de couffins ?", "كم قفة؟"],
+    'qoffa.print': ["Print the list", "Imprimer la liste", "اطبع القائمة"],
+    'qoffa.sheetTitle': ["{name} × {n}", "{name} × {n}", "{name} × {n}"],
+    'qoffa.col.article': ["Article", "Article", "السلعة"],
+    'qoffa.col.each': ["In one basket", "Par couffin", "في القفة الواحدة"],
+    'qoffa.col.all': ["For {n} baskets", "Pour {n} couffins", "لـ {n} قفة"],
+    'qoffa.total': ["{n} baskets × {price} = {total}", "{n} couffins × {price} = {total}", "{n} قفة × {price} = {total}"],
 };
 
 export default messages;
