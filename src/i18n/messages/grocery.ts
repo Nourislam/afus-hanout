@@ -158,6 +158,23 @@ const messages: Record<string, [string, string, string]> = {
     'capped.cap': ["Official price", "Prix officiel", "السعر الرسمي"],
     'capped.limit': ["Per customer", "Par client", "لكل زبون"],
     'capped.saved': ["{name} saved", "{name} enregistré", "حُفظت {name}"],
+    // «اسأل حانوتك»
+    'nav.ask': ["Ask your shop", "Demandez à votre magasin", "اسأل حانوتك"],
+    'ask.title': ["Ask your shop", "Demandez à votre magasin", "اسأل حانوتك"],
+    'ask.subtitle': ["Press a question: the answer comes from your own figures, without the internet", "Appuyez sur une question : la réponse vient de vos propres chiffres, sans Internet", "اضغط على سؤال: الجواب من أرقام محلك، بلا إنترنت"],
+    'ask.q.bestThisWeek': ["What sold best this week?", "Qu'est-ce qui s'est le mieux vendu cette semaine ?", "واش بعت أكثر هذا الأسبوع؟"],
+    'ask.q.profitToday': ["What did I earn today?", "Combien ai-je gagné aujourd'hui ?", "شحال ربحت اليوم؟"],
+    'ask.q.whoOwes': ["Who owes me the most?", "Qui me doit le plus ?", "شكون يسالني أكثر؟"],
+    'ask.q.runningOut': ["What runs out this week?", "Qu'est-ce qui sera épuisé cette semaine ?", "واش راح يخلاص هذا الأسبوع؟"],
+    'ask.q.notSelling': ["What is not selling?", "Qu'est-ce qui ne se vend pas ?", "واش ما راهش يتباع؟"],
+    'ask.line.best': ["{amount} · {n}", "{amount} · {n}", "{amount} · {n}"],
+    'ask.line.runningOut': ["{n} left, about {days} day(s)", "{n} restant(s), environ {days} jour(s)", "باقي {n}، حوالي {days} يوم"],
+    'ask.line.notSelling': ["{n} in stock ({value})", "{n} en stock ({value})", "{n} في المخزون ({value})"],
+    'ask.profitToday': ["Sold {sales} today, earned {profit} (sales less what they cost)", "Vendu {sales} aujourd'hui, gagné {profit} (ventes moins leur coût)", "بعت اليوم {sales}، وربحت {profit} (المبيعات ناقص تكلفتها)"],
+    'ask.none.bestThisWeek': ["Nothing sold this week yet", "Rien de vendu cette semaine", "لم يُبع شيء هذا الأسبوع"],
+    'ask.none.whoOwes': ["Nobody owes anything", "Personne ne doit rien", "لا أحد عليه شيء"],
+    'ask.none.runningOut': ["Nothing runs out this week at this pace", "Rien ne s'épuise cette semaine à ce rythme", "لا شيء يخلاص هذا الأسبوع بهذا الرتم"],
+    'ask.none.notSelling': ["Everything in stock sold in the last 30 days", "Tout le stock s'est vendu ces 30 derniers jours", "كل ما في المخزون تباع في آخر 30 يوم"],
 };
 
 export default messages;

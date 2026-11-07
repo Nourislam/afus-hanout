@@ -471,6 +471,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
         generateInvoiceNumber: () => ipcRenderer.invoke('db:creditSales:generateInvoiceNumber'),
     },
 
+    // «اسأل حانوتك»: ready questions answered from the shop's figures
+    ask: {
+        answer: (id) => ipcRenderer.invoke('ask:answer', id),
+    },
+
     // Hanout: the distributor's quick receiving, his days and order, expiry, official prices
     hanout: {
         receive: (input) => ipcRenderer.invoke('hanout:receive', input),
