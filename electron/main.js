@@ -531,5 +531,6 @@ require('./ipc/charges')(ipcContext);
 require('./ipc/commissions')(ipcContext);
 require('./ipc/figures')(ipcContext);
 require('./ipc/exports')(ipcContext);
+require('./ipc/scale')(ipcContext);
 // The shop's devices on its WiFi (phone, price checker): off until the owner turns it on
 const devices = require('./ipc/devices')(ipcContext);

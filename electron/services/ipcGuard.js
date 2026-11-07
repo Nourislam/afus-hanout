@@ -99,6 +99,7 @@ const RULES = {
       kridi: P.CUSTOMERS_VIEW,
       suppliers: P.INVENTORY_ADJUST,
       customerStatement: P.CUSTOMERS_VIEW,
+      scalePlu: P.PRODUCTS_VIEW,
       // accountant: the owner's (stock at purchase price)
     })[args?.kind] || 'admin',
     'exports:showFile': 'login',
@@ -140,6 +141,11 @@ const RULES = {
     'db:creditPayments:create': 'login',
     'karni:payPart': 'login',
     'karni:openingDebt': P.CUSTOMERS_CREDIT,
+    // The label scale's list: numbers given and the scale said up to date by who edits articles
+    'scale:assignNumbers': P.PRODUCTS_EDIT,
+    'scale:markSent': P.PRODUCTS_EDIT,
+    'scale:saveFile': P.PRODUCTS_VIEW,
+    'scale:printSheet': P.PRODUCTS_VIEW,
     // The shop's devices: the owner's choice
     'devices:enable': 'admin',
     'devices:pairingCode': 'admin',
