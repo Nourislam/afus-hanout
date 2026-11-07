@@ -467,6 +467,29 @@ module.exports = function register(ctx) {
     }));
 
     // GOODS RECEIVING (GRN)
+    // Hanout: the distributor's quick receiving, his days, his order, expiry, official prices
+    const receiveService = require('../services/receiveService');
+    const visitOrders = require('../services/visitOrderService');
+    ipcMain.handle('hanout:receive', (_, input = {}) => runTransaction(() => receiveService.receive(dbApi, {
+      supplierId: input.supplierId, lines: input.lines || [], paid: input.paid, employeeId: session.getEmployee()?.id || null,
+    })));
+    ipcMain.handle('hanout:priceRises', (_, { supplierId, lines } = {}) => receiveService.priceRises(dbApi, supplierId, lines || []));
+    ipcMain.handle('hanout:supplierPrices', (_, productId) => receiveService.supplierPrices(dbApi, productId));
+    ipcMain.handle('hanout:lastCost', (_, { supplierId, productId } = {}) =>
+      dbApi.get('SELECT last_cost FROM product_suppliers WHERE product_id = ? AND supplier_id = ?', [productId, supplierId])?.last_cost ?? null);
+    ipcMain.handle('hanout:visits', () => dbApi.all('SELECT id, name, phone FROM suppliers WHERE COALESCE(is_active, 1) = 1 ORDER BY name')
+      .map(s => ({ ...s, weekdays: visitOrders.visitDays(dbApi, s.id) })));
+    ipcMain.handle('hanout:setVisits', (_, { supplierId, weekdays } = {}) => visitOrders.setVisitDays(dbApi, supplierId, weekdays));
+    ipcMain.handle('hanout:visitsToday', () => visitOrders.visitsToday(dbApi).map(v => ({ ...v, lines: visitOrders.suggestedOrder(dbApi, v.supplier_id).length })));
+    ipcMain.handle('hanout:suggestedOrder', (_, supplierId) => visitOrders.suggestedOrder(dbApi, supplierId));
+    ipcMain.handle('hanout:sellSoon', (_, days = 7) => require('../services/expiryService').sellSoon(dbApi, { days }));
+    ipcMain.handle('hanout:capped', () => require('../services/cappedService').review(dbApi));
+    ipcMain.handle('hanout:setCap', (_, { productId, cap, limit } = {}) => runTransaction(() => {
+      const value = Number(cap);
+      dbApi.run('UPDATE products SET capped_price = ? WHERE id = ?', [value > 0 ? value : null, productId]);
+      return require('../services/cappedService').setLimit(dbApi, productId, limit);
+    }));
+
     ipcMain.handle('db:receivings:create', (_, data) => {
       const { poId, items, notes, extras = {} } = data;
       const receivingId = uuid();

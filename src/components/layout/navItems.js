@@ -3,7 +3,7 @@
 // Shared by the menu and by Settings › Modules (pages of the simple menu).
 import {
     LayoutDashboard, ShoppingCart, Package, Boxes, UserCog, BarChart3, Percent, QrCode,
-    History, CreditCard, FileText, LibraryBig, Users, Truck,
+    History, CreditCard, FileText, LibraryBig, Users, Truck, CalendarClock,
 } from 'lucide-react';
 import { PERMISSIONS } from '../../stores/authStore';
 import { offerTabs } from '../../lib/modules';
@@ -26,6 +26,8 @@ export const NAV_GROUPS = [
             { path: '/labels', icon: QrCode, label: 'nav.labels', permission: PERMISSIONS.PRODUCTS_VIEW },
             { path: '/catalog', icon: LibraryBig, label: 'nav.catalog', permission: PERMISSIONS.PRODUCTS_VIEW },
             { path: '/customers', icon: Users, label: 'nav.customers', permission: PERMISSIONS.CUSTOMERS_VIEW, feature: 'customers' },
+            // The distributors' days, their order and the quick receiving
+            { path: '/distributors', icon: CalendarClock, label: 'nav.distributors', permission: PERMISSIONS.INVENTORY_ADJUST, feature: 'suppliers' },
             { path: '/suppliers', icon: Truck, label: 'nav.suppliers', permission: PERMISSIONS.INVENTORY_ADJUST, feature: 'suppliers' },
             { path: '/purchase-orders', icon: FileText, label: 'nav.purchases', permission: PERMISSIONS.INVENTORY_ADJUST, feature: 'purchaseOrders' },
         ],

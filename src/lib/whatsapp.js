@@ -52,3 +52,22 @@ export function statementText({ name, shop, lines = [], owed, lang }) {
         tr('karni.statement.thanks'),
     ].join('\n');
 }
+
+/**
+ * The order for a distributor, ready to send: greeting, one line per article
+ * (cartons, kg or pieces), thanks and the shop's name.
+ * @param {{ supplier: string, shop: string, lang: string, lines: { name: string, quantity: number, cartons?: number, unit: string }[] }} input
+ */
+export function orderText({ supplier, shop, lang, lines = [] }) {
+    const tr = (key, params) => translate(lang, key, params);
+    const amount = (l) => {
+        if (l.cartons) return tr('order.cartons', { n: l.cartons });
+        if (l.unit === 'kg') return tr('order.kg', { n: Math.round(l.quantity / 100) / 10 });
+        return String(l.quantity);
+    };
+    return [
+        tr('order.hello', { name: supplier || '' }),
+        ...lines.map(l => `• ${l.name}: ${amount(l)}`),
+        tr('order.thanks', { shop: shop || '' }),
+    ].join('\n');
+}
