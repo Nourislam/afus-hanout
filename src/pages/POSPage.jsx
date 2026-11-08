@@ -6,6 +6,7 @@ import {
     LayoutGrid, List, Tag, Percent, Banknote, ChevronDown, History, Check, Bookmark,
 } from 'lucide-react';
 import { useCartStore, heldLines } from '../stores/cartStore';
+import { saveCartBackup, readCartBackup } from '../lib/cartBackup';
 import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { toast } from '../components/ui/Toast';
@@ -141,6 +142,20 @@ export default function POSPage() {
     useEffect(() => {
         try { localStorage.setItem(VIEW_KEY, view); } catch { /* per-computer preference only */ }
     }, [view]);
+
+    // A power cut or a restart in the middle of a ticket: the open cart comes
+    // back (same employee, same shop day); every change is kept on this computer
+    useEffect(() => {
+        if (!currentEmployee) return undefined;
+        if (useCartStore.getState().items.length === 0) {
+            const saved = readCartBackup(currentEmployee.id);
+            if (saved) {
+                useCartStore.setState({ ...saved, lastAddedId: null });
+                toast.info(t('pos.cartBack', { n: saved.items.length }));
+            }
+        }
+        return useCartStore.subscribe(state => saveCartBackup(state.snapshot(), currentEmployee.id));
+    }, [currentEmployee?.id]);
 
     // USB barcode/QR scanner: works wherever the focus is on this screen
     useBarcodeScanner((code) => handleCode(code, { fromScanner: true }), { isActive: () => !anyModalOpen });

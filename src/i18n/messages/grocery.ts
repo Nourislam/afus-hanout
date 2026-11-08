@@ -339,6 +339,7 @@ const messages: Record<string, [string, string, string]> = {
     'labels.toPrintTitle': ["Labels to print", "Étiquettes à imprimer", "ملصقات للطباعة"],
     'labels.toPrintText': ["The price of {n} article(s) changed: {names}", "Le prix de {n} article(s) a changé : {names}", "تغيّر سعر {n} سلعة: {names}"],
     'labels.toPrintAdd': ["Add their labels", "Ajouter leurs étiquettes", "أضف ملصقاتها"],
+    'pos.cartBack': ["The ticket left open came back ({n} lines)", "Le ticket resté ouvert est revenu ({n} lignes)", "رجعت التذكرة التي بقيت مفتوحة ({n} سطر)"],
 };
 
 export default messages;
