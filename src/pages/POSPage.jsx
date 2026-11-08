@@ -147,14 +147,22 @@ export default function POSPage() {
     // back (same employee, same shop day); every change is kept on this computer
     useEffect(() => {
         if (!currentEmployee) return undefined;
+        let active = true;
         if (useCartStore.getState().items.length === 0) {
-            const saved = readCartBackup(currentEmployee.id);
-            if (saved) {
+            readCartBackup(currentEmployee.id).then(saved => {
+                // Put back only if nothing was scanned meanwhile
+                if (!active || !saved || useCartStore.getState().items.length > 0) return;
                 useCartStore.setState({ ...saved, lastAddedId: null });
                 toast.info(t('pos.cartBack', { n: saved.items.length }));
-            }
+            });
         }
-        return useCartStore.subscribe(state => saveCartBackup(state.snapshot(), currentEmployee.id));
+        // Written when the ticket changes (not when the screen opens: a cart kept stays kept)
+        const stop = useCartStore.subscribe((state, prev) => {
+            if (state.items !== prev.items || state.customer !== prev.customer || state.discount !== prev.discount || state.discountType !== prev.discountType) {
+                saveCartBackup(state.snapshot(), currentEmployee.id);
+            }
+        });
+        return () => { active = false; stop(); };
     }, [currentEmployee?.id]);
 
     // USB barcode/QR scanner: works wherever the focus is on this screen

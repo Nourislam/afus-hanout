@@ -1,42 +1,35 @@
-// The open cart survives a power cut (انقطاع الكهرباء): every change is kept
-// on this computer, and the sales screen puts it back after a restart, for the
-// same employee and the same shop day only. A ticket paid or put on hold
-// leaves nothing behind (the cart is empty then).
+// The open cart survives a power cut (انقطاع الكهرباء): every change of the
+// ticket is kept in a small file next to the shop's database (main process,
+// written to the disk at once), and the sales screen puts it back after a
+// restart, for the same employee and the same shop day only. A ticket paid or
+// put on hold erases it. The browser's own storage writes seconds late and
+// loses them in a cut, so it is not used for this.
 import { shopDayStart } from '../../electron/shared/shopDay.ts';
 
-const KEY = 'afus-hanout.open-cart';
-
 export interface CartTicket { items: unknown[]; [key: string]: unknown }
-interface Saved { at: number; employeeId: string | null; ticket: CartTicket }
+export interface KeptCart { at: number; employeeId: string | null; ticket: CartTicket }
 
-function storage(): Storage | null {
-    try { return typeof window !== 'undefined' ? window.localStorage : null; } catch { return null; }
+interface CartBridge { keep(payload: KeptCart | null): Promise<unknown>; kept(): Promise<KeptCart | null> }
+const bridge = (): CartBridge | null => {
+    try { return (window as unknown as { electronAPI?: { cart?: CartBridge } }).electronAPI?.cart || null; } catch { return null; }
+};
+
+/** What is kept for this ticket: null (erase) when the cart is empty. */
+export function cartPayload(ticket: CartTicket, employeeId: string | null, now: number = Date.now()): KeptCart | null {
+    return ticket?.items?.length ? { at: now, employeeId, ticket } : null;
 }
 
-/** Keep the cart as it is now (an empty cart erases the copy). */
-export function saveCartBackup(ticket: CartTicket, employeeId: string | null, now: number = Date.now()): void {
-    const store = storage();
-    if (!store) return;
-    try {
-        if (!ticket?.items?.length) store.removeItem(KEY);
-        else store.setItem(KEY, JSON.stringify({ at: now, employeeId, ticket } satisfies Saved));
-    } catch { /* storage full or unavailable: the cart stays in memory */ }
+/** The cart to put back: this employee's, from this shop day, with lines; else null. */
+export function cartToRestore(kept: KeptCart | null, employeeId: string | null, now: Date = new Date()): CartTicket | null {
+    if (!kept?.ticket?.items?.length || kept.employeeId !== employeeId) return null;
+    if (!(kept.at >= shopDayStart(now).getTime()) || kept.at > now.getTime() + 60000) return null;
+    return kept.ticket;
 }
 
-/** The cart left open by this employee today (shop day), or null. */
-export function readCartBackup(employeeId: string | null, now: Date = new Date()): CartTicket | null {
-    const store = storage();
-    if (!store) return null;
-    try {
-        const saved = JSON.parse(store.getItem(KEY) || 'null') as Saved | null;
-        if (!saved?.ticket?.items?.length || saved.employeeId !== employeeId) return null;
-        if (saved.at < shopDayStart(now).getTime() || saved.at > now.getTime() + 60000) return null;
-        return saved.ticket;
-    } catch {
-        return null;
-    }
+export function saveCartBackup(ticket: CartTicket, employeeId: string | null): void {
+    bridge()?.keep(cartPayload(ticket, employeeId)).catch(() => { /* the cart stays in memory */ });
 }
 
-export function clearCartBackup(): void {
-    try { storage()?.removeItem(KEY); } catch { /* nothing to clear */ }
+export async function readCartBackup(employeeId: string | null): Promise<CartTicket | null> {
+    try { return cartToRestore((await bridge()?.kept()) ?? null, employeeId); } catch { return null; }
 }

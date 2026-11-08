@@ -145,6 +145,8 @@ const RULES = {
     'db:creditPayments:create': 'login',
     'karni:payPart': 'login',
     'karni:openingDebt': P.CUSTOMERS_CREDIT,
+    // The open cart kept for a power cut: whoever is selling
+    'cart:keep': 'login',
     // The seasons' lists show purchase prices; what looks odd and the zakat are the owner's
     'seasons:prep': P.INVENTORY_ADJUST,
     'day:oddities': 'admin',

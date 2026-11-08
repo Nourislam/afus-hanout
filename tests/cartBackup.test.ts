@@ -1,51 +1,51 @@
 // A power cut in the middle of a ticket: after the restart the sales screen
-// puts the open cart back, for the same employee and the same shop day.
-import { describe, it, expect, beforeEach } from 'vitest';
-import { saveCartBackup, readCartBackup, clearCartBackup } from '../src/lib/cartBackup';
+// puts the open cart back, for the same employee and the same shop day. The
+// cart is kept in a file written whole at each change.
+import { describe, it, expect } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { cartPayload, cartToRestore } from '../src/lib/cartBackup';
 
-const store = new Map<string, string>();
-beforeEach(() => {
-    store.clear();
-    (globalThis as unknown as { window: unknown }).window = {
-        localStorage: {
-            getItem: (k: string) => store.get(k) ?? null,
-            setItem: (k: string, v: string) => { store.set(k, v); },
-            removeItem: (k: string) => { store.delete(k); },
-        },
-    };
-});
+const require = createRequire(import.meta.url);
+const { keepCart, keptCart } = require('../electron/services/cartFile');
 
 const ticket = { items: [{ id: 'milk', quantity: 2 }], customer: null, discount: 0 };
 const at = (h: number, d = 7) => new Date(2026, 10, d, h, 0);
 
 describe('the open cart after a power cut', () => {
-    it('comes back for the same employee on the same shop day', () => {
-        saveCartBackup(ticket, 'amina', at(20).getTime());
-        expect(readCartBackup('amina', at(21))).toEqual(ticket);
-        // 01:00: still the shop day that began at 04:00
-        expect(readCartBackup('amina', at(1, 8))).toEqual(ticket);
+    it('comes back for the same employee on the same shop day (01:00 is still the evening\'s)', () => {
+        const kept = cartPayload(ticket, 'amina', at(20).getTime());
+        expect(cartToRestore(kept, 'amina', at(21))).toEqual(ticket);
+        expect(cartToRestore(kept, 'amina', at(1, 8))).toEqual(ticket);
     });
 
-    it('not for another employee, not the next shop day', () => {
-        saveCartBackup(ticket, 'amina', at(20).getTime());
-        expect(readCartBackup('karim', at(21))).toBeNull();
-        expect(readCartBackup('amina', at(9, 8))).toBeNull();
+    it('not for another employee, not the next shop day, not an empty cart', () => {
+        const kept = cartPayload(ticket, 'amina', at(20).getTime());
+        expect(cartToRestore(kept, 'karim', at(21))).toBeNull();
+        expect(cartToRestore(kept, 'amina', at(9, 8))).toBeNull();
+        expect(cartPayload({ items: [] }, 'amina')).toBeNull();
+        expect(cartToRestore(null, 'amina')).toBeNull();
+    });
+});
+
+describe('the file on the disk', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'afus-cart-'));
+    const file = path.join(dir, 'afus-hanout.db.open-cart.json');
+
+    it('is written whole and read back; null erases it', () => {
+        keepCart(file, cartPayload(ticket, 'amina', at(20).getTime()));
+        expect(fs.existsSync(`${file}.tmp`)).toBe(false);
+        expect(keptCart(file)).toEqual({ at: at(20).getTime(), employeeId: 'amina', ticket });
+        keepCart(file, null);
+        expect(fs.existsSync(file)).toBe(false);
+        expect(keptCart(file)).toBeNull();
+        keepCart(file, null); // nothing to erase: no error
     });
 
-    it('a ticket paid or put on hold (empty cart) leaves nothing', () => {
-        saveCartBackup(ticket, 'amina', at(20).getTime());
-        saveCartBackup({ items: [] }, 'amina', at(20).getTime());
-        expect(readCartBackup('amina', at(21))).toBeNull();
-        saveCartBackup(ticket, 'amina', at(20).getTime());
-        clearCartBackup();
-        expect(readCartBackup('amina', at(21))).toBeNull();
-    });
-
-    it('a damaged copy or no storage: nothing comes back, nothing breaks', () => {
-        store.set('afus-hanout.open-cart', '{not json');
-        expect(readCartBackup('amina', at(21))).toBeNull();
-        (globalThis as unknown as { window: unknown }).window = { get localStorage() { throw new Error('blocked'); } };
-        expect(() => saveCartBackup(ticket, 'amina')).not.toThrow();
-        expect(readCartBackup('amina')).toBeNull();
+    it('a damaged file gives nothing back', () => {
+        fs.writeFileSync(file, '{"at": 1, "tick');
+        expect(keptCart(file)).toBeNull();
     });
 });

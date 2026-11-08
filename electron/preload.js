@@ -471,6 +471,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         generateInvoiceNumber: () => ipcRenderer.invoke('db:creditSales:generateInvoiceNumber'),
     },
 
+    // The open cart kept on disk, for a power cut
+    cart: {
+        keep: (payload) => ipcRenderer.invoke('cart:keep', payload),
+        kept: () => ipcRenderer.invoke('cart:kept'),
+    },
+
     // Seasons, the day's summary, what looks odd, the zakat's figures (read only)
     smart: {
         upcomingSeasons: () => ipcRenderer.invoke('seasons:upcoming'),
