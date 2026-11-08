@@ -340,6 +340,13 @@ const messages: Record<string, [string, string, string]> = {
     'labels.toPrintText': ["The price of {n} article(s) changed: {names}", "Le prix de {n} article(s) a changé : {names}", "تغيّر سعر {n} سلعة: {names}"],
     'labels.toPrintAdd': ["Add their labels", "Ajouter leurs étiquettes", "أضف ملصقاتها"],
     'pos.cartBack': ["The ticket left open came back ({n} lines)", "Le ticket resté ouvert est revenu ({n} lignes)", "رجعت التذكرة التي بقيت مفتوحة ({n} سطر)"],
+    // The shop's Baridi Pay QR code
+    'baridi.title': ["Your Baridi Pay QR code", "Votre QR code Baridi Pay", "رمز بريدي باي الخاص بمحلك"],
+    'baridi.text': ["The picture of the code Algérie Poste gave the shop: shown large when «Baridi Pay» is chosen, for the customer to scan", "La photo du code donné par Algérie Poste : affiché en grand quand « Baridi Pay » est choisi, pour que le client le scanne", "صورة الرمز الذي أعطاه بريد الجزائر للمحل: يظهر كبيراً عند اختيار «بريدي باي» ليمسحه الزبون"],
+    'baridi.add': ["Add the picture", "Ajouter la photo", "أضف الصورة"],
+    'baridi.change': ["Change", "Changer", "غيّر"],
+    'baridi.remove': ["Remove", "Retirer", "أزل"],
+    'baridi.saved': ["Baridi Pay code saved", "Code Baridi Pay enregistré", "حُفظ رمز بريدي باي"],
 };
 
 export default messages;

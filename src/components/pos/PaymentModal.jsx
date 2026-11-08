@@ -48,6 +48,8 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
 
     // Split Payments
     const [splitPayments, setSplitPayments] = useState([]);
+    // The shop's Baridi Pay QR code (Settings › Sales screen), as a picture
+    const [baridiQr, setBaridiQr] = useState(null);
 
     const paidAmount = splitPayments.reduce((sum, p) => sum + p.amount, 0);
     const remainingDue = total - paidAmount;
@@ -66,6 +68,9 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
             setSmsReceived(false);
             setKeepChange(false);
             setChangeBalance(0);
+            window.electronAPI.settings.get('baridi_qr')
+                .then(name => (name ? window.electronAPI.images.get(name) : null))
+                .then(data => setBaridiQr(data || null)).catch(() => setBaridiQr(null));
             const customerId = useCartStore.getState().customer?.id;
             if (customerId) window.electronAPI.changeBalance?.get(customerId).then(b => setChangeBalance(Number(b) || 0)).catch(() => {});
             // Reservation picked up: its deposit is already paid
@@ -540,7 +545,10 @@ export default function PaymentModal({ isOpen, onClose, total, onComplete }) {
                             <div className="text-center">
                                 {paymentMethod === 'card'
                                     ? <CreditCard className="w-20 h-20 mx-auto mb-4 text-zinc-600" />
-                                    : <Smartphone className="w-20 h-20 mx-auto mb-4 text-zinc-600" />}
+                                    : baridiQr
+                                        // The shop's Baridi Pay code, for the customer to scan from this screen
+                                        ? <img src={baridiQr} alt={t('baridi.title')} className="w-56 h-56 mx-auto mb-4 rounded-xl bg-white p-2 object-contain" data-testid="baridi-qr" />
+                                        : <Smartphone className="w-20 h-20 mx-auto mb-4 text-zinc-600" />}
                                 <p className="text-zinc-400">{paymentMethod === 'card' ? t('pos.cardReady') : t('pos.transferReady')}</p>
                                 {paymentMethod === 'transfer' && (remainingDue < BARIDI_PAY_MIN
                                     ? <p className="mt-3 text-amber-300 font-semibold" data-testid="baridi-min">{t('pay.baridiMin')}</p>

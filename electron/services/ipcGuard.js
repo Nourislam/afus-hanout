@@ -27,6 +27,7 @@ const SETTING_RULES = {
     loyalty: 'admin',
     local_server: 'admin',
     zakat: 'admin',
+    baridi_qr: 'admin',
 };
 
 const RULES = {
