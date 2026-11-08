@@ -402,7 +402,7 @@ module.exports = function register(ctx) {
     });
 
     // The supplier's own Excel file -> lines for the purchase order form (nothing saved here)
-    ipcMain.handle('purchaseOrders:readExcel', (_, bytes) => require('../services/purchaseImport').readSupplierFile(dbApi, Buffer.from(bytes)));
+    ipcMain.handle('purchaseOrders:readExcel', (_, bytes, supplierId) => require('../services/purchaseImport').readSupplierFile(dbApi, Buffer.from(bytes), { supplierId: supplierId || null }));
 
     ipcMain.handle('db:purchaseOrders:create', (_, input) => runTransaction(() => {
       // One transaction: the order and its lines are saved together, and an error
@@ -433,6 +433,10 @@ module.exports = function register(ctx) {
           item.id || uuid(), id, item.product_id, item.variant_id || null, item.variant_label || null, item.product_name, item.quantity, item.unit_cost,
           item.tax_rate || 0, item.tax_amount || 0, item.discount_amount || 0, item.total_cost
         ]);
+        // The supplier's own name for the article (from his file): matched by itself next time
+        if (item.invoice_name && po.supplier_id && item.product_id && !item.variant_id) {
+          require('../services/receiveService').rememberInvoiceName(dbApi, po.supplier_id, item.invoice_name, item.product_id);
+        }
       }
 
       return { ...po, id };

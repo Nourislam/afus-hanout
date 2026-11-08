@@ -327,7 +327,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         previewHtml: (overrides) => ipcRenderer.invoke('purchaseOrders:previewHtml', overrides),
         getById: (id) => ipcRenderer.invoke('db:purchaseOrders:getById', id),
         create: (po) => ipcRenderer.invoke('db:purchaseOrders:create', po),
-        readExcel: (bytes) => ipcRenderer.invoke('purchaseOrders:readExcel', bytes),
+        readExcel: (bytes, supplierId) => ipcRenderer.invoke('purchaseOrders:readExcel', bytes, supplierId),
         delete: (id) => ipcRenderer.invoke('db:purchaseOrders:delete', id),
         receiveStock: (data) => ipcRenderer.invoke('db:purchaseOrders:receiveStock', data),
         createGRN: (data) => ipcRenderer.invoke('db:receivings:create', data),

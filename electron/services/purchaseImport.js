@@ -3,7 +3,10 @@
  * form): whatever its layout, the row of titles is found (Arabic, French or
  * English), and each line is matched to one article size of the shop:
  *   1. by its code (QR, reference or barcode), else
- *   2. by the article's name + colour + size.
+ *   2. by this supplier's own name for it, learned from his earlier
+ *      deliveries and orders (supplier_item_names), else
+ *   3. by the article's name + colour + size.
+ * Each line keeps the file's name (invoice_name): saving the order teaches it.
  * The quantity and unit price are the file's (the article's purchase price
  * when the file has none). Nothing is saved here: the lines go into the
  * purchase order form, where the shop checks them before saving.
@@ -64,13 +67,19 @@ const sameColor = (variant, color) => {
 };
 
 /** The article size a line is for, or why none. */
-function matchLine(api, { code, name, color, size }) {
+function matchLine(api, { code, name, color, size }, supplierId = null) {
     if (code) {
         const found = catalog.lookupCode(api, code);
         if (found && !found.needsVariant) return { product: found.product, variant: found.type === 'variant' ? found.variant : null };
         if (found?.needsVariant) name = name || found.product.name;
     }
     if (!name) return { error: 'PO_LINE_UNKNOWN' };
+    // His own name for an article, learned before
+    if (supplierId) {
+        const known = require('./receiveService').matchInvoiceName(api, supplierId, name);
+        const product = known ? api.get('SELECT * FROM products WHERE id = ? AND COALESCE(is_active, 1) = 1 AND COALESCE(has_variants, 0) = 0', [known]) : null;
+        if (product) return { product, variant: null };
+    }
     const products = api.all('SELECT * FROM products WHERE COALESCE(is_active, 1) = 1 AND LOWER(TRIM(name)) = ?', [String(name).trim().toLowerCase()]);
     if (!products.length) return { error: 'PO_LINE_UNKNOWN' };
     for (const product of products) {
@@ -87,7 +96,7 @@ function matchLine(api, { code, name, color, size }) {
  * @returns {{ found: boolean, lines: object[], problems: { row, text, error }[] }}
  *   lines in the shape of the purchase order form (same size twice = one line).
  */
-function readSupplierFile(api, buffer) {
+function readSupplierFile(api, buffer, { supplierId = null } = {}) {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     for (const sheetName of workbook.SheetNames) {
         const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, raw: true, defval: '' });
@@ -106,7 +115,7 @@ function readSupplierFile(api, buffer) {
             if (!asked.code && /^(total|totaux|المجموع|montant)/i.test(asked.name)) continue;
             const text = [asked.code, asked.name, asked.color, asked.size].filter(Boolean).join(' · ');
             if (!(quantity > 0) || !Number.isInteger(quantity)) { problems.push({ row: r + 1, text, error: 'PO_LINE_QUANTITY' }); continue; }
-            const match = matchLine(api, asked);
+            const match = matchLine(api, asked, supplierId);
             if (match.error) { problems.push({ row: r + 1, text, error: match.error }); continue; }
             const { product, variant } = match;
             const filePrice = amount(at.price === undefined ? '' : line[at.price]);
@@ -124,6 +133,7 @@ function readSupplierFile(api, buffer) {
                 product_name: product.name, quantity, unit_cost: unitCost,
                 total_cost: Math.round(quantity * unitCost * 100) / 100, tax_rate: 0,
                 from_file_price: filePrice !== null,
+                ...(asked.name && !variant ? { invoice_name: asked.name } : {}),
             });
         }
         return { found: true, sheet: sheetName, lines: [...lines.values()], problems };

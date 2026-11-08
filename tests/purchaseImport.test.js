@@ -81,3 +81,22 @@ describe('a purchase order from the supplier\'s file', () => {
         expect(math.poTotals({ items: lines }).subtotal).toBe(10400);
     });
 });
+
+describe('the supplier\'s own names, learned', () => {
+    it('a name of his already linked to an article is matched in his file (and only in his)', () => {
+        api.run("INSERT INTO suppliers (id, name) VALUES ('cevital', 'Cevital'), ('other', 'Autre')");
+        api.run("INSERT INTO products (id, name, price, cost, stock_quantity) VALUES ('oil5', 'Huile 5 L', 1100, 950, 3)");
+        const receive = require('../electron/services/receiveService');
+        receive.rememberInvoiceName(api, 'cevital', 'ELIO 5L PET', 'oil5');
+        const rows = [['Désignation', 'Qté', 'P.U'], ['Elio  5L pet', 6, 990]];
+        const his = read(api, file(rows), { supplierId: 'cevital' });
+        expect(his.lines).toEqual([expect.objectContaining({ product_id: 'oil5', quantity: 6, unit_cost: 990, invoice_name: 'Elio  5L pet' })]);
+        expect(his.problems).toEqual([]);
+        expect(read(api, file(rows), { supplierId: 'other' }).problems).toEqual([{ row: 2, text: 'Elio  5L pet', error: 'PO_LINE_UNKNOWN' }]);
+    });
+
+    it('lines matched by the article\'s own name carry the name of the file, to be remembered with the order', () => {
+        const result = read(api, file([['Désignation', 'Qté'], ['Ceinture cuir', 2]]), { supplierId: 'cevital' });
+        expect(result.lines[0]).toMatchObject({ product_id: 'belt', invoice_name: 'Ceinture cuir' });
+    });
+});
