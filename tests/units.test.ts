@@ -25,3 +25,17 @@ describe('units on the screens', () => {
         expect(weightLabel(0)).toBe(`0 ${g}`);
     });
 });
+
+describe('a quantity typed for the stock', () => {
+    it('kg become grams for an article sold by weight; pieces are whole', async () => {
+        const { stockInput } = await import('../src/lib/units');
+        expect(stockInput('2', 'kg')).toBe(2000);
+        expect(stockInput('2,5', 'kg')).toBe(2500);
+        expect(stockInput('0.25', 'kg')).toBe(250);
+        expect(stockInput('3', 'piece')).toBe(3);
+        expect(stockInput('2.5', 'piece')).toBeNull();
+        expect(stockInput('0', 'kg')).toBeNull();
+        expect(stockInput('abc')).toBeNull();
+        expect(stockInput('-1')).toBeNull();
+    });
+});

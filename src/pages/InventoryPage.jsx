@@ -22,7 +22,7 @@ import { PERMISSIONS } from '../lib/permissions';
 import StockCountModal from '../components/inventory/StockCountModal';
 import { MissingCodes } from '../components/inventory/MissingCodes';
 import { ExportButton } from '../components/ui/ExportButton';
-import { stockLabel } from '../lib/units';
+import { stockLabel, stockInput } from '../lib/units';
 
 export default function InventoryPage() {
     const [products, setProducts] = useState([]);
@@ -252,9 +252,9 @@ export default function InventoryPage() {
                                             {stockLabel(product)}
                                         </span>
                                     </TableCell>
-                                    <TableCell className="hidden xl:table-cell text-zinc-400">{product.min_stock_level}</TableCell>
+                                    <TableCell className="hidden xl:table-cell text-zinc-400">{stockLabel({ unit: product.unit, stock_quantity: product.min_stock_level })}</TableCell>
                                     <TableCell><StatusBadge status={getStockStatus(product)} /></TableCell>
-                                    {owner && <TableCell className="hidden xl:table-cell whitespace-nowrap">{formatCurrency(valueOf[product.id]?.cost ?? Math.max(0, product.stock_quantity) * (product.cost || 0))}</TableCell>}
+                                    {owner && <TableCell className="hidden xl:table-cell whitespace-nowrap">{formatCurrency(valueOf[product.id]?.cost ?? Math.max(0, product.stock_quantity) / (product.unit === 'kg' ? 1000 : 1) * (product.cost || 0))}</TableCell>}
                                     <TableCell>
                                         <div className="flex items-center gap-1.5 flex-nowrap">
                                             {canCount && (
@@ -384,12 +384,14 @@ function StockAdjustmentModal({ isOpen, onClose, product, employeeId, onSave }) 
     const selectedVariant = variants.find(v => v.id === variantId) || null;
     const needsVariant = product?.variant_count > 0;
     const currentStock = needsVariant ? (selectedVariant?.stock_quantity ?? 0) : (product?.stock_quantity ?? 0);
+    const weighed = !needsVariant && product?.unit === 'kg';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const qty = parseInt(quantity);
-        if (!qty || qty <= 0) {
+        // An article sold by weight: kg typed, grams in stock
+        const qty = stockInput(quantity, weighed ? 'kg' : 'piece');
+        if (!qty) {
             toast.error(t('inventory.validQty'));
             return;
         }
@@ -434,7 +436,7 @@ function StockAdjustmentModal({ isOpen, onClose, product, employeeId, onSave }) 
                         <div className="p-4 rounded-lg bg-dark-tertiary">
                             <p className="font-medium">{product.name}</p>
                             <p className="text-sm text-zinc-400">
-                                {t('inventory.currentN', { n: currentStock })}
+                                {t('inventory.currentN', { n: stockLabel({ unit: weighed ? 'kg' : 'piece', stock_quantity: currentStock }) })}
                                 {needsVariant && ` ${t('inventory.allVariantsTotal', { n: product.stock_quantity })}`}
                             </p>
                         </div>
@@ -483,12 +485,14 @@ function StockAdjustmentModal({ isOpen, onClose, product, employeeId, onSave }) 
                         </div>
 
                         <Input
-                            label={t('inventory.quantity')}
-                            type="number"
+                            label={weighed ? t('inventory.quantityKg') : t('inventory.quantity')}
+                            type="text"
+                            inputMode="decimal"
+                            dir="ltr"
                             value={quantity}
                             onChange={(e) => setQuantity(e.target.value)}
-                            placeholder={t('inventory.enterQty')}
-                            min="1"
+                            placeholder={weighed ? '2,5' : t('inventory.enterQty')}
+                            data-testid="adjust-quantity"
                         />
 
                         <Select
@@ -506,10 +510,7 @@ function StockAdjustmentModal({ isOpen, onClose, product, employeeId, onSave }) 
                             <div className={`p-4 rounded-lg ${adjustType === 'add' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
                                 <p className="text-sm text-zinc-400">{t('inventory.newLevel')}</p>
                                 <p className="text-2xl font-bold">
-                                    {adjustType === 'add'
-                                        ? currentStock + parseInt(quantity || 0)
-                                        : currentStock - parseInt(quantity || 0)
-                                    }
+                                    {stockLabel({ unit: weighed ? 'kg' : 'piece', stock_quantity: currentStock + (adjustType === 'add' ? 1 : -1) * (stockInput(quantity, weighed ? 'kg' : 'piece') || 0) })}
                                 </p>
                             </div>
                         )}
