@@ -22,6 +22,7 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const catalog = require('../services/catalogService');
+const { centimesLabel } = require('../shared/grocery.ts');
 
 const DEFAULT_PORT = 4560;
 const CODE_MINUTES = 10;
@@ -93,7 +94,11 @@ function priceOf(api, code, scaleFormat) {
     if (!found) return null;
     const p = found.product;
     const unit = p.unit === 'kg' ? 'kg' : p.unit === 'service' ? 'service' : 'piece';
+    // «25 ألف» under the price when the shop shows centimes (Settings › Sales screen)
+    const shown = found.scale?.price ?? (Number(p.price) || 0);
+    const centimes = require('../services/guard').readPosControls(api).showCentimes ? centimesLabel(shown, 'ar') || null : null;
     return {
+        centimes,
         id: p.id, name: p.name, price: Number(p.price) || 0, unit,
         capped: Number(p.capped_price) > 0 ? Number(p.capped_price) : null,
         carton: found.carton ? { qty: p.carton_qty, price: p.carton_price } : null,

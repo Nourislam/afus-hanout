@@ -107,6 +107,15 @@ describe('what a paired device can ask', () => {
     });
 });
 
+describe('centimes on the price checker', () => {
+    it('«2.5 ألف» under the price when the shop shows centimes, nothing otherwise', async () => {
+        const token = await paired('kiosk');
+        expect((await req('GET', '/api/price?code=6130000000011', { token })).json.centimes).toBeNull();
+        api.run("INSERT INTO settings (key, value) VALUES ('pos_controls', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", [JSON.stringify({ showCentimes: true })]);
+        expect((await req('GET', '/api/price?code=6130000000011', { token })).json.centimes).toBe('2.5 ألف');
+    });
+});
+
 describe('the real server', () => {
     let running: { port: number; stop: () => Promise<void> } | null = null;
     afterEach(async () => { await running?.stop(); running = null; });

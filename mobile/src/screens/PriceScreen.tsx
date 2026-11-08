@@ -50,6 +50,7 @@ export function PriceCard({ lang, price }: { lang: Lang; price: Price }) {
             ) : (
                 <T lang={lang} style={[s.big, { color: C.good }]}>{`${money(price.price, lang)} `}<T lang={lang} style={s.muted}>{tr(lang, price.unit === 'kg' ? 'perKg' : 'perPiece')}</T></T>
             )}
+            {price.centimes ? <T lang={lang} style={[s.title, { color: C.muted }]}>{price.centimes}</T> : null}
             {price.capped !== null && <T lang={lang} style={{ color: C.warn }}>{tr(lang, 'capped', { price: money(price.capped, lang) })}</T>}
             {price.carton && price.carton.price > 0 && (
                 <T lang={lang} style={s.muted}>{tr(lang, 'carton', { qty: price.carton.qty, price: money(price.carton.price, lang) })}</T>

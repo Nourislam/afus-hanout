@@ -23,6 +23,8 @@ export interface Price {
     carton: { qty: number; price: number } | null;
     image: string | null;
     scale?: { grams: number; price?: number };
+    /** «2.5 ألف» when the shop shows prices in centimes too */
+    centimes?: string | null;
 }
 
 export interface CountLine {
