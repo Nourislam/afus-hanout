@@ -24,6 +24,8 @@ export default {
     'errors.GIFT_CARD_NOT_FOUND': ["Gift card {code} not found", "Carte cadeau {code} introuvable", "بطاقة الهدية {code} غير موجودة"],
     'errors.STOCK_INSUFFICIENT': ["Not enough stock for \"{product}\": {available} left", "Stock insuffisant pour « {product} » : il en reste {available}", "المخزون غير كافٍ لـ «{product}»: المتبقي {available}"],
     'errors.PRICE_ABOVE_CAP': ["\"{product}\" cannot be sold above its official price of {cap} DA — put its price back to {cap} DA or less", "« {product} » ne peut pas être vendu au-dessus de son prix officiel de {cap} DA — remettez son prix à {cap} DA ou moins", "«{product}» لا يُباع فوق سعره الرسمي {cap} دج — أرجِع سعره إلى {cap} دج أو أقل"],
+    'errors.PRODUCT_NOT_FOUND': ["This article cannot be found — it may have been deleted", "Article introuvable — il a peut-être été supprimé", "السلعة غير موجودة — ربما حُذفت"],
+    'errors.PRICE_INVALID': ["Type a price above 0", "Tapez un prix supérieur à 0", "اكتب سعراً أكبر من 0"],
     'errors.SALE_NOT_FOUND': ["This ticket cannot be found — search it again in the sales list", "Ticket introuvable — cherchez-le à nouveau dans la liste des ventes", "التذكرة غير موجودة — ابحث عنها من جديد في قائمة المبيعات"],
     'errors.SALE_NOT_COUNTED': ["Ticket {receipt} was cancelled: it cannot be returned or exchanged", "Le ticket {receipt} a été annulé : il ne peut être ni retourné ni échangé", "التذكرة {receipt} ملغاة: لا يمكن إرجاعها أو تبديلها"],
     'errors.EXCHANGE_CREDIT_SALE': ["Ticket {receipt} was sold on credit: make a return, then a new sale", "Le ticket {receipt} a été vendu à crédit : faites un retour puis une nouvelle vente", "التذكرة {receipt} بيعت بالكريدي: قم بإرجاع ثم ببيع جديد"],

@@ -330,6 +330,15 @@ const messages: Record<string, [string, string, string]> = {
     'qoffa.col.each': ["In one basket", "Par couffin", "في القفة الواحدة"],
     'qoffa.col.all': ["For {n} baskets", "Pour {n} couffins", "لـ {n} قفة"],
     'qoffa.total': ["{n} baskets × {price} = {total}", "{n} couffins × {price} = {total}", "{n} قفة × {price} = {total}"],
+    // A new purchase price: the suggested sale price and «طبّق»
+    'dist.suggested': ["Sale price {price} → suggested", "Prix de vente {price} → suggéré", "سعر البيع {price} ← المقترح"],
+    'dist.suggestedCapped': ["Sale price {price} → official price", "Prix de vente {price} → prix officiel", "سعر البيع {price} ← السعر الرسمي"],
+    'dist.apply': ["Apply", "Appliquer", "طبّق"],
+    'dist.priceApplied': ["New price {price} at the till; its label is in «Labels to print»", "Nouveau prix {price} en caisse ; son étiquette est dans « Étiquettes à imprimer »", "السعر الجديد {price} في الصندوق؛ ملصقها في «ملصقات للطباعة»"],
+    'dist.priceDone': ["New price applied", "Nouveau prix appliqué", "طُبّق السعر الجديد"],
+    'labels.toPrintTitle': ["Labels to print", "Étiquettes à imprimer", "ملصقات للطباعة"],
+    'labels.toPrintText': ["The price of {n} article(s) changed: {names}", "Le prix de {n} article(s) a changé : {names}", "تغيّر سعر {n} سلعة: {names}"],
+    'labels.toPrintAdd': ["Add their labels", "Ajouter leurs étiquettes", "أضف ملصقاتها"],
 };
 
 export default messages;

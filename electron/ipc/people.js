@@ -474,6 +474,12 @@ module.exports = function register(ctx) {
       supplierId: input.supplierId, lines: input.lines || [], paid: input.paid, employeeId: session.getEmployee()?.id || null,
     })));
     ipcMain.handle('hanout:priceRises', (_, { supplierId, lines } = {}) => receiveService.priceRises(dbApi, supplierId, lines || []));
+    // «طبّق»: the suggested sale price at the till, and the label to print again
+    ipcMain.handle('hanout:applyPrice', (_, { productId, price } = {}) => runTransaction(() => require('../services/priceService')
+        .applyPrice(dbApi, { productId, price, employeeId: session.getEmployee()?.id || null })));
+    // «ملصقات للطباعة»: the articles whose price changed, taken by the labels page
+    ipcMain.handle('labels:toPrint', () => require('../services/priceService').labelsToPrint(dbApi));
+    ipcMain.handle('labels:takeToPrint', (_, ids = []) => require('../services/priceService').clearLabelsToPrint(dbApi, Array.isArray(ids) ? ids : []));
     ipcMain.handle('hanout:supplierPrices', (_, productId) => receiveService.supplierPrices(dbApi, productId));
     ipcMain.handle('hanout:matchName', (_, { supplierId, name } = {}) => receiveService.matchInvoiceName(dbApi, supplierId, name));
     ipcMain.handle('hanout:lastCost', (_, { supplierId, productId } = {}) =>

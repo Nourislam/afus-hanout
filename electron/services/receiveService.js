@@ -14,6 +14,7 @@
  */
 const catalog = require('./catalogService');
 const { isWeighed } = require('../shared/grocery.ts');
+const { suggestedPrice } = require('./priceService');
 
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100 + 0;
 const err = (code, params = {}) => catalog.codedError(code, params);
@@ -40,8 +41,9 @@ function rememberInvoiceName(api, supplierId, name, productId) {
 }
 
 /**
- * Prices that went up by more than 5 % at this supplier since the last delivery.
- * @returns {{ productId, before, now, percent }[]}
+ * Prices that went up by more than 5 % at this supplier since the last delivery,
+ * with the sale price now and the one that keeps the margin (null: nothing to change).
+ * @returns {{ productId, before, now, percent, price, suggested: { price, capped } | null }[]}
  */
 function priceRises(api, supplierId, lines, threshold = 5) {
     const out = [];
@@ -50,7 +52,12 @@ function priceRises(api, supplierId, lines, threshold = 5) {
         const now = Number(line.unitCost);
         if (!(last > 0) || !(now > 0)) continue;
         const percent = Math.round((now - last) / last * 1000) / 10;
-        if (percent > threshold) out.push({ productId: line.productId, before: last, now, percent });
+        if (percent > threshold) {
+            // The sale price that keeps the margin («طبّق» applies it; never above the official price)
+            const p = api.get('SELECT price, capped_price FROM products WHERE id = ?', [line.productId]);
+            const suggested = p ? suggestedPrice({ price: p.price, before: last, now, capped: p.capped_price }) : null;
+            out.push({ productId: line.productId, before: last, now, percent, price: p ? Number(p.price) || 0 : 0, suggested });
+        }
     }
     return out;
 }

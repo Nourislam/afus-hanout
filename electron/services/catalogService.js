@@ -689,6 +689,11 @@ function saveProduct(api, product, variants = [], { employeeId = null, isNew = f
         ];
 
         if (existing && !isNew) {
+            const before = api.get('SELECT price FROM products WHERE id = ?', [product.id]);
+            // A new sale price: the article's label is to print again («ملصقات للطباعة»)
+            if (before && Math.abs((Number(before.price) || 0) - (Number(product.price) || 0)) > 0.004) {
+                require('./priceService').queueLabel(api, product.id);
+            }
             api.run(`
                 UPDATE products SET
                     sku = ?, barcode = ?, name = ?, description = ?, category_id = ?, supplier_id = ?,

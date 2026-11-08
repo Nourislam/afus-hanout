@@ -128,6 +128,8 @@ const RULES = {
     'db:purchaseOrders:receiveStock': P.INVENTORY_ADJUST,
     'db:receivings:create': P.INVENTORY_ADJUST,
     'hanout:receive': P.INVENTORY_ADJUST,
+    'hanout:applyPrice': P.PRODUCTS_EDIT,
+    'labels:takeToPrint': P.PRODUCTS_VIEW,
     'hanout:setVisits': P.INVENTORY_ADJUST,
     'hanout:setCap': P.PRODUCTS_EDIT,
     'db:supplierInvoices:create': P.INVENTORY_ADJUST,
