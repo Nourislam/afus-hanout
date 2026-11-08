@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Store, RotateCcw, LogOut } from 'lucide-react';
+import { Store, RotateCcw, LogOut, ShoppingBag, Compass, Home } from 'lucide-react';
 import { useT } from '../../i18n';
 import { toast } from '../ui/Toast';
 import { translateError } from '../../i18n/errors';
@@ -9,13 +9,16 @@ import { useDemoStore } from '../../stores/demoStore';
 /**
  * The demo shop bar: on every screen while the demo shop is open, so its
  * sample data is never taken for the real shop. Start the demo again, or
- * leave it for the real shop (nothing is copied over).
+ * leave it for the real shop (nothing is copied over). In the web demo (on
+ * the Afus website) there is no real shop to start: the guided tour, the
+ * way back to the website and the way to order instead.
  */
 export default function DemoBanner() {
     const { t, lang } = useT();
     const { active, load, reset, exit } = useDemoStore();
     const [confirm, setConfirm] = useState(null); // 'reset' | 'exit'
     const [busy, setBusy] = useState(false);
+    const web = typeof window !== 'undefined' ? window.__AFUS_WEB_DEMO__ : null;
 
     useEffect(() => { load(); }, [load]);
 
@@ -39,17 +42,36 @@ export default function DemoBanner() {
                 className="shrink-0 bg-orange-600 text-white px-4 py-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                 <span className="flex items-center gap-2 font-bold min-w-0">
                     <Store className="w-5 h-5 shrink-0" />
-                    <span>{t('demo.banner')}</span>
+                    <span>{t(web ? 'demo.webBanner' : 'demo.banner')}</span>
                 </span>
                 <span className="ms-auto flex items-center gap-2">
                     <button type="button" onClick={() => setConfirm('reset')} disabled={busy} data-testid="demo-reset"
                         className="flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1 font-semibold hover:bg-white/25">
                         <RotateCcw className="w-4 h-4" /> {t('demo.reset')}
                     </button>
-                    <button type="button" onClick={() => setConfirm('exit')} disabled={busy} data-testid="demo-exit"
-                        className="flex items-center gap-1.5 rounded-lg bg-white text-orange-700 px-3 py-1 font-semibold hover:bg-orange-50">
-                        <LogOut className="w-4 h-4 flip-rtl" /> {t('demo.exit')}
-                    </button>
+                    {web ? (
+                        <>
+                            <button type="button" onClick={() => web.tour?.()} data-testid="demo-tour"
+                                className="flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1 font-semibold hover:bg-white/25">
+                                <Compass className="w-4 h-4" /> {t('demo.tour')}
+                            </button>
+                            {web.siteUrl && (
+                                <a href={web.siteUrl} target="_top" data-testid="demo-site"
+                                    className="flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1 font-semibold hover:bg-white/25">
+                                    <Home className="w-4 h-4" /> {t('demo.backSite')}
+                                </a>
+                            )}
+                            <a href={web.orderUrl} target="_top" data-testid="demo-order"
+                                className="flex items-center gap-1.5 rounded-lg bg-white text-orange-700 px-3 py-1 font-semibold hover:bg-orange-50">
+                                <ShoppingBag className="w-4 h-4" /> {t('demo.order')}
+                            </a>
+                        </>
+                    ) : (
+                        <button type="button" onClick={() => setConfirm('exit')} disabled={busy} data-testid="demo-exit"
+                            className="flex items-center gap-1.5 rounded-lg bg-white text-orange-700 px-3 py-1 font-semibold hover:bg-orange-50">
+                            <LogOut className="w-4 h-4 flip-rtl" /> {t('demo.exit')}
+                        </button>
+                    )}
                 </span>
             </div>
             <ConfirmDialog
