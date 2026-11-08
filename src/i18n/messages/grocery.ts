@@ -347,6 +347,8 @@ const messages: Record<string, [string, string, string]> = {
     'baridi.change': ["Change", "Changer", "غيّر"],
     'baridi.remove': ["Remove", "Retirer", "أزل"],
     'baridi.saved': ["Baridi Pay code saved", "Code Baridi Pay enregistré", "حُفظ رمز بريدي باي"],
+    'devices.network': ["The shop's network", "Le réseau du magasin", "شبكة المحل"],
+    'devices.firewall': ["If Windows asks about its firewall, choose «Allow» for private networks: the phone cannot reach the computer otherwise", "Si Windows parle de son pare-feu, choisissez « Autoriser » pour les réseaux privés : sinon le téléphone n'atteint pas l'ordinateur", "إن سألك Windows عن جدار الحماية، اختر «السماح» للشبكات الخاصة: وإلا لا يصل الهاتف إلى الحاسوب"],
 };
 
 export default messages;

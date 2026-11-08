@@ -16,7 +16,7 @@ interface Pairing { code: string; expiresAt: number; link: string; qr: string; k
 interface DevicesBridge {
     status(): Promise<DevicesStatus>;
     enable(on: boolean): Promise<DevicesStatus>;
-    pairingCode(): Promise<Pairing>;
+    pairingCode(host?: string): Promise<Pairing>;
     remove(id: string): Promise<DevicesStatus>;
 }
 const bridge = (): DevicesBridge => (window as unknown as { electronAPI: { devices: DevicesBridge } }).electronAPI.devices;
@@ -26,6 +26,8 @@ export function DevicesSettings() {
     const [status, setStatus] = useState<DevicesStatus | null>(null);
     const [pairing, setPairing] = useState<Pairing | null>(null);
     const [busy, setBusy] = useState(false);
+    // Several networks on this computer: the owner picks the shop's WiFi
+    const [host, setHost] = useState('');
     const [now, setNow] = useState(Date.now());
 
     useEffect(() => {
@@ -55,7 +57,7 @@ export function DevicesSettings() {
         if (!on) setPairing(null);
     });
     const pair = () => run(async () => {
-        const p = await bridge().pairingCode();
+        const p = await bridge().pairingCode(address || undefined);
         setPairing(p);
         setNow(Date.now());
         setStatus(await bridge().status());
@@ -66,7 +68,7 @@ export function DevicesSettings() {
     });
 
     if (!status) return null;
-    const address = status.addresses[0];
+    const address = status.addresses.includes(host) ? host : status.addresses[0];
 
     return (
         <div className="space-y-5" data-testid="devices-settings">
@@ -85,10 +87,24 @@ export function DevicesSettings() {
                 <p className="text-sm text-amber-400" data-testid="devices-no-wifi">{t('devices.noWifi')}</p>
             )}
 
+            {status.running && (
+                <p className="text-xs text-zinc-500" data-testid="devices-firewall">{t('devices.firewall')}</p>
+            )}
+
             {status.enabled && (
                 <div className="space-y-3">
                     {!pairing ? (
-                        <Button onClick={pair} loading={busy} data-testid="devices-pair"><QrCode className="w-4 h-4" />{t('devices.pair')}</Button>
+                        <div className="flex flex-wrap items-end gap-3">
+                            {status.addresses.length > 1 && (
+                                <label className="text-sm text-zinc-400 space-y-1">
+                                    <span className="block">{t('devices.network')}</span>
+                                    <select className="input h-10" value={address} onChange={(e) => setHost(e.target.value)} dir="ltr" data-testid="devices-address">
+                                        {status.addresses.map(a => <option key={a} value={a}>{a}</option>)}
+                                    </select>
+                                </label>
+                            )}
+                            <Button onClick={pair} loading={busy} data-testid="devices-pair"><QrCode className="w-4 h-4" />{t('devices.pair')}</Button>
+                        </div>
                     ) : (
                         <div className="flex flex-col sm:flex-row gap-5 items-start p-4 rounded-xl bg-white/5 border border-dark-border" data-testid="devices-pairing">
                             {pairing.qr && (

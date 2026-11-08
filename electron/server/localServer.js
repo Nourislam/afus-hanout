@@ -54,11 +54,22 @@ function kioskLink({ host, port }) {
     return `http://${host}:${port}/kiosk`;
 }
 
-/** This computer's addresses on the shop's network (IPv4, not the loopback). */
-function lanAddresses() {
-    return Object.values(os.networkInterfaces()).flat()
-        .filter(a => a && a.family === 'IPv4' && !a.internal && isPrivate(a.address))
-        .map(a => a.address);
+// Adapters of virtual machines, containers and VPNs: their address is not the shop's WiFi
+const VIRTUAL = /vethernet|hyper-v|wsl|virtualbox|vbox|vmware|vmnet|docker|br-|virbr|veth|tailscale|zerotier|wireguard|tun|tap|utun|hamachi|vpn/i;
+// The shop's router usually gives 192.168.x.x, sometimes 10.x.x.x; 172.16-31 is often a virtual one
+const rank = (address) => (/^192\.168\./.test(address) ? 0 : /^10\./.test(address) ? 1 : 2);
+
+/**
+ * This computer's addresses on the shop's network (IPv4, private, not the
+ * loopback), the real WiFi or cable first; virtual adapters only when there
+ * is nothing else.
+ */
+function lanAddresses(interfaces = os.networkInterfaces()) {
+    const all = Object.entries(interfaces).flatMap(([name, list]) => (list || [])
+        .filter(a => a && (a.family === 'IPv4' || a.family === 4) && !a.internal && isPrivate(a.address))
+        .map(a => ({ name, address: a.address })));
+    const real = all.filter(a => !VIRTUAL.test(a.name));
+    return [...new Set((real.length ? real : all).sort((a, b) => rank(a.address) - rank(b.address)).map(a => a.address))];
 }
 
 /** An address of a private network: the shop's WiFi or this computer. */

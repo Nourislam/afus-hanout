@@ -48,10 +48,12 @@ module.exports = function register(ctx) {
         return status();
     });
     // A pairing code and its QR code (one per address of this computer on the shop's network)
-    ipcMain.handle('devices:pairingCode', async () => {
+    ipcMain.handle('devices:pairingCode', async (_, chosen) => {
         if (!running) await startServer();
         const { code, expiresAt } = server.newPairingCode();
-        const host = server.lanAddresses()[0] || '127.0.0.1';
+        // The address the owner chose (one of this computer's), else the first one
+        const addresses = server.lanAddresses();
+        const host = addresses.includes(chosen) ? chosen : addresses[0] || '127.0.0.1';
         const link = server.pairingLink({ host, port: running.port, code });
         let qr = '';
         try { qr = require('bwip-js').toSVG({ bcid: 'qrcode', text: link, scale: 4, paddingwidth: 2, paddingheight: 2 }); } catch { /* the code is shown in figures */ }

@@ -493,7 +493,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     devices: {
         status: () => ipcRenderer.invoke('devices:status'),
         enable: (on) => ipcRenderer.invoke('devices:enable', on),
-        pairingCode: () => ipcRenderer.invoke('devices:pairingCode'),
+        pairingCode: (host) => ipcRenderer.invoke('devices:pairingCode', host),
         remove: (id) => ipcRenderer.invoke('devices:remove', id),
     },
 
