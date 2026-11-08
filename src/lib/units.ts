@@ -25,3 +25,14 @@ export function stockLabel(product: Stocked): string {
 export function perUnit(product: Stocked): string {
     return product.unit === 'kg' ? `/${t('pos.kg')}` : '';
 }
+
+/**
+ * A quantity typed for the stock, in stock units: kg (2 or 2,5) become grams
+ * for an article sold by weight, pieces are whole. null when it is not one.
+ */
+export function stockInput(text: string, unit?: string | null): number | null {
+    const n = Number(String(text ?? '').trim().replace(/\s/g, '').replace(',', '.'));
+    if (!Number.isFinite(n) || !(n > 0)) return null;
+    if (unit === 'kg') return Math.round(n * 1000) || null;
+    return Number.isInteger(n) ? n : null;
+}

@@ -70,7 +70,17 @@ describe('quick receiving', () => {
         const ids = shop();
         delivery(ids);
         expect(receiving.priceRises(api, ids.dist, [{ productId: ids.milk, unitCost: 23.5 }, { productId: ids.tomato, unitCost: 72 }]))
-            .toEqual([{ productId: ids.milk, before: 21, now: 23.5, percent: 11.9 }]);
+            // With the sale price that keeps the margin: 25 × 23.5 / 21 = 27.98 → 28 DA
+            .toEqual([{ productId: ids.milk, before: 21, now: 23.5, percent: 11.9, price: 25, suggested: { price: 28, capped: false } }]);
+    });
+
+    it('each delivery of the day has its own number, R-YYMMDD-n, after the highest', () => {
+        const ids = shop();
+        const a = delivery(ids);
+        const b = delivery(ids);
+        const stem = a.number.replace(/\d+$/, '');
+        expect(a.number).toMatch(/^R-\d{6}-\d+$/);
+        expect(b.number).toBe(`${stem}${Number(a.number.slice(stem.length)) + 1}`);
     });
 
     it('refuses an empty delivery, a quantity of 0, a negative price, or more paid than delivered', () => {

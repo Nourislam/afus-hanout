@@ -38,7 +38,8 @@ export default function CreatePurchaseOrderModal({ isOpen, onClose, onComplete, 
         if (!file) return;
         setReading(true);
         try {
-            const result = await window.electronAPI.purchaseOrders.readExcel(new Uint8Array(await file.arrayBuffer()));
+            // The supplier chosen: his own names for the articles are known from before
+            const result = await window.electronAPI.purchaseOrders.readExcel(new Uint8Array(await file.arrayBuffer()), formData.supplier_id || null);
             if (!result.found) { toast.error(t('poFile.notFound')); return; }
             setFormData(prev => {
                 const items = [...prev.items];

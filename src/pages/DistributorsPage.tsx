@@ -122,7 +122,19 @@ function QuickReceive({ state, onClose, onDone }: { state: { who: Distributor; l
     const [lines, setLines] = useState<ReceiveLine[]>([]);
     const [query, setQuery] = useState('');
     const [paid, setPaid] = useState('');
-    const [rises, setRises] = useState<{ productId: string; before: number; now: number; percent: number }[]>([]);
+    const [rises, setRises] = useState<{ productId: string; before: number; now: number; percent: number; price: number; suggested: { price: number; capped: boolean } | null }[]>([]);
+    // The suggested sale prices, as typed (applied one by one with «طبّق»)
+    const [newPrices, setNewPrices] = useState<Record<string, string>>({});
+    const [applied, setApplied] = useState<string[]>([]);
+    const applyPrice = async (productId: string) => {
+        try {
+            const done = await api().applyPrice({ productId, price: Number(String(newPrices[productId]).replace(',', '.')) });
+            setApplied([...applied, productId]);
+            toast.success(t('dist.priceApplied', { price: formatMoney(done.price) }));
+        } catch (error) {
+            toast.error(translateError(error));
+        }
+    };
     // The name as written on his invoice, already linked to an article of the shop
     const [remembered, setRemembered] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
@@ -185,7 +197,10 @@ function QuickReceive({ state, onClose, onDone }: { state: { who: Distributor; l
 
     useEffect(() => {
         if (!who || !lines.length) { setRises([]); return; }
-        api().priceRises({ supplierId: who.id, lines: lines.map(l => ({ productId: l.productId, unitCost: costOf(l) })) }).then(setRises).catch(() => setRises([]));
+        api().priceRises({ supplierId: who.id, lines: lines.map(l => ({ productId: l.productId, unitCost: costOf(l) })) }).then((list: typeof rises) => {
+            setRises(list);
+            setNewPrices(prev => Object.fromEntries(list.filter(r => r.suggested).map(r => [r.productId, prev[r.productId] ?? String(r.suggested!.price)])));
+        }).catch(() => setRises([]));
     }, [who, lines]);
 
     const add = async (p: ArticleRow) => {
@@ -259,9 +274,21 @@ function QuickReceive({ state, onClose, onDone }: { state: { who: Distributor; l
                     </table>
                 )}
                 {rises.map(r => (
-                    <p key={r.productId} className="text-sm text-amber-300 flex items-center gap-2" data-testid="price-rise">
-                        <AlertTriangle className="w-4 h-4" /> {t('dist.rise', { name: lines.find(l => l.productId === r.productId)?.name || '', before: formatMoney(r.before), now: formatMoney(r.now), percent: r.percent })}
-                    </p>
+                    <div key={r.productId} className="text-sm flex flex-wrap items-center gap-x-3 gap-y-1" data-testid="price-rise">
+                        <span className="text-amber-300 flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4" /> {t('dist.rise', { name: lines.find(l => l.productId === r.productId)?.name || '', before: formatMoney(r.before), now: formatMoney(r.now), percent: r.percent })}
+                        </span>
+                        {r.suggested && (applied.includes(r.productId) ? (
+                            <span className="text-emerald-300">{t('dist.priceDone')}</span>
+                        ) : (
+                            <span className="flex items-center gap-2 text-zinc-300">
+                                {t(r.suggested.capped ? 'dist.suggestedCapped' : 'dist.suggested', { price: formatMoney(r.price) })}
+                                <input className="input w-24 h-8 tabular ltr" inputMode="decimal" value={newPrices[r.productId] ?? ''} data-testid="suggested-price"
+                                    onChange={(e) => setNewPrices({ ...newPrices, [r.productId]: e.target.value })} />
+                                <Button size="sm" variant="secondary" onClick={() => applyPrice(r.productId)} data-testid="apply-price">{t('dist.apply')}</Button>
+                            </span>
+                        ))}
+                    </div>
                 ))}
                 <div className="flex flex-wrap items-end justify-between gap-3 border-t border-dark-border pt-3">
                     <p className="text-lg">{t('dist.total')}: <span className="font-bold tabular">{formatMoney(total)}</span></p>

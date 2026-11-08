@@ -15,6 +15,8 @@
 - **الفليكسي والخدمات:** المبلغ يُكتب في الصندوق، وهامش المحل يُحسب، بلا مخزون.
 - **يوم المحل من 04:00 إلى 04:00:** بيع الساعة 00:30 يُحسب في سهرة اليوم نفسه.
 - **السعر المسقّف:** لا بيع فوق السعر الرسمي، وحد للزبون في السلع النادرة.
+- **رمز بريدي باي للمحل** يظهر كبيراً في نافذة الدفع ليمسحه الزبون (تضيف صورته مرة واحدة في الإعدادات).
+- **انقطاع الكهرباء:** التذكرة المفتوحة تعود بعد إعادة التشغيل، لنفس العامل في نفس يوم المحل.
 
 ### الكريدي (الكارني)
 - صفحة الكارني: الأسماء وما على كل واحد، و**«خلّص بعض»**، والكشف بواتساب بعبارة مؤدبة.
@@ -25,7 +27,9 @@
 - **الاستلام السريع:** المخزون وسعر الشراء ودين المورد في خطوة واحدة، مع تاريخ الصلاحية.
 - البرنامج **يتذكر أسماء سلع كل مورد** كما في فاتورته.
 - **يوم مرور الموزع** والطلبية المقترحة بالكرطونة، تُرسل بواتساب.
-- آخر سعر عند كل مورد، أرخص مورد، وتنبيه حين يرفع مورد سعره.
+- آخر سعر عند كل مورد، أرخص مورد، وتنبيه حين يرفع مورد سعره، مع **سعر بيع مقترح وزر «طبّق»** (لا يتجاوز السعر الرسمي).
+- **«ملصقات للطباعة»:** كل سلعة تغيّر سعرها تنتظر ملصقها في صفحة الملصقات.
+- أسماء سلع المورد تُتعلّم أيضاً من **ملفات Excel** التي يرسلها.
 - **«بِعها قبل ما تفسد»:** السلع التي تنتهي صلاحيتها قبل أن تُباع.
 
 ### الذكاء بلا إنترنت
@@ -38,12 +42,12 @@
 - **حاسبة الزكاة التقديرية** (للمالك): البرنامج يجمع أرقام المحل فقط، والقرار لك ولمن تستفتيه.
 
 ### الأجهزة
-- **الهاتف وقارئ الأسعار:** خادم صغير على WiFi المحل فقط، مطفأ حتى تشغّله. تطبيق الهاتف يقرأ الأسعار، يجرد الرفوف، يرى اليوم، ويصوّر السلع؛ ولوحة عند الرفوف تقرأ الأسعار. الاقتران برمز QR مرة واحدة.
+- **الهاتف وقارئ الأسعار:** خادم صغير على WiFi المحل فقط، مطفأ حتى تشغّله. تطبيق الهاتف يقرأ الأسعار، يجرد الرفوف، يرى اليوم، ويصوّر السلع؛ ولوحة عند الرفوف تقرأ الأسعار (وبالسنتيم إن اخترته). الاقتران برمز QR مرة واحدة، ويختار البرنامج شبكة المحل الحقيقية.
 - **ميزان الملصقات:** ملف PLU (CSV أو Excel) لبرنامج الميزان، وورقة مطبوعة، وتنبيه حين تتغير أسعار لم تدخل الميزان بعد.
 
 ### Excel والجرد
 - ملفات Excel بالقطع والكيلوغرام وPLU، واستيراد السلع سطراً لكل سلعة.
-- الجرد بالكيلوغرام للسلع بالوزن.
+- الجرد وتعديل المخزون بالكيلوغرام للسلع بالوزن، وسبب «منتهي الصلاحية».
 
 ---
 
@@ -51,9 +55,9 @@
 
 Première version d'Afus Hanout : la caisse, le stock et le crédit de l'épicerie et de la supérette algérienne. Sans internet, vos données restent sur votre ordinateur.
 
-- **Vente** : au poids, au carton, étiquettes de la balance, boutons-images, « Annuler » au lieu des confirmations, Baridi Pay (dès 100 DA) avec SMS, centimes en option, petite monnaie laissée ou gardée pour le client, flexy et services, journée de 04:00 à 04:00, prix plafonnés.
+- **Vente** : au poids, au carton, étiquettes de la balance, boutons-images, « Annuler » au lieu des confirmations, Baridi Pay (dès 100 DA) avec SMS et le QR code du magasin à l'écran, centimes en option, petite monnaie laissée ou gardée pour le client, flexy et services, journée de 04:00 à 04:00, prix plafonnés, le ticket ouvert retrouvé après une coupure de courant.
 - **Karni** : qui doit combien, « payer une partie », relevé poli par WhatsApp, plafond par client, ancien carnet saisi nom par nom.
-- **Fournisseurs et distributeurs** : réception rapide, mémoire des noms de chaque fournisseur, jour de passage et commande en cartons par WhatsApp, dernier prix et hausses signalées, « à vendre avant péremption ».
+- **Fournisseurs et distributeurs** : réception rapide, mémoire des noms de chaque fournisseur (aussi depuis ses fichiers Excel), jour de passage et commande en cartons par WhatsApp, hausses signalées avec un prix de vente suggéré et « Appliquer », « Étiquettes à imprimer », « à vendre avant péremption ».
 - **Intelligence sans internet** : « Demandez à votre magasin », trois cartes par jour au plus, saisons selon le calendrier hégirien (Ramadan, Aïd, rentrée), couffin du Ramadan pour les associations, journée en trois lignes, anomalies, estimation de la zakat.
 - **Appareils** : téléphone et vérificateur de prix sur le WiFi du magasin (QR code), liste PLU de la balance étiqueteuse (fichier et feuille).
 
@@ -61,8 +65,8 @@ Première version d'Afus Hanout : la caisse, le stock et le crédit de l'épicer
 
 First release of Afus Hanout: till, stock and credit for Algerian groceries. Works offline; your data stays on your computer.
 
-- **Selling**: by weight and by the carton, scale labels, picture buttons, undo instead of confirmations, Baridi Pay (from 100 DA) with SMS, optional centimes, small change kept or saved for the customer, flexy and services, a 04:00 → 04:00 shop day, capped prices.
+- **Selling**: by weight and by the carton, scale labels, picture buttons, undo instead of confirmations, Baridi Pay (from 100 DA) with SMS and the shop's QR code on screen, optional centimes, small change kept or saved for the customer, flexy and services, a 04:00 → 04:00 shop day, capped prices, the open ticket back after a power cut.
 - **Karni**: who owes what, "pay part", a polite WhatsApp statement, a limit per customer, the old notebook typed in name by name.
-- **Suppliers and distributors**: quick receiving, each supplier's names remembered, visit days and the carton order on WhatsApp, last price and rises flagged, "sell before it goes off".
+- **Suppliers and distributors**: quick receiving, each supplier's names remembered (also from his Excel files), visit days and the carton order on WhatsApp, rises flagged with a suggested sale price and "Apply", "Labels to print", "sell before it goes off".
 - **Offline smarts**: "Ask your shop", at most three cards a day, Hijri-calendar seasons (Ramadan, Eids, school start), Ramadan baskets for associations, the day in three lines, oddities, a zakat estimate.
 - **Devices**: phone and price checker on the shop's WiFi (QR pairing), the label scale's PLU list (file and sheet).

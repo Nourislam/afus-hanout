@@ -11,6 +11,7 @@
   main { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 24px; text-align: center; }
   h1 { font-size: 28px; margin: 0; color: var(--muted); font-weight: 600; }
   .price { font-size: clamp(64px, 14vw, 160px); font-weight: 800; color: var(--ok); line-height: 1; }
+  .centimes { font-size: clamp(28px, 5vw, 56px); font-weight: 700; color: #d4d4d8; margin-top: 12px; }
   .name { font-size: clamp(28px, 5vw, 56px); font-weight: 700; }
   .hint { font-size: 22px; color: var(--muted); }
   .warn { color: var(--warn); font-size: 22px; }
@@ -63,7 +64,7 @@
     const p = await res.json();
     const unit = p.unit === 'kg' ? ' / كغ' : '';
     const label = p.scale && p.scale.price ? money(p.scale.price) : money(p.price) + unit;
-    show('<p class="name">' + esc(p.name) + '</p><p class="price">' + label + '</p>' + (p.capped ? '<p class="hint">سعر رسمي · Prix officiel</p>' : ''));
+    show('<p class="name">' + esc(p.name) + '</p><p class="price">' + label + '</p>' + (p.centimes ? '<p class="centimes">' + esc(p.centimes) + '</p>' : '') + (p.capped ? '<p class="hint">سعر رسمي · Prix officiel</p>' : ''));
   }
   code.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;

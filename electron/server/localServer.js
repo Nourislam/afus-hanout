@@ -22,6 +22,7 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const catalog = require('../services/catalogService');
+const { centimesLabel } = require('../shared/grocery.ts');
 
 const DEFAULT_PORT = 4560;
 const CODE_MINUTES = 10;
@@ -53,11 +54,22 @@ function kioskLink({ host, port }) {
     return `http://${host}:${port}/kiosk`;
 }
 
-/** This computer's addresses on the shop's network (IPv4, not the loopback). */
-function lanAddresses() {
-    return Object.values(os.networkInterfaces()).flat()
-        .filter(a => a && a.family === 'IPv4' && !a.internal && isPrivate(a.address))
-        .map(a => a.address);
+// Adapters of virtual machines, containers and VPNs: their address is not the shop's WiFi
+const VIRTUAL = /vethernet|hyper-v|wsl|virtualbox|vbox|vmware|vmnet|docker|br-|virbr|veth|tailscale|zerotier|wireguard|tun|tap|utun|hamachi|vpn/i;
+// The shop's router usually gives 192.168.x.x, sometimes 10.x.x.x; 172.16-31 is often a virtual one
+const rank = (address) => (/^192\.168\./.test(address) ? 0 : /^10\./.test(address) ? 1 : 2);
+
+/**
+ * This computer's addresses on the shop's network (IPv4, private, not the
+ * loopback), the real WiFi or cable first; virtual adapters only when there
+ * is nothing else.
+ */
+function lanAddresses(interfaces = os.networkInterfaces()) {
+    const all = Object.entries(interfaces).flatMap(([name, list]) => (list || [])
+        .filter(a => a && (a.family === 'IPv4' || a.family === 4) && !a.internal && isPrivate(a.address))
+        .map(a => ({ name, address: a.address })));
+    const real = all.filter(a => !VIRTUAL.test(a.name));
+    return [...new Set((real.length ? real : all).sort((a, b) => rank(a.address) - rank(b.address)).map(a => a.address))];
 }
 
 /** An address of a private network: the shop's WiFi or this computer. */
@@ -93,7 +105,11 @@ function priceOf(api, code, scaleFormat) {
     if (!found) return null;
     const p = found.product;
     const unit = p.unit === 'kg' ? 'kg' : p.unit === 'service' ? 'service' : 'piece';
+    // «25 ألف» under the price when the shop shows centimes (Settings › Sales screen)
+    const shown = found.scale?.price ?? (Number(p.price) || 0);
+    const centimes = require('../services/guard').readPosControls(api).showCentimes ? centimesLabel(shown, 'ar') || null : null;
     return {
+        centimes,
         id: p.id, name: p.name, price: Number(p.price) || 0, unit,
         capped: Number(p.capped_price) > 0 ? Number(p.capped_price) : null,
         carton: found.carton ? { qty: p.carton_qty, price: p.carton_price } : null,

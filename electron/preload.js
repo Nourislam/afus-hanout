@@ -327,7 +327,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         previewHtml: (overrides) => ipcRenderer.invoke('purchaseOrders:previewHtml', overrides),
         getById: (id) => ipcRenderer.invoke('db:purchaseOrders:getById', id),
         create: (po) => ipcRenderer.invoke('db:purchaseOrders:create', po),
-        readExcel: (bytes) => ipcRenderer.invoke('purchaseOrders:readExcel', bytes),
+        readExcel: (bytes, supplierId) => ipcRenderer.invoke('purchaseOrders:readExcel', bytes, supplierId),
         delete: (id) => ipcRenderer.invoke('db:purchaseOrders:delete', id),
         receiveStock: (data) => ipcRenderer.invoke('db:purchaseOrders:receiveStock', data),
         createGRN: (data) => ipcRenderer.invoke('db:receivings:create', data),
@@ -471,6 +471,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         generateInvoiceNumber: () => ipcRenderer.invoke('db:creditSales:generateInvoiceNumber'),
     },
 
+    // The open cart kept on disk, for a power cut
+    cart: {
+        keep: (payload) => ipcRenderer.invoke('cart:keep', payload),
+        kept: () => ipcRenderer.invoke('cart:kept'),
+    },
+
     // Seasons, the day's summary, what looks odd, the zakat's figures (read only)
     smart: {
         upcomingSeasons: () => ipcRenderer.invoke('seasons:upcoming'),
@@ -493,7 +499,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     devices: {
         status: () => ipcRenderer.invoke('devices:status'),
         enable: (on) => ipcRenderer.invoke('devices:enable', on),
-        pairingCode: () => ipcRenderer.invoke('devices:pairingCode'),
+        pairingCode: (host) => ipcRenderer.invoke('devices:pairingCode', host),
         remove: (id) => ipcRenderer.invoke('devices:remove', id),
     },
 
@@ -506,6 +512,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     hanout: {
         receive: (input) => ipcRenderer.invoke('hanout:receive', input),
         priceRises: (input) => ipcRenderer.invoke('hanout:priceRises', input),
+        applyPrice: (input) => ipcRenderer.invoke('hanout:applyPrice', input),
+        labelsToPrint: () => ipcRenderer.invoke('labels:toPrint'),
+        takeLabelsToPrint: (ids) => ipcRenderer.invoke('labels:takeToPrint', ids),
         supplierPrices: (productId) => ipcRenderer.invoke('hanout:supplierPrices', productId),
         matchName: (input) => ipcRenderer.invoke('hanout:matchName', input),
         lastCost: (input) => ipcRenderer.invoke('hanout:lastCost', input),

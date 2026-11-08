@@ -1,8 +1,8 @@
-import { t } from '../i18n';
+import { t, currentLanguage } from '../i18n';
 import { formatMoney } from '../i18n/format';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { QrCode, Trash2, Search, Boxes, Sparkles, Wand2 } from 'lucide-react';
+import { QrCode, Trash2, Search, Boxes, Sparkles, Wand2, Tag } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { toast } from '../components/ui/Toast';
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
@@ -187,6 +187,22 @@ export default function QrLabelsPage() {
         }
     });
 
+    // «ملصقات للطباعة»: the articles whose price changed (applied after a delivery, or edited)
+    const [toPrint, setToPrint] = useState([]);
+    useEffect(() => {
+        let cancelled = false;
+        window.electronAPI.hanout?.labelsToPrint().then(list => { if (!cancelled) setToPrint(Array.isArray(list) ? list : []); }).catch(() => {});
+        return () => { cancelled = true; };
+    }, []);
+    const addToPrint = async () => {
+        for (const article of toPrint) {
+            const product = products.find(p => p.id === article.id) || article;
+            await addProduct(product);
+        }
+        await window.electronAPI.hanout.takeLabelsToPrint(toPrint.map(a => a.id)).catch(() => {});
+        setToPrint([]);
+    };
+
     const items = useMemo(() => queue.map(i => ({ variantId: i.variantId, productId: i.productId, quantity: i.quantity })), [queue]);
     const totalLabels = queue.reduce((sum, i) => sum + (parseInt(i.quantity, 10) || 0), 0);
     const newCodes = queue.filter(i => !i.code).length;
@@ -227,6 +243,16 @@ export default function QrLabelsPage() {
                         <Wand2 className="w-4 h-4" /> {t('labels.addMissing')}
                     </Button>
                 </div>
+
+                {toPrint.length > 0 && (
+                    <div className="mx-4 mt-4 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 flex flex-wrap items-center justify-between gap-3" data-testid="labels-to-print">
+                        <span className="flex items-center gap-2 text-sm text-amber-100 min-w-0">
+                            <Tag className="w-4 h-4 flex-none text-amber-300" />
+                            <span><span className="font-semibold">{t('labels.toPrintTitle')}</span> — {t('labels.toPrintText', { n: toPrint.length, names: toPrint.slice(0, 3).map(a => a.name).join(currentLanguage() === 'ar' ? '، ' : ', ') })}</span>
+                        </span>
+                        <Button size="sm" onClick={addToPrint} disabled={!products.length}>{t('labels.toPrintAdd')}</Button>
+                    </div>
+                )}
 
                 <div className="flex-1 overflow-y-auto p-4">
                     {queue.length === 0 ? (

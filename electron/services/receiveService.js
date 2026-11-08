@@ -14,6 +14,7 @@
  */
 const catalog = require('./catalogService');
 const { isWeighed } = require('../shared/grocery.ts');
+const { suggestedPrice } = require('./priceService');
 
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100 + 0;
 const err = (code, params = {}) => catalog.codedError(code, params);
@@ -40,8 +41,9 @@ function rememberInvoiceName(api, supplierId, name, productId) {
 }
 
 /**
- * Prices that went up by more than 5 % at this supplier since the last delivery.
- * @returns {{ productId, before, now, percent }[]}
+ * Prices that went up by more than 5 % at this supplier since the last delivery,
+ * with the sale price now and the one that keeps the margin (null: nothing to change).
+ * @returns {{ productId, before, now, percent, price, suggested: { price, capped } | null }[]}
  */
 function priceRises(api, supplierId, lines, threshold = 5) {
     const out = [];
@@ -50,7 +52,12 @@ function priceRises(api, supplierId, lines, threshold = 5) {
         const now = Number(line.unitCost);
         if (!(last > 0) || !(now > 0)) continue;
         const percent = Math.round((now - last) / last * 1000) / 10;
-        if (percent > threshold) out.push({ productId: line.productId, before: last, now, percent });
+        if (percent > threshold) {
+            // The sale price that keeps the margin («طبّق» applies it; never above the official price)
+            const p = api.get('SELECT price, capped_price FROM products WHERE id = ?', [line.productId]);
+            const suggested = p ? suggestedPrice({ price: p.price, before: last, now, capped: p.capped_price }) : null;
+            out.push({ productId: line.productId, before: last, now, percent, price: p ? Number(p.price) || 0 : 0, suggested });
+        }
     }
     return out;
 }
@@ -67,7 +74,8 @@ function supplierPrices(api, productId) {
 function deliveryNumber(api) {
     const d = new Date();
     const stem = `R-${String(d.getFullYear()).slice(2)}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-`;
-    const n = api.get('SELECT COUNT(*) AS n FROM purchase_orders WHERE po_number LIKE ?', [`${stem}%`]).n + 1;
+    // After the day's highest number (never one already taken)
+    const n = (Number(api.get('SELECT MAX(CAST(SUBSTR(po_number, ?) AS INTEGER)) AS n FROM purchase_orders WHERE po_number LIKE ?', [stem.length + 1, `${stem}%`]).n) || 0) + 1;
     return `${stem}${n}`;
 }
 

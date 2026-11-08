@@ -9,6 +9,7 @@ import { translateError } from '../../i18n/errors';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { resolvePosControls } from '../../lib/posControls';
 import { Switch } from './ModulesSettings';
+import { BaridiQrSetting } from './BaridiQrSetting';
 import { OfficialPrices } from './OfficialPrices';
 
 const ROWS = [
@@ -129,6 +130,7 @@ export function PosControlsSettings() {
                 </Card>
             ))}
             <OfficialPrices />
+            <Card><BaridiQrSetting /></Card>
             <Card className="space-y-3" data-testid="karni-settings">
                 <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-lg bg-sky-500/15 text-sky-300 flex items-center justify-center flex-none"><BookOpen className="w-5 h-5" /></div>

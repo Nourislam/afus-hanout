@@ -27,6 +27,7 @@ const SETTING_RULES = {
     loyalty: 'admin',
     local_server: 'admin',
     zakat: 'admin',
+    baridi_qr: 'admin',
 };
 
 const RULES = {
@@ -128,6 +129,8 @@ const RULES = {
     'db:purchaseOrders:receiveStock': P.INVENTORY_ADJUST,
     'db:receivings:create': P.INVENTORY_ADJUST,
     'hanout:receive': P.INVENTORY_ADJUST,
+    'hanout:applyPrice': P.PRODUCTS_EDIT,
+    'labels:takeToPrint': P.PRODUCTS_VIEW,
     'hanout:setVisits': P.INVENTORY_ADJUST,
     'hanout:setCap': P.PRODUCTS_EDIT,
     'db:supplierInvoices:create': P.INVENTORY_ADJUST,
@@ -142,6 +145,8 @@ const RULES = {
     'db:creditPayments:create': 'login',
     'karni:payPart': 'login',
     'karni:openingDebt': P.CUSTOMERS_CREDIT,
+    // The open cart kept for a power cut: whoever is selling
+    'cart:keep': 'login',
     // The seasons' lists show purchase prices; what looks odd and the zakat are the owner's
     'seasons:prep': P.INVENTORY_ADJUST,
     'day:oddities': 'admin',

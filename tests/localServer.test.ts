@@ -107,6 +107,35 @@ describe('what a paired device can ask', () => {
     });
 });
 
+describe('this computer\'s address on the shop\'s WiFi', () => {
+    const nic = (address: string, internal = false) => [{ family: 'IPv4', address, internal }];
+    it('the real WiFi or cable first; virtual adapters (WSL, Hyper-V, VirtualBox, Docker, VPN) left out', () => {
+        expect(server.lanAddresses({
+            'vEthernet (WSL)': nic('172.27.80.1'),
+            'VirtualBox Host-Only Network': nic('192.168.56.1'),
+            'Wi-Fi': nic('192.168.1.23'),
+            Ethernet: nic('10.0.0.8'),
+            docker0: nic('172.17.0.1'),
+            'Tailscale': nic('100.101.1.2'),
+            'Loopback Pseudo-Interface 1': nic('127.0.0.1', true),
+            'Ethernet 2': [{ family: 'IPv6', address: 'fe80::1', internal: false }],
+        })).toEqual(['192.168.1.23', '10.0.0.8']);
+    });
+
+    it('only virtual adapters: they are offered, rather than nothing', () => {
+        expect(server.lanAddresses({ 'vEthernet (Default Switch)': nic('172.20.0.1') })).toEqual(['172.20.0.1']);
+    });
+});
+
+describe('centimes on the price checker', () => {
+    it('«2.5 ألف» under the price when the shop shows centimes, nothing otherwise', async () => {
+        const token = await paired('kiosk');
+        expect((await req('GET', '/api/price?code=6130000000011', { token })).json.centimes).toBeNull();
+        api.run("INSERT INTO settings (key, value) VALUES ('pos_controls', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", [JSON.stringify({ showCentimes: true })]);
+        expect((await req('GET', '/api/price?code=6130000000011', { token })).json.centimes).toBe('2.5 ألف');
+    });
+});
+
 describe('the real server', () => {
     let running: { port: number; stop: () => Promise<void> } | null = null;
     afterEach(async () => { await running?.stop(); running = null; });

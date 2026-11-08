@@ -402,7 +402,7 @@ module.exports = function register(ctx) {
     });
 
     // The supplier's own Excel file -> lines for the purchase order form (nothing saved here)
-    ipcMain.handle('purchaseOrders:readExcel', (_, bytes) => require('../services/purchaseImport').readSupplierFile(dbApi, Buffer.from(bytes)));
+    ipcMain.handle('purchaseOrders:readExcel', (_, bytes, supplierId) => require('../services/purchaseImport').readSupplierFile(dbApi, Buffer.from(bytes), { supplierId: supplierId || null }));
 
     ipcMain.handle('db:purchaseOrders:create', (_, input) => runTransaction(() => {
       // One transaction: the order and its lines are saved together, and an error
@@ -433,6 +433,10 @@ module.exports = function register(ctx) {
           item.id || uuid(), id, item.product_id, item.variant_id || null, item.variant_label || null, item.product_name, item.quantity, item.unit_cost,
           item.tax_rate || 0, item.tax_amount || 0, item.discount_amount || 0, item.total_cost
         ]);
+        // The supplier's own name for the article (from his file): matched by itself next time
+        if (item.invoice_name && po.supplier_id && item.product_id && !item.variant_id) {
+          require('../services/receiveService').rememberInvoiceName(dbApi, po.supplier_id, item.invoice_name, item.product_id);
+        }
       }
 
       return { ...po, id };
@@ -474,6 +478,12 @@ module.exports = function register(ctx) {
       supplierId: input.supplierId, lines: input.lines || [], paid: input.paid, employeeId: session.getEmployee()?.id || null,
     })));
     ipcMain.handle('hanout:priceRises', (_, { supplierId, lines } = {}) => receiveService.priceRises(dbApi, supplierId, lines || []));
+    // «طبّق»: the suggested sale price at the till, and the label to print again
+    ipcMain.handle('hanout:applyPrice', (_, { productId, price } = {}) => runTransaction(() => require('../services/priceService')
+        .applyPrice(dbApi, { productId, price, employeeId: session.getEmployee()?.id || null })));
+    // «ملصقات للطباعة»: the articles whose price changed, taken by the labels page
+    ipcMain.handle('labels:toPrint', () => require('../services/priceService').labelsToPrint(dbApi));
+    ipcMain.handle('labels:takeToPrint', (_, ids = []) => require('../services/priceService').clearLabelsToPrint(dbApi, Array.isArray(ids) ? ids : []));
     ipcMain.handle('hanout:supplierPrices', (_, productId) => receiveService.supplierPrices(dbApi, productId));
     ipcMain.handle('hanout:matchName', (_, { supplierId, name } = {}) => receiveService.matchInvoiceName(dbApi, supplierId, name));
     ipcMain.handle('hanout:lastCost', (_, { supplierId, productId } = {}) =>

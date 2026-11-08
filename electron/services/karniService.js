@@ -120,7 +120,8 @@ function openingDebt(api, { name, phone = '', amount, date = null, defaultLimit 
         api.run('INSERT INTO customers (id, name, phone, credit_enabled, credit_limit) VALUES (?, ?, ?, ?, ?)', [customerId, clean, String(phone || '').trim(), enabled, limit]);
     }
     const when = /^\d{4}-\d{2}-\d{2}$/.test(String(date || '')) ? `${date} 00:00:00` : new Date().toISOString().replace('T', ' ').slice(0, 19);
-    const n = api.get("SELECT COUNT(*) AS n FROM credit_sales WHERE invoice_number LIKE 'KO-%'").n + 1;
+    // After the highest number (a line taken away never makes the next one collide)
+    const n = (Number(api.get("SELECT MAX(CAST(SUBSTR(invoice_number, 4) AS INTEGER)) AS n FROM credit_sales WHERE invoice_number LIKE 'KO-%'").n) || 0) + 1;
     const creditId = api.uuid();
     api.run(`INSERT INTO credit_sales (id, sale_id, customer_id, invoice_number, amount_due, amount_paid, status, due_date, notes, created_at)
              VALUES (?, NULL, ?, ?, ?, 0, 'pending', ?, ?, ?)`, [creditId, customerId, `KO-${String(n).padStart(4, '0')}`, value, when, 'old karni', when]);
