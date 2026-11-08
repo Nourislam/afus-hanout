@@ -3,6 +3,11 @@ export default {
     'demo.try': ["Try the demo shop", "Essayer le magasin de démo", "جرّب المحل التجريبي"],
     'demo.opening': ["Preparing the demo shop…", "Préparation du magasin de démo…", "جاري تجهيز المحل التجريبي…"],
     'demo.entered': ["You are in the demo shop: try everything, nothing touches your real shop", "Vous êtes dans le magasin de démo : essayez tout, rien ne touche votre vrai magasin", "أنت في المحل التجريبي: جرّب كل شيء، لا شيء يمسّ محلك الحقيقي"],
+    // The web demo on the Afus website
+    'demo.webBanner': ["Afus Hanout demo — try everything, nothing is saved", "Démo Afus Hanout — essayez tout, rien n'est enregistré", "تجربة أفوس حانوت — جرّب كل شيء، لا شيء يُحفظ"],
+    'demo.tour': ["Guided tour", "Visite guidée", "جولة مشروحة"],
+    'demo.backSite': ["Afus website", "Site Afus", "موقع Afus"],
+    'demo.order': ["Get Afus Hanout", "Obtenir Afus Hanout", "اطلب أفوس حانوت"],
     'demo.banner': ["DEMO SHOP — sample data, kept apart from your real shop", "MAGASIN DE DÉMO — données d'exemple, séparées de votre magasin", "وضع العرض — هذه البيانات تجريبية ومنفصلة عن محلك الحقيقي"],
     'demo.reset': ["Start the demo again", "Recommencer la démo", "إعادة العرض للبداية"],
     'demo.resetTitle': ["Start the demo again?", "Recommencer la démo ?", "إعادة العرض للبداية؟"],

@@ -60,6 +60,7 @@ npm run electron:dev   # Vite dev server + Electron
 npm test               # unit tests (vitest)
 npm run lint
 npm run electron:build:win -- --publish never   # Windows installer (run on Windows)
+npm run build:demo     # the web demo (dist-demo/): the real program in a browser page, for the Afus website
 node scripts/generate-icons.js                  # icons from public/icon.svg
 ```
 

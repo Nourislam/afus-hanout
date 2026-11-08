@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:demo": "vite build -c demo-web/vite.config.mjs",
     "preview": "vite preview",
     "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint src electron tests --ext .js,.jsx,.ts,.tsx --max-warnings 0",
     "typecheck": "tsc --noEmit -p tsconfig.json",
