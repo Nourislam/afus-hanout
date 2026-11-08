@@ -74,7 +74,8 @@ function supplierPrices(api, productId) {
 function deliveryNumber(api) {
     const d = new Date();
     const stem = `R-${String(d.getFullYear()).slice(2)}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-`;
-    const n = api.get('SELECT COUNT(*) AS n FROM purchase_orders WHERE po_number LIKE ?', [`${stem}%`]).n + 1;
+    // After the day's highest number (never one already taken)
+    const n = (Number(api.get('SELECT MAX(CAST(SUBSTR(po_number, ?) AS INTEGER)) AS n FROM purchase_orders WHERE po_number LIKE ?', [stem.length + 1, `${stem}%`]).n) || 0) + 1;
     return `${stem}${n}`;
 }
 

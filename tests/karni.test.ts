@@ -80,6 +80,14 @@ describe('the old paper karni', () => {
         expect(karni.openLines(api, ali.id)).toEqual([{ date: '2026-10-01 00:00:00', left: 750.5, invoice: expect.stringMatching(/^KO-/) }]);
     });
 
+    it('a line taken away does not block the next one (its number follows the highest)', () => {
+        const first = karni.openingDebt(api, { name: 'Ali', amount: 100 });
+        karni.openingDebt(api, { name: 'Omar', amount: 200 });
+        api.run('DELETE FROM credit_sales WHERE id = ?', [first.creditId]);
+        const third = karni.openingDebt(api, { name: 'Said', amount: 300 });
+        expect(api.get('SELECT invoice_number FROM credit_sales WHERE id = ?', [third.creditId]).invoice_number).toBe('KO-0003');
+    });
+
     it('refuses no name or no amount', () => {
         expect(() => karni.openingDebt(api, { name: '', amount: 100 })).toThrow(/KARNI_OLD_LINE/);
         expect(() => karni.openingDebt(api, { name: 'Ali', amount: 0 })).toThrow(/KARNI_OLD_LINE/);

@@ -74,6 +74,15 @@ describe('quick receiving', () => {
             .toEqual([{ productId: ids.milk, before: 21, now: 23.5, percent: 11.9, price: 25, suggested: { price: 28, capped: false } }]);
     });
 
+    it('each delivery of the day has its own number, R-YYMMDD-n, after the highest', () => {
+        const ids = shop();
+        const a = delivery(ids);
+        const b = delivery(ids);
+        const stem = a.number.replace(/\d+$/, '');
+        expect(a.number).toMatch(/^R-\d{6}-\d+$/);
+        expect(b.number).toBe(`${stem}${Number(a.number.slice(stem.length)) + 1}`);
+    });
+
     it('refuses an empty delivery, a quantity of 0, a negative price, or more paid than delivered', () => {
         const ids = shop();
         expect(() => receiving.receive(api, { supplierId: ids.dist, lines: [] })).toThrow(/RECEIVE_EMPTY/);
